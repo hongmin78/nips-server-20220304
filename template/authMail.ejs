@@ -1,0 +1,150 @@
+<html>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap"
+    rel="stylesheet"
+  />
+  <body>
+    <section
+      style="
+        width: 600px;
+        height: 700px;
+        padding: 0;
+        margin: 0;
+        background: #f6f7fb;
+        border-radius: 24px;
+        overflow: hidden;
+      "
+    >
+      <article
+        class="contContainer"
+        style="
+          height: 630px;
+          padding: 34px 40px;
+          margin: 0;
+          box-sizing: border-box;
+        "
+      >
+        <div class="logoBox" style="padding: 0; margin: 0; text-align: center">
+          <img
+            style="height: 102px; padding: 0; margin: 0"
+            src="cid:logo"
+            alt="logo"
+          />
+        </div>
+
+        <div
+          class="contBox"
+          style="
+            padding: 0;
+            margin: 57px 0 0 0;
+            box-sizing: border-box;
+            text-align: center;
+          "
+        >
+          <p
+            class="title"
+            style="
+              padding: 0;
+              margin: 0;
+              font-size: 30px;
+              font-weight: 600;
+              line-height: 45px;
+              font-family: 'Poppins', sans-serif;
+            "
+          >
+            Sign up email verification
+          </p>
+
+          <p
+            class="explain"
+            style="
+              padding: 0;
+              margin: 24px 0 0 0;
+              font-size: 14px;
+              line-height: 16.41px;
+              color: #555;
+            "
+          >
+            Thank you for joining the NFTinfinity.<br />
+            Please verify your e- mail at
+            <u><%= walletAddress %></u>.<br />
+            to use the transaction service .
+          </p>
+
+          <p
+            class="explain"
+            style="
+              padding: 0;
+              margin: 10px 0 0 0;
+              font-size: 14px;
+              line-height: 16.41px;
+              color: #555;
+            "
+          >
+            This e-mail will not be replied to for outgoing purposes.
+          </p>
+
+          <div
+            class="linkBox"
+            style="
+              height: 110px;
+              padding: 26px 0 0 0;
+              margin: 44px 0 0 0;
+              text-align: center;
+              background: #fff;
+              border-radius: 12px;
+              box-sizing: border-box;
+            "
+          >
+            <a
+              style="
+                padding: 0;
+                margin: 0;
+                font-size: 22px;
+                font-weight: 600;
+                line-height: 33px;
+                font-family: 'Poppins', sans-serif;
+                color: #004ce0;
+              "
+              href="http://users.nips1.net/#/emailauth/<%= email %>/<%= authNum %>/<%= walletAddress %>"
+              target="_blank"
+            >
+              Complete signup
+            </a>
+            <p
+              class="explain"
+              style="
+                padding: 0;
+                margin: 10px 0 0 0;
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 14px;
+                color: #c7c7c7;
+                box-sizing: border-box;
+              "
+            >
+              • This link is only valid for 24 hours
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article
+        class="bottomBar"
+        style="
+          height: 70px;
+          font-size: 14px;
+          line-height: 70px;
+          text-align: center;
+          color: #fff;
+          background: #000;
+          box-sizing: border-box;
+        "
+      >
+        Copyright © 2022 METACHAIN .LTD. All rights reserved.
+      </article>
+    </section>
+  </body>
+</html>
