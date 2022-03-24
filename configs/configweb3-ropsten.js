@@ -1,12 +1,4 @@
 
-let jweb3={}
-jweb3[ 'ETH_TESTNET' ] = require('./configweb3-ethtestnet').web3
-jweb3[ 'ETH-TESTNET' ] = require('./configweb3-ethtestnet').web3
-jweb3[ 'BSC-MAINNET' ] = require('./configweb3-bscmainnet').web3
-jweb3[ 'BSC_MAINNET' ] = require('./configweb3-bscmainnet').web3
-module.exports={jweb3}
-
-/*
 const Web3=require('web3')
 const infuraurlmain=   '' // 'https://mainnet.infura.io/v3/cd35bc8ac4c14bc5b464e267e88ee9d0'
 // const infuraurlropsten= XXX 'https://data-seed-prebsc-2-s2.binance.org:8545/' // 'https://ropsten.infura.io/v3/cd35bc8ac4c14bc5b464e267e88ee9d0'
@@ -25,4 +17,4 @@ const netkind=jnetkind[NETCLASS],nettype=jnettype[NETCLASS] // 'testnet' //  'ro
 let web3 = new Web3(new Web3.providers.HttpProvider(infuraurl))
 
 module.exports={ web3 ,netkind,nettype } // ,createaccount,aapikeys,getapikey
-*/
+

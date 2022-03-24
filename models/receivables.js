@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('itemhistory', {
+  return sequelize.define('receivables', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -17,77 +17,57 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true
     },
+    username: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
     itemid: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(60),
       allowNull: true
     },
-    iteminstanceid: {
-      type: DataTypes.INTEGER(10).UNSIGNED,
+    amount: {
+      type: DataTypes.STRING(20),
       allowNull: true
     },
-    from_: {
+    currency: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    currencyaddress: {
       type: DataTypes.STRING(80),
       allowNull: true
     },
-    to_: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
-    price: {
+    statusstr: {
       type: DataTypes.STRING(20),
-      allowNull: true
-    },
-    priceunit: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    },
-    typestr: {
-      type: DataTypes.STRING(20),
-      allowNull: true,
-      comment: 'MINT,BID,MINT_SELL,SALE,APPROVE_BID,CANCEL_BID,DENY_BID'
-    },
-    type: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true
-    },
-    datahash: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    tokenid: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    },
-    txtype: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true
-    },
-    isonchain: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true
-    },
-    nettype: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    },
-    uuid: {
-      type: DataTypes.STRING(50),
       allowNull: true
     },
     status: {
       type: DataTypes.INTEGER(4),
       allowNull: true
     },
-    txhash: {
-      type: DataTypes.STRING(80),
+    roundnumber: {
+      type: DataTypes.INTEGER(11),
       allowNull: true
     },
-    roundnumber: {
-      type: DataTypes.INTEGER(10).UNSIGNED,
+    uuid: {
+      type: DataTypes.STRING(50),
       allowNull: true
+    },
+    duetimeunix: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    duetime: {
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    active: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 1
     }
   }, {
     sequelize,
-    tableName: 'itemhistory'
+    tableName: 'receivables'
   });
 };

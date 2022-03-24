@@ -55,4 +55,8 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+const cron=require('node-cron'),moment=require('moment');
+cron.schedule('*/1 * * * *',()=>{  console.log(moment().format('HH:mm:ss, YYYY-MM-DD') , '@nips' )
+})
+
 module.exports = app;

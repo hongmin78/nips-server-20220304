@@ -72,6 +72,14 @@ module.exports = function(sequelize, DataTypes) {
     uuid: {
       type: DataTypes.STRING(50),
       allowNull: true
+    },
+    stakecurrency: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    nickname: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,

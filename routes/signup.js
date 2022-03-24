@@ -95,11 +95,13 @@ router.post("/email/request", (req, res) => {
 		}
   );
 });
+let {createnicks}=require('../utils/users')
 router.post('/signup' , async(req,res)=>{
   const { walletAddress : walletaddress 
 		, email 
 		, password
-		, referral : referer 
+		, referral : referer
+		, nickname 
 	} = req.body; LOGGER(req.body )
 	if ( walletaddress && email && password && referer ){}
 	else {resperr(res, messages.MSG_ARGMISSING);return }
@@ -122,6 +124,11 @@ router.post('/signup' , async(req,res)=>{
 		//else { resperr( res, messages.MSG_EMAIL_NOTSET ) ; return } // M_emailAuth.find({ email, auth: true }, (err, item) => {
 		let uuid=create_uuid_via_namespace ( walletaddress.toLowerCase() ) 
 		let myreferercode = generaterandomstr_charset( REFERERCODELEN , 'notconfusing' ) 
+		if ( nickname){		} 
+else {
+	let respcreatenick =await createnicks()
+	nickname=respcreatenick.nickname	
+}	
 		await createrow( 'users', {
 			username : walletaddress
 			, walletaddress
@@ -131,6 +138,7 @@ router.post('/signup' , async(req,res)=>{
 			, emailauth : 0
 			, uuid
 			, myreferercode 
+			, nickname
 		})
 		respok ( res, null,null, {respdata : uuid } ) 
   })

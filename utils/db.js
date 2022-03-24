@@ -4,6 +4,17 @@ const {LOGGER}=require('./common')
 const findone=async(table,jfilter)=>          { return await db[table].findOne({raw:true,where:jfilter})}
 const findall=async(table,jfilter)=>          { return await db[table].findAll({raw:true,where:jfilter})}
 
+const getrandomrow_filter=async (tablename, jfilter)=>{
+  let aresp= await db[tablename].findAll({raw : true , order: db.Sequelize.literal('rand()'), limit: 1
+		, where : { ... jfilter } 
+	 })
+  return aresp && aresp[0] ? aresp[0] : null
+}
+/////////
+const getrandomrow=async tablename=>{
+  let aresp= await db[tablename].findAll({raw: true , order: db.Sequelize.literal('rand()'), limit: 1 })
+  return aresp && aresp[0] ? aresp[0] : null
+}
 const tableexists=async tablename=>{
   let resp=await db.sequelize.query(`SHOW TABLES LIKE '${tablename}'`)
   return resp[0][0]
@@ -145,7 +156,9 @@ const moverow=async(fromtable, jfilter, totable , auxdata)=>{
 module.exports={findone,findall,
 	findall_select_columns
 	, togglefield 
-	, updatetable, updaterow 
+	, updatetable, updaterow
+	, getrandomrow_filter
+	, getrandomrow 
 	, tableexists
 	, fieldexists
 	, createrow,createorupdaterow , updateorcreaterow , incrementroworcreate 

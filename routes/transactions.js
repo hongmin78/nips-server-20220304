@@ -8,6 +8,7 @@ const {   enqueue_tx_toclose
 }=require ( '../services/close-transactions')
 const STRINGER=JSON.stringify
 const { create_uuid_via_namespace } =require('../utils/common')
+const { respok , resperr}=require( '../utils/rest')
 const cliredisa=require('async-redis').createClient()
 
 router.post('/:txhash', async(req,res)=>{
@@ -22,14 +23,14 @@ router.post('/:txhash', async(req,res)=>{
 	}=req.body
   let objtype= getobjtype( auxdata)
 	let strauxdata
-  switch ( objtype){
+  switch ( objtype ){
 		case 'null' : break	
     case 'String' : strauxdata=auxdata ; break
     case 'Array' : strauxdata=STRINGER(auxdata) ; break
     case 'Object': strauxdata=STRINGER(auxdata) ; break
     default : break
   }
-	await createrow('transactions' , {
+	await createrow( 'transactions' , {
 		username
 		, txhash
 		, auxdata : strauxdata
@@ -44,26 +45,21 @@ router.post('/:txhash', async(req,res)=>{
 		, txhash
 		, typestr
 	})
-	
-	if ( typestr=='STAKE' ){
-	  cliredisa.hset('TX-TABLES' , txhash , STRINGER({
-  	  type:'STAKE'
-	    , tables:{   logactions:1
-  	    , transactions:1
-    	  } , address:username // itemid
-	  })).then(resp=>{
-		  enqueue_tx_toclose( txhash , uuid )
-		})
-	}
-	else if ( typestr=='APPROVE' ){
-		cliredisa.hset('TX-TABLES' , txhash , STRINGER ({
-			type : 'APPROVE'
-			, tables : {logactions : 1
-				, transactions : 1
-			} , address:username 
-		}) ).then(resp=>{
-			enqueue_tx_toclose( txhash , uuid ) 
-		})
+	respok(res, null,null, {payload : {uuid} } )	
+	switch( typestr ) {
+		case 'STAKE' :
+		case 'APPROVE' : 
+		case 'PAY' :
+		  cliredisa.hset('TX-TABLES' , txhash , STRINGER({
+  		  type: typestr
+	  	  , tables:{   logactions:1
+  	  	  , transactions:1
+    	  	} , address:username // itemid
+				, amount : auxdata?.amount	
+		  })).then(resp=>{
+			  enqueue_tx_toclose( txhash , uuid , nettype )
+			})
+		break
 	}
 })
 router.get('/', function(req, res, next) {

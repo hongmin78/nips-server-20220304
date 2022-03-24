@@ -7,8 +7,17 @@ const LOGGER=console.log
 const { v4 : uuidv4 , v5 : uuidv5 }=require('uuid')
 const mnemonicwords =require('mnemonic-words')
 const getrandomint=(min, max)=> {
-	return Math.random() * (max - min) + min;
+	return Math.floor( Math.random() * (max - min) + min ) ;
 }
+function shufflearray(array) {
+  for (var i = array.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}
+
 const create_uuid_via_namespace = str=> uuidv5 ( str , Array.from ( Array(16).keys() ) )
 const getobjtype=object=>{
   var stringConstructor = "test".constructor;
@@ -127,7 +136,7 @@ module.exports={
 	convaj
 	,	generaterandomhex, 
 	getrandomwords ,
-	getrandomint ,
+	getrandomint ,shufflearray,
 	LOGGER:console.log , cyrb53 , hash53:cyrb53 , hashFnv32a,gettimestr
 	, create_uuid_via_namespace 
 	, isuuid 

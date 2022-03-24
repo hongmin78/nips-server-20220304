@@ -1,4 +1,4 @@
-
+const moment = require('moment');
 var express = require('express');
 var router = express.Router();
 const {findone,findall,createrow , updaterow
@@ -45,8 +45,36 @@ const MAP_TABLE_INVOKE_ITEMQUERY={
 	, itembalances : 1
 }
 const SERIAL_NUMBER_DEF = 1
+router.get( '/singlerow/:tablename/:fieldname/:fieldval' , async(req,res)=>{
+	let {tablename , fieldname , fieldval }=req.params
+	if ( tablename && fieldname && fieldval){}
+	else {resperr(res,messaegs.MSG_ARGMISSING);return }
+	fieldexists( tablename ,fieldname ).then(async resp=>{
+		if (resp){}
+		else {resperr(res, messages.MSG_DATANOTFOUND); return }
+	
+		let jfilter={}
+		jfilter[ fieldname]=fieldval	
+		if (req.query && KEYS(req.query).length){
+
+			let akeys=KEYS(req.query)
+			for ( let i=0; i<akeys.length; i++){ let elem=akeys[ i ] // 			forEach (elem=>{
+				let respfieldex = await fieldexists ( tablename , elem )
+				if ( respfieldex){}
+				else {resperr(res, messages.MSG_ARGINVALID , null, {payload:{reason:elem } } ); return }
+			}
+			jfilter={... jfilter , ... req.query }
+		}
+		else {}
+		let respfindone = await findone( tablename, { ... jfilter } )
+		respok ( res, null,null, { respdata : respfindone } )
+	})
+})
+
 router.get( '/singlerow/:tablename/:fieldname/:fieldval', async (req,res)=>{
 	let {tablename , fieldname , fieldval }=req.params
+	if ( tablename && fieldname && fieldval){}
+	else {resperr(res,messaegs.MSG_ARGMISSING);return }
 	fieldexists( tablename ,fieldname ).then(async resp=>{
 		if (resp){}
 		else { resperr(res, messages.MSG_DATANOTFOUND ) ;return }
@@ -76,7 +104,7 @@ router.get( '/max/:tablename/:fieldname' ,async (req,res)=>{
 })
 router.get('/count/:tablename',async (req,res)=>{
 	let {tablename} =req.params
-	tablexists( tablename).then(async resp=>{
+	tableexists( tablename).then(async resp=>{
 		if ( resp ){}
 		else {resperr(res, messages.MSG_DATANOTFOUND ); return }
 		let count = await countrows_scalar( tablename ,{}) 
@@ -171,9 +199,11 @@ const expand_search=(tablename , liker ) =>{
 }
 router.get('/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval' , async (req,res)=>{
 	let { tablename , fieldname , fieldval , offset , limit , orderkey , orderval}=req.params
-	let { itemdetail, userdetail , filterkey , filterval }=req.query
+	let { itemdetail, userdetail , filterkey , filterval}=req.query
 	let { searchkey } =req.query
 	let { date0 , date1 } =req.query
+	console.log(date0)
+	console.log(date1)
 	const username=getusernamefromsession( req ) 
 	fieldexists(tablename, fieldname ).then(async resp=>{
 		if(resp){}
@@ -182,6 +212,9 @@ router.get('/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
 		limit = +limit
 		if ( ISFINITE(offset) && offset>=0 && ISFINITE(limit) && limit >=1 ){}
 		else {resperr( res, messages.MSG_ARGINVALID , null , {payload: {reason : 'offset-or-limit-invalid'}} ); return }
+		offset=parseInt(offset)
+		limit=parseInt(limit)
+
 		if ( MAP_ORDER_BY_VALUES[orderval]){}
 		else {resperr( res , messages.MSG_ARGINVALID , null , {payload: {reason : 'orderby-value-invalid'}})  ; return }
 		let respfield_orderkey = await fieldexists ( tablename , orderkey )
@@ -216,6 +249,15 @@ router.get('/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
     	  }
 			}
 		}
+		if (date0 && date1){
+			jfilter = { ... jfilter ,
+				createdat: {
+					[Op.gte] : moment(date0).format('YYYY-MM-DD HH:mm:ss'),
+		      		[Op.lte] : moment(date1).format('YYYY-MM-DD HH:mm:ss')
+    	  		}
+			}
+		}
+		console.log(jfilter)
 		db[tablename].findAll ({raw:true
 			, where : {... jfilter} 
 			, offset
@@ -274,12 +316,24 @@ router.get('/:tablename/:fieldname/:fieldval' , (req,res)=>{
   fieldexists ( tablename , fieldname).then(resp=>{
     if (resp){}
     else { resperr( res, messages.MSG_DATANOTFOUND); return }
-    let  jfitler = {}
-    jfilter [ fieldnamn ]  = fieldval
-    findone ( tablename , {... jfilter } ).then(resp=>{
+    let  jfilter = {}
+    jfilter [ fieldname ]  = fieldval
+    findall ( tablename , {... jfilter } ).then(resp=>{
       if ( resp) {}
       else {resperr( res, messages.MSG_DATANOTFOUND ) ; return }
-      respok ( res, null ,null , {payload : {rowdata : resp } } )
+			if (resp[0] && resp[0].itemid ){	
+				let aproms=[]
+				resp.forEach (elem=>{
+					aproms[aproms.length ] = findone('items', { itemid : elem.itemid } )
+				})
+				Promise.all ( aproms).then(respproms=>{
+					let list = resp.map(( elem , idx ) =>{ return {... elem, itemdata: respproms[idx] } } )
+					respok ( res, null,null, { list } )	
+				})
+			} else {
+      	respok ( res, null ,null , {payload : {rowdata : resp } } )
+			}
+			
     })
   })
 })

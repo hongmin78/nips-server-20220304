@@ -66,6 +66,11 @@ module.exports = function(sequelize, DataTypes) {
     username: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    salestatus: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,

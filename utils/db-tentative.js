@@ -17,6 +17,14 @@ const expand_fieldval_matches=( fieldname , arrfieldvalues ) =>{
 	let arr_field_matches =	arrfieldvalues.map ( elem => { let jdata={} ; jdata[fieldname] = { [Op.like] : elem }; return jdata } )
 	return { [ Op.or] : arr_field_matches }
 }
+const date_between=(fieldname, startDate, endDate)=>{
+	return{
+		[Op.and]:[{
+			[Op.between]:[startDate, endDate]
+		}]
+	}
+}
+
 module.exports= {
 	expand_fieldval_matches
 }
