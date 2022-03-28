@@ -34,7 +34,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     currencyaddress: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(80),
       allowNull: true
     },
     statusstr: {
@@ -47,6 +47,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     roundnumber: {
       type: DataTypes.INTEGER(11),
+      allowNull: true
+    },
+    txhash: {
+      type: DataTypes.STRING(80),
       allowNull: true
     }
   }, {

@@ -6,7 +6,9 @@ const { respok , resperr}=require( '../utils/rest')
 const { generateSlug } =require( 'random-word-slugs')
 const {LOGGER,generaterandomstr 
 	, generaterandomstr_charset 
-	, gettimestr }=require('../utils/common')
+	, gettimestr
+	, ISFINITE
+	, }=require('../utils/common')
 const { messages}=require('../configs/messages')
 const { isethaddressvalid } =require('../utils/validates')
 const {TOKENLEN}=require('../configs/configs')
@@ -120,10 +122,14 @@ router.post("/email/auth", (req, res) => {
 		)
 	} )
 });
-
-router.post("/email/request", (req, res) => {
+const RESTRICT_EMAIL_REUSE_COUNT=10
+router.post("/email/request", async(req, res) => {
   const { email		, walletAddress 	} = req.body;
   const authNum = Math.floor(Math.random() * (9999 - 1) + 1);
+	let respcountemail = await countrows_scalar( 'users', { email }) 
+	if ( ISFINITE(+respcountemail ) && +respcountemail < RESTRICT_EMAIL_REUSE_COUNT ){	
+	}
+	else {resperr(res, 'EMAIL-REUSE-COUNT-EXCEEDED' );return }
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {      user: process.env.mailId,      pass: process.env.mailPw,

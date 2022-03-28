@@ -6,13 +6,14 @@ const {findone,findall,createrow , updaterow
 , createorupdaterow
   , fieldexists
 	, tableexists
+	, updateorcreaterow
 }=require('../utils/db')
 const { updaterow : updaterow_mon}=require('../utils/dbmon')
 const KEYS=Object.keys
 const {LOGGER,generaterandomstr , generaterandomstr_charset , gettimestr
-  , convaj
 	, ISFINITE
 	, separatebycommas
+	, convaj
  }=require('../utils/common')
 const {respok,respreqinvalid,resperr , resperrwithstatus } =require('../utils/rest')
 const {messages}=require('../configs/messages')
@@ -45,6 +46,31 @@ const MAP_TABLE_INVOKE_ITEMQUERY={
 	, itembalances : 1
 }
 const SERIAL_NUMBER_DEF = 1
+router.post('/update-or-create-rows/:tablename',async(req,res)=>{
+	let {tablename , keyname, valuename }=req.params
+	let jpostdata={... req.body}
+	let resp = await tableexists(tablename)
+	if(resp){}
+	else {resperr(res,messages.MSG_DATANOTFOUND);return}
+	KEYS ( jpostdata ).forEach(async elem=>{
+		let valuetoupdateto = jpostdata [elem] //		let jdata={}
+		await updateorcreaterow(tablename ,{ key_:elem } ,{ value_: valuetoupdateto } )
+	})
+	respok ( res)
+})
+router.put('/update-or-create-rows/:tablename',async(req,res)=>{
+	let {tablename , keyname, valuename }=req.params
+	let jpostdata={... req.body}
+	let resp = await tableexists(tablename)
+	if(resp){}
+	else { resperr(res,messages.MSG_DATANOTFOUND);return}
+	KEYS ( jpostdata ).forEach(async elem=>{
+		let valuetoupdateto = jpostdata [elem] //		let jdata={}
+		await updateorcreaterow(tablename ,{ key_:elem } ,{ value_: valuetoupdateto } )
+	})
+	respok ( res)
+})
+
 router.get( '/singlerow/:tablename/:fieldname/:fieldval' , async(req,res)=>{
 	let {tablename , fieldname , fieldval }=req.params
 	if ( tablename && fieldname && fieldval){}
@@ -109,6 +135,18 @@ router.get('/count/:tablename',async (req,res)=>{
 		else {resperr(res, messages.MSG_DATANOTFOUND ); return }
 		let count = await countrows_scalar( tablename ,{}) 
 		respok ( res, null,null, { payload : {count } } )
+	})
+})
+router.get('/rows/jsonobject/:tablename/:keyname/:valuename',(req,res)=>{
+	let {tablename ,keyname , valuename }=req.params
+	if ( tablename=='users'){resperr(res,'ERR-RESTRICTED');return }
+	tableexists(tablename).then(resp=>{
+		if(resp){}
+		else {resperr(res,messages.MSG_DATANOTFOUND); return }
+		findall(tablename, {}).then(list=>{
+			let jdata = convaj( list , keyname , valuename ) // =(arr,keyname,valuename)=>{
+			respok ( res,null,null, { respdata : jdata } )
+		})
 	})
 })
 router.get('/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval' , async (req,res)=>{ // :fieldname/:fieldval/

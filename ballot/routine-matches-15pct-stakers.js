@@ -69,10 +69,17 @@ const func01_inspect_payments=async _=>{ // in here done payment cases are not p
 		moverow ( 'receivables' , {id : elem.id } ,  'delinquencies', {} )
 	})
 }
-const func00=async _=>{
+const func_00_01_draw_users=_=>{
 	let listreceivers0 = await findall( 'ballots' , {			counthelditems : 0		} )
+	
+}
+const func_00_02_draw_items=_=>{
+	
+}
+const func00_allocate_item_to_users =async _=>{
+//	let listreceivers0 = await findall( 'ballots' , {			counthelditems : 0		} )
 	await db['ballots'].findAll({raw:true
-		, 
+		,  
 	})	
 /************* */
 	let listreceivers0 =await findall( 'ballots' , {			counthelditems : 0		} )
@@ -145,7 +152,7 @@ cron.schedule('0 0 0 * * *',async ()=>{  	LOGGER('' , moment().format('HH:mm:ss,
 		let respdurationunix = await findone('settings', { key_: 'BALLOT_LAST_START_UNIX' } )
 
 		if (timediff > respdurationunix){
-			func00()				
+			func00_allocate_item_to_users ()				
 		}
 		else { }
 	}, 3600 * 9 * 1000 ) // in

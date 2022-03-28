@@ -26,6 +26,13 @@ const TOKENLEN = 48
 let { Op }=db.Sequelize
 let nettype = 'ETH-TESTNET'
 
+router.put ('/round/status/:statusvalue',(req,res)=>{
+	let { stattusvalue}=req.params
+	if ( == 'START' )
+
+	if ( == 'PAUSE' ) 
+
+})
 
 module.exports = router;
 

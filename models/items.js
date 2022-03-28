@@ -71,6 +71,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER(4),
       allowNull: true,
       defaultValue: 0
+    },
+    salesstatusstr: {
+      type: DataTypes.STRING(40),
+      allowNull: true,
+      defaultValue: "on_reserve",
+      comment: '0:on_reserve,1:assigned,2:user_owned'
     }
   }, {
     sequelize,

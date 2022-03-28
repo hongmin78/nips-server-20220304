@@ -109,9 +109,9 @@ router.post('/signup' , async(req,res)=>{
 	let respreferer= await findone('users' , { myreferercode : referer} )
 	if ( respreferer){}
 	else {resperr( res, messages.MSG_INVALID_REFERER); return }
-	let respemail = await findone('users', { email })
-	if ( respemail ){resperr( res, messages.MSG_DATADUPLICATE ,null, {reason : 'email'} ) ; return }
-	else { }
+//	let respemail = await findone('users', { email })
+	//if ( respemail ){resperr( res, messages.MSG_DATADUPLICATE ,null, {reason : 'email'} ) ; return }
+//	else { }
 	let respaddress = await findone ( 'users', {username : walletaddress } )
 	if ( respaddress ) {resperr( res, messages.MSG_DATADUPLICATE ,null, {reason : 'walletaddress'}) ; return }
 	else {} 

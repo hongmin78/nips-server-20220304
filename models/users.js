@@ -80,6 +80,16 @@ module.exports = function(sequelize, DataTypes) {
     nickname: {
       type: DataTypes.STRING(50),
       allowNull: true
+    },
+    isdelinquent: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
+    },
+    hasreceivables: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,
