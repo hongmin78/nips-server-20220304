@@ -13,6 +13,8 @@ const {updaterow
   , createorupdaterow
 	, moverow
 	, updateorcreaterow
+	, incrementroworcreate
+	, incrementrow
 }=require('../utils/db')
 const { query_with_arg }=require('../utils/contract-calls')
 const { ADDRESSES}=require('../configs/addresses')
@@ -30,45 +32,27 @@ let TX_POLL_OPTIONS={
   , blocksToWait : TXREQSTATUS_BLOCKCOUNT
 } 
 const {MIN_STAKE_AMOUNT}=require('../configs/stakes')
-
+const {ITEM_SALE_START_PRICE ,
+	 PAYMENT_ADDRESS_DEF ,
+	PAYMENT_MEANS_DEF , 
+	MAX_ROUND_TO_REACH}=require('../configs/receivables')
+let MAX_ROUND_TO_REACH_DEF = 17
 const enqueue_tx_toclose=async(txhash , uuid , nettype )=>{
 	switch (nettype){
 		case 'ETH_TESTNET':
-		case 'ETH-TESTNET':
-			enqueue_tx_eth (txhash , uuid , nettype )
-		break
-		case 'BSC_MAINNET' :
+		case 'ETH-TESTNET': //			enqueue_tx_eth (txhash , uuid , nettype ) //		break
+		case 'BSC_MAINNET':
 		case 'BSC-MAINNET':
-			enqueue_tx_eth (txhash , uuid , nettype )
-//			enqueue_tx_bsc (txhash , uuid , nettype )
+			enqueue_tx_eth (txhash , uuid , nettype ) //			enqu eue_tx_bsc (txhash , uuid , nettype )
 		break
 	}
-}
-const enqueue_tx_bsc=async (txhash , uuid, nettype )=>{
-	setTimeout(_=>{
-		cliredisa.hget('TX-TABLES', txhash).then(async resp=>{
-			if (resp){LOGGER( resp )}
-				let str_txauxdata = resp
-        let jparams = PARSER( str_txauxdata )
-        let {type , tables, address , amount , strauxdata }=jparams // itemid
-			let status_code_toupdate =1; let status =true
-        KEYS( tables ).forEach(async tablename=>{
-          await updaterow( tablename , { txhash } , {status : status_code_toupdate })
-        })
-				if ( type=='STAKE' ){
-					updaterow('users', {username : address} , {stakeamount : amount ,
-						isstaked : status ? 1 : 0
-					})
-				}
-		})
-	}, 10*1000 )
 }
 const handle_pay_case = async( jdata )=>{
 	let {uuid , username , itemid , strauxdata , txhash }=jdata
 	await moverow( 'receivables', { itemid } , 'logsales', { txhash }) // uuid
 	await updaterow( 'itemhistory' , {uuid} , {status : 1 } )
 	let amount,currency,currencyaddress
-	if (strauxdata ){
+	if ( strauxdata ){
 		let jdata=PARSER( strauxdata )
 		amount = jdata.amount
 		currency = jdata.currency
@@ -76,15 +60,67 @@ const handle_pay_case = async( jdata )=>{
 	}
 	await updateorcreaterow ( 'itembalances' ,{
 		itemid
-	} , { username
-	, status : 1
-	, buyprice : amount
-	, paymeans : currency
-	, paymeansaddress : currencyaddress 
-//	, amount
-	 } )
+		} , { username
+		, status : 1
+		, buyprice : amount
+		, paymeans : currency
+		, paymeansaddress : currencyaddress  //	, amount
+	} )
+	await incrementroworcreate( {table : 'ballots' 
+		, jfilter : { username } 
+		, fieldname : 'counthelditems' 
+		, incvalue : +1 
+	})
+	let respcirc = await findone('circulations', { itemid } )
+	if(respcirc){
+		let { price ,roundnumber , countchangehands }= respcirc
+		if( +roundnumber < MAX_ROUND_TO_REACH ){ // max not reached yet 
+			updaterow ( 'items'
+			, { itemid }
+			, {	salestatus : 1
+				, salesstatusstr : 'ASSIGNED' 
+			}).then(resp=>{
+				incrementrow({table : 'items' // orcreate 
+					,jfilter : { itemid }
+					,fieldname : 'roundnumber'
+					,incvalue : +1 
+				})
+			})
+			await updaterow ('circulations', {id: respcirc.id }, { 
+				price : price 
+				, roundnumber : 1 + +roundnumber
+				, countchangehands : 1 + +countchangehands
+			})
+		} //	
+		else { // max reached
+			
+		}
+	}
+	else { // no circ defined, should not have happened, give a fallback
+		await createrow ( 'circulations' , {
+				itemid // : ''
+			, username // : ''
+			, roundnumber : 1 // : 1 // + +roundnumber // : ''
+			, price : ITEM_SALE_START_PRICE 
+			, priceunit : PAYMENT_MEANS_DEF 
+			, priceunitcurrency : PAYMENT_ADDRESS_DEF 
+		} )
+	}
+
 }
-/** logactions
+/** circulations
+  itemid            | varchar(80)         | YES  |     | NULL                |                               |
+| username          | varchar(80)         | YES  |     | NULL                |                               |
+| roundnumber       | int(11)             | YES  |     | NULL                |                               |
+| price             | varchar(40)         | YES  |     | NULL                |                               |
+| priceunit         | varchar(80)         | YES  |     | NULL                |                               |
+| priceunitcurrency | varchar(80)         | YES  |     | NULL                |                               |
+| countchangehands
+*/
+/** 
+ `salestatus		` tinyint(4) DEFAULT 0,
+ `salesstatusstr`
+logactions
 	username     | varchar(80)      | YES  |     | NULL                |                               |
 | actiontype   | tinyint(4)       | YES  |     | NULL                |                               |
 | actionname   | varchar(20)      | YES  |     | NULL                |                               |
@@ -108,11 +144,15 @@ const	handle_clear_delinquent_case = async ( jdata)=>{
 	let { uuid , username , itemid , strauxdata , txhash } = jdata //	await moverow ('delinquencies', { itemid } , 'logdelinquents', {} )	
 	findall('delinquencies' , {username} ).then(async list=>{
 		list.forEach ( async (elem)=>{
-			await moverow ('delinquencies', { id : elem.id } , 'logdelinquents', { txhash } )	
+			await moverow ('delinquencies'
+				, { id : elem.id } 
+				, 'logdelinquents', { txhash } 
+			)
+			updaterow('ballots', { username } , {active : 1 } )
 		})
 	})
 }
-const enqueue_tx_eth=async (txhash , uuid, nettype)=>{
+const enqueue_tx_eth=async (txhash , uuid, nettype )=>{
 	let web3= jweb3[ nettype ]
   awaitTransactionMined
     .awaitTx(web3
@@ -126,34 +166,40 @@ const enqueue_tx_eth=async (txhash , uuid, nettype)=>{
       cliredisa.hget('TX-TABLES' , txhash ).then(async resp=>{ 
         if(resp) {LOGGER( 'LdRvT1x8gH',resp ) }
         else { LOGGER('YFSoB0x0Nm@empty-table' , txhash  );return }
-let str_txauxdata = resp
+				let str_txauxdata = resp
         let jparams = PARSER( str_txauxdata )
         let {type , tables, address , amount, itemid , strauxdata }=jparams // itemid 
 
         KEYS( tables ).forEach(async tablename=>{
-          await updaterow( tablename , { txhash } , {status : status_code_toupdate })
+ 	amount //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
         })
 				if ( type=='PAY' ){
 					handle_pay_case( { uuid , username : address , itemid , strauxdata , txhash })
 				}
         else if(type=='STAKE'){
-/**          que ry_with_arg({
-            contractaddress : ADDRESSES.contract_stake
-            , abikind : 'STAKE'
-            , methodname : '_balances' // _maphashtotokenid'
-            , aargs : [ address ]
-          }).then(resp=>{ LOGGER('oEPexsBvPd' , resp) */
-//            if(resp){} else {return}
-//						let stakeamount = getethrep(resp)
-						if ( true || +amount>= MIN_STAKE_AMOUNT ){
-							updaterow('users', { address }, {stakeamount : amount // stakeamount
-								, isstaked : status? 1:0
-							} )
-							updateorcreaterow( 'ballots' , {username:address , } ,  )
-						}
-						else {
-						}
-//          })
+					if ( true || +amount>= MIN_STAKE_AMOUNT ){
+						await updaterow('users', { username : address }, {stakeamount : amount // stakeamount
+							, isstaked : status? 1:0
+						} )
+						await updateorcreaterow( 'ballots' , {username:address , } , { isstaked : 1 } )
+						let { currency , currencyaddress ,nettype }=PARSER ( strauxdata )
+						await createifnoneexistent('logstakes' ,{txhash} , {
+							username : address
+// , txhash
+, type : 1 
+, typestr : 'STAKE' 
+, active : 1 
+, status : 1
+, amount : amount // ITEM_SALE_START_PRICE 
+, currency 
+, currencyaddress
+, nettype 
+, address 
+						})
+					}
+					else {
+					}
+//        })
         }
 				else if (type=='APPROVE' ){
 					query_with_arg({
@@ -175,12 +221,71 @@ let str_txauxdata = resp
 				else if ( type=='CLEAR_DELINQUENT' ){
 					handle_clear_delinquent_case( { uuid , username:address , itemid , strauxdata , txhash })	
 				}
+				updaterow( 'transactionstotrack' , {					txhash				} , {active:0 } )	
+//				deleterow( 'transactionstotrack' , {					txhash				} )	
       })
     }).catch(err=>{
       LOGGER('zjxPWfqwD3' , err , txhash , uuid )
   })
 }
+const init=async _=>{ let tablename='transactionstotrack'
+	let list =await findall( tablename , {
+		active : 1
+	}) // .then(list=>{
+		if ( list && list.length ) {
+			list.forEach(elem=>{
+				let { txhash , uuid , nettype }=elem
+				enqueue_tx_toclose ( txhash , uuid , nettype )	
+			})
+		} else {return }
+//	})
+}
+init()
 module.exports={
   enqueue_tx_toclose
 }
+/** const enqueue_tx_bsc=async (txhash , uuid, nettype )=>{
+	setTimeout(_=>{
+		cliredisa.hget('TX-TABLES', txhash).then(async resp=>{
+			if (resp){LOGGER( resp )}
+				let str_txauxdata = resp
+        let jparams = PARSER( str_txauxdata )
+        let {type , tables, address , amount , strauxdata }=jparams // itemid
+			let status_code_toupdate =1; let status =true
+        KEYS( tables ).forEach(async tablename=>{
+          await updaterow( tablename , { txhash } , {status : status_code_toupdate })
+        })
+				if ( type=='STAKE' ){
+					updaterow('users', {username : address} , {stakeamount : amount ,
+						isstaked : status ? 1 : 0
+					})
+				}
+		})
+	}, 10*1000 )
+}
+*/
+/**          que ry_with_arg({
+            contractaddress : ADDRESSES.contract_stake
+            , abikind : 'STAKE'
+            , methodname : '_balances' // _maphashtotokenid'
+            , aargs : [ address ]
+          }).then(resp=>{ LOGGER('oEPexsBvPd' , resp) */
+//            if(resp){} else {return}
+//						let stakeamount = getethrep(resp)
+/**  username     | varchar(80)         | YES  |     | NULL                |                               |
+| txhash          | varchar(80)         | YES  |     | NULL                |                               |
+| type            | tinyint(3) unsigned | YES  |     | NULL                |                               |
+| typestr         | varchar(40)         | YES  |     | NULL                |                               |
+| active          | tinyint(4)          | YES  |     | 1                   |                               |
+| status          | tinyint(4)          | YES  |     | -1                  |                               |
+| amount          | varchar(20)         | YES  |     | NULL                |                               |
+| currency        | varchar(40)         | YES  |     | NULL                |                               |
+| currencyaddress | varchar(80)         | YES  |     | NULL                |                               |
+| nettype         | varchar(20)         | YES  |     | NULL                |                               |
+| address         | varchar(80)  
+username         | varchar(80)      | YES  |     | NULL                |                               |
+| isstaked         | tinyint(4)       | YES  |     | NULL                |                               |
+| counthelditems   | int(10) unsigned | YES  |     | 0                   |                               |
+| lastassigneddate
+*/
 

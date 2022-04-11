@@ -14,6 +14,7 @@ const { create_uuid_via_namespace } =require('../utils/common')
 const { respok , resperr}=require( '../utils/rest')
 const cliredisa=require('async-redis').createClient()
 const ISFINITE=Number.isFinite
+const { NETTYPE }=require('../configs/net')
 
 router.post('/:txhash', async(req,res)=>{
 	let { txhash }=req.params
@@ -35,6 +36,9 @@ router.post('/:txhash', async(req,res)=>{
     case 'Object': strauxdata=STRINGER(auxdata) ; break
     default : break
   }
+	if (nettype){}
+	else if ( auxdata.nettype ){ nettype =  auxdata.nettype }
+	else {nettype = NETTYPE}
 	await createifnoneexistent( 'transactions' , {txhash},{
 		username
 //		, txhash
@@ -43,7 +47,7 @@ router.post('/:txhash', async(req,res)=>{
 		, amount :  auxdata?.amount // typestr=='STAKE' ?: null
 		, currency : auxdata?.currency // typestr=='STAKE'? : null
 		, currencyaddress :  auxdata?.currencyaddress // typestr=='STAKE' ?: null
-		, nettype
+		, nettype // : 
 	} )
 	await createifnoneexistent ( 'logactions' , {txhash},{
 		username
@@ -70,24 +74,6 @@ router.post('/:txhash', async(req,res)=>{
 			, roundnumber
 		})
 	}  
-/** itemhistory
-itemid         | varchar(100)     | YES  |     | NULL                |                               |
-| iteminstanceid | int(10) unsigned | YES  |     | NULL                |                               |
-| from_          | varchar(80)      | YES  |     | NULL                |                               |
-| to_            | varchar(80)      | YES  |     | NULL                |                               |
-| price          | varchar(20)      | YES  |     | NULL                |                               |
-| priceunit      | varchar(20)      | YES  |     | NULL                |                               |
-| typestr        | varchar(20)      | YES  |     | NULL                |                               |
-| type           | tinyint(4)       | YES  |     | NULL                |                               |
-| datahash       | varchar(100)     | YES  |     | NULL                |                               |
-| tokenid        | varchar(20)      | YES  |     | NULL                |                               |
-| txtype         | tinyint(4)       | YES  |     | NULL                |                               |
-| isonchain      | tinyint(4)       | YES  |     | NULL                |                               |
-| nettype        | varchar(20)      | YES  |     | NULL                |                               |
-| uuid           | varchar(50)      | YES  |     | NULL                |                               |
-| status         | tinyint(4)       | YES  |     | NULL                |                               |
-| txhash         | varchar(80)      | YES  |     | NULL                |                               |
-| roundnumber    | int(1 */
 //	 } )
 	respok(res, null,null, {payload : {uuid} } )	
 	switch( typestr ) {
@@ -109,9 +95,44 @@ itemid         | varchar(100)     | YES  |     | NULL                |          
 			})
 		break
 	}
+	createifnoneexistent ( 'transactionstotrack', {	txhash } 
+		, {	  username
+//	  , type
+  	, typestr
+	  , active : 1
+  	, status : -1
+	  , auxdata : strauxdata 
+  	, amoun : auxdata?.amountt
+	  , currency : auxdata?.currency
+  	, currencyaddress : auxdata?.currencyaddress
+	  , nettype
+  	, address : username
+	  , itemid : itemid? itemid:null
+		, uuid
+	})
 })
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
 module.exports = router;
+
+/** itemhistory
+itemid         | varchar(100)     | YES  |     | NULL                |                               |
+| iteminstanceid | int(10) unsigned | YES  |     | NULL                |                               |
+| from_          | varchar(80)      | YES  |     | NULL                |                               |
+| to_            | varchar(80)      | YES  |     | NULL                |                               |
+| price          | varchar(20)      | YES  |     | NULL                |                               |
+| priceunit      | varchar(20)      | YES  |     | NULL                |                               |
+| typestr        | varchar(20)      | YES  |     | NULL                |                               |
+| type           | tinyint(4)       | YES  |     | NULL                |                               |
+| datahash       | varchar(100)     | YES  |     | NULL                |                               |
+| tokenid        | varchar(20)      | YES  |     | NULL                |                               |
+| txtype         | tinyint(4)       | YES  |     | NULL                |                               |
+| isonchain      | tinyint(4)       | YES  |     | NULL                |                               |
+| nettype        | varchar(20)      | YES  |     | NULL                |                               |
+| uuid           | varchar(50)      | YES  |     | NULL                |                               |
+| status         | tinyint(4)       | YES  |     | NULL                |                               |
+| txhash         | varchar(80)      | YES  |     | NULL                |                               |
+| roundnumber    | int(1 */
+

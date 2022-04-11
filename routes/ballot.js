@@ -6,6 +6,7 @@ const {findone,findall,createrow , updaterow
 , createorupdaterow
   , fieldexists
 	, tableexists
+,updateorcreaterow,
 }=require('../utils/db')
 const { updaterow : updaterow_mon}=require('../utils/dbmon')
 const KEYS=Object.keys
@@ -25,14 +26,48 @@ const { queryuserdata }=require('../utils/db-custom-user' )
 const TOKENLEN = 48
 let { Op }=db.Sequelize
 let nettype = 'ETH-TESTNET'
+let rmqq = 'tasks'
+let rmqopen = require('amqplib').connect('amqp://localhost');
+const STRINGER=JSON.stringify
 
-router.put ('/round/status/:statusvalue',(req,res)=>{
-	let { stattusvalue}=req.params
-	if ( == 'START' )
+router.put("/update-or-create-rows/:tablename/:statusstr", async (req, res) => {
+  let { tablename, keyname, valuename, statusstr } = req.params;
+  let jpostdata = { ...req.body };
+  let resp = await tableexists(tablename);
+  if (statusstr == "START") {
+    KEYS(jpostdata).forEach(async (elem) => {
+      let valuetoupdateto = jpostdata[elem]; //		let jdata={}
+      await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+    });
+  }
 
-	if ( == 'PAUSE' ) 
+  if (statusstr == "PAUSE") {
+    KEYS(jpostdata).forEach(async (elem) => {
+      let valuetoupdateto = jpostdata[elem]; //		let jdata={}
+      await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+    });
+  }
+  respok(res);
+});
+
+router.post('/mq',(req,res)=>{
+  let {}=req.body
+  let mstr= STRINGER( req.body )
+  rmqopen.then(function(conn) {
+    return conn.createChannel();
+  }).then(function(ch) {
+    return ch.assertQueue(rmqq).then(function(ok) {
+      respok ( res )
+      return ch.sendToQueue(rmqq, Buffer.from( mstr ));
+    });
+  }).catch(err=> { console.warn(err)
+    resperr(res, 'INTERNAL-ERR' )
+  });
 
 })
 
+   
+   
+   
 module.exports = router;
 

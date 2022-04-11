@@ -19,7 +19,9 @@ router.get('/:objectid/likers',(req,res)=>{
 })
 
 router.get('/me/:objectid',(req,res)=>{
-	const username=getusernamefromsession(req)
+	let username=getusernamefromsession(req)
+	if (username){}
+	else { username= req.query.username }	
 	if(username) {} else {resperrwithstatus(res,403,messages.MSG_PLEASELOGIN);return}
 	let {objectid}=req.params
 	findone('logfavorites',{username:username , object:objectid}).then(resp=>{
@@ -28,7 +30,7 @@ router.get('/me/:objectid',(req,res)=>{
 		respok(res,null,null,{respdata:resp.status });return
 	})
 })
-// router.get('/:objectid/totalcount',(req,res)=>{
+// rou ter.g et('/:objectid/totalcount',(req,res)=>{
 router.get('/totalcount/:objectid',(req,res)=>{
 	let {objectid}=req.params
 	findone('favorites',{object:objectid}).then(resp=>{

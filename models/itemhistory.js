@@ -42,9 +42,8 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     typestr: {
-      type: DataTypes.STRING(20),
-      allowNull: true,
-      comment: 'MINT,BID,MINT_SELL,SALE,APPROVE_BID,CANCEL_BID,DENY_BID'
+      type: DataTypes.STRING(40),
+      allowNull: true
     },
     type: {
       type: DataTypes.INTEGER(4),
@@ -85,6 +84,11 @@ module.exports = function(sequelize, DataTypes) {
     roundnumber: {
       type: DataTypes.INTEGER(10).UNSIGNED,
       allowNull: true
+    },
+    active: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 1
     }
   }, {
     sequelize,

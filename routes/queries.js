@@ -26,6 +26,7 @@ const { queryuserdata }=require('../utils/db-custom-user' )
 const TOKENLEN=48
 let { Op }=db.Sequelize
 let nettype='ETH-TESTNET'
+const { mqpub } = require('../services/mqpub')
 const MAP_ORDER_BY_VALUES={
   ASC:1
   , asc:1
@@ -46,9 +47,9 @@ const MAP_TABLE_INVOKE_ITEMQUERY={
 	, itembalances : 1
 }
 const SERIAL_NUMBER_DEF = 1
-router.post('/update-or-create-rows/:tablename',async(req,res)=>{
+router.post('/update-or-create-rows/:tablename',async(req,res)=>{ LOGGER('' , req.body )
 	let {tablename , keyname, valuename }=req.params
-	let jpostdata={... req.body}
+	let jpostdata={... req.body} 
 	let resp = await tableexists(tablename)
 	if(resp){}
 	else {resperr(res,messages.MSG_DATANOTFOUND);return}
@@ -57,8 +58,9 @@ router.post('/update-or-create-rows/:tablename',async(req,res)=>{
 		await updateorcreaterow(tablename ,{ key_:elem } ,{ value_: valuetoupdateto } )
 	})
 	respok ( res)
+	mqpub ( jpostdata )
 })
-router.put('/update-or-create-rows/:tablename',async(req,res)=>{
+router.put('/update-or-create-rows/:tablename',async(req,res)=>{ LOGGER('' , req.body )
 	let {tablename , keyname, valuename }=req.params
 	let jpostdata={... req.body}
 	let resp = await tableexists(tablename)
@@ -69,6 +71,7 @@ router.put('/update-or-create-rows/:tablename',async(req,res)=>{
 		await updateorcreaterow(tablename ,{ key_:elem } ,{ value_: valuetoupdateto } )
 	})
 	respok ( res)
+	mqpub ( jpostdata )
 })
 
 router.get( '/singlerow/:tablename/:fieldname/:fieldval' , async(req,res)=>{

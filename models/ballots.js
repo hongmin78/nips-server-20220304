@@ -33,6 +33,11 @@ module.exports = function(sequelize, DataTypes) {
     lastassigneddate: {
       type: DataTypes.STRING(20),
       allowNull: true
+    },
+    active: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 1
     }
   }, {
     sequelize,

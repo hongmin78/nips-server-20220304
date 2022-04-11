@@ -1,0 +1,17 @@
+roundnumber                | bigint(20) unsigned | YES  |     | NULL                |                               |
+countballotsactive         | bigint(20) unsigned | YES  |     | NULL                |                               |
+countitemsassigned         | int(10) unsigned    | YES  |     | 0                   |                               |
+countusersassigned         | int(10) unsigned    | YES  |     | 0                   |                               |
+countdelinquencies         | int(10) unsigned    | YES  |     | 0                   |                               |
+countdelinquenciesresolved | int(10) unsigned    | YES  |     | 0                   |                               |
+starttime                  | varchar(30)         | YES  |     | NULL                |                               |
+drawtime                   | varchar(30)         | YES  |     | NULL                |                               |
+paymentduetime             | varchar(30)         | YES  |     | NULL                |                               |
+endtime                    | varchar(30)         | YES  |     | NULL                |                               |
+starttimeunix              | bigint(20) unsigned | YES  |     | NULL                |                               |
+drawtimeunix               | bigint(20) unsigned | YES  |     | NULL                |                               |
+paymentduetimeunix         | bigint(20) unsigned | YES  |     | NULL                |                               |
+endtimeunix                | bigint(20) unsigned | YES  |     | NULL                |                               |
+totalitemsonreserve        | int(10) unsigned    | YES  |     | NULL                |                               |
+totalitemsassigned         | int(10) unsigned    | YES  |     | NULL                |                               |
+totalitemsinpossession     | int(10) unsign

@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "amqplib": "^0.8.0",
     "async-redis": "^2.0.0",
     "await-transaction-mined": "^1.0.12",
     "base58": "^2.0.1",
@@ -24,10 +25,13 @@
     "mariadb": "^2.5.5",
     "mnemonic-words": "^1.1.0",
     "moment": "^2.29.1",
+    "moment-random": "^1.1.0",
+    "moment-timezone": "^0.5.34",
     "mongoose": "^5.13.2",
     "morgan": "~1.9.1",
     "mysql2": "^2.3.3",
     "node-cron": "^3.0.0",
+    "node-schedule": "^2.1.0",
     "nodemailer": "^6.7.2",
     "random-word-slugs": "^0.1.6",
     "sequelize": "^5.21.13",

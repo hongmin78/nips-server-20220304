@@ -5,14 +5,24 @@ const { respok , resperr}=require( '../utils/rest')
 const { ISFINITE} =require('../utils/common')
 const { messages}=require('../configs/messages')
 const db=require('../models')
+const { queryitemdata , queryitemdata_user }=require('../utils/db-custom')
 
+router.get('/item/:itemid', async (req,res)=>{
+	let {itemid}=req.params
+	findone('items', {itemid}).then(async resp=>{
+	//	let respdetail = await queryitemdata(itemid) // .then(resp=>
+		respok ( res, null,null,{ respdata: {... resp
+//		, ... respdetail
+		 } } ) 
+	})	
+})
 /* GET home page. */
-router.get('/item/:itemid', (req,res)=>{
+/** router.get('/item/:itemid', (req,res)=>{
 	let {itemid}=req.params
 	findone('items', {itemid}).then(resp=>{
 		respok ( res, null,null,{ respdata: resp } ) 
 	})	
-})
+}) */
 router.get('/:offset/:limit/:orderkey/:orderval', function(req, res, next) {
 	let { offset , limit }=req.params
 	let { orderkey , orderval }=req.params

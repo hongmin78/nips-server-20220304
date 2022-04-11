@@ -35,7 +35,7 @@ router.get('/randomuuid', (req,res)=>{
 	respok ( res, null,null, { uuid})
 })
 
-router.post("/email/request", (req, res) => {
+router.post("/email/request", (req, res) => { LOGGER(req.body)
   const { email		, walletAddress 	} = req.body; LOGGER( '', req.body )
 	if ( email && walletAddress ) {}
 	else { resperr(res, messages.MSG_ARGMISSING ) ;return }
@@ -96,7 +96,7 @@ router.post("/email/request", (req, res) => {
   );
 });
 let {createnicks}=require('../utils/users')
-router.post('/signup' , async(req,res)=>{
+router.post('/signup' , async(req,res)=>{LOGGER(req.body)
   const { walletAddress : walletaddress 
 		, email 
 		, password
@@ -143,7 +143,7 @@ else {
 		respok ( res, null,null, {respdata : uuid } ) 
   })
 })
-router.post("/email/auth", async(req, res) => {
+router.post("/email/auth", async(req, res) => {LOGGER(req.body)
   const { email : emailaddress
 		, authNum : code
 		, walletaddress  

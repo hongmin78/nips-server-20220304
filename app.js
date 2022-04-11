@@ -13,6 +13,9 @@ const itemsrouter= require('./routes/items')
 const favoritesrouter= require('./routes/favorites')
 const signuprouter= require('./routes/signup')
 const transactionsrouter= require('./routes/transactions')
+const ballotrouter= require("./routes/ballot")
+const devtestrouter= require("./routes/devtest")
+const adminRouter = require("./routes/admin")
 const LOGGER = console.log
 const cors=require('cors')
 var app = express();
@@ -39,6 +42,9 @@ app.use('/items' , itemsrouter )
 app.use('/favorites' , favoritesrouter )
 app.use('/signup' , signuprouter )
 app.use('/transactions' , transactionsrouter )
+app.use("/ballotrouter", ballotrouter)
+app.use("/devtest", devtestrouter)
+app.use("/admin", adminRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

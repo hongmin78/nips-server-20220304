@@ -145,9 +145,10 @@ const moverow=async(fromtable, jfilter, totable , auxdata)=>{
 			delete resp['createdat']
 			delete resp['updatedat']
 			delete resp['id']
-			await createrow(totable , {... resp , ... auxdata } )
+			let respcreate = await createrow(totable , {... resp , ... auxdata } )
+			await db.sequelize.query(`delete from ${fromtable} where id=${id}` )
 //			deleterow (fromtable ,{id: resp.id} )
-			return await db.sequelize.query(`delete from ${fromtable} where id=${id}` )
+			return respcreate 
 		}
 		else{
 		}

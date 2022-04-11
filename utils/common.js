@@ -4,6 +4,7 @@ const KEYS=Object.keys
 const ISFINITE=Number.isFinite
 const STRINGER=JSON.stringify
 const LOGGER=console.log
+const PARSER=JSON.parse
 const { v4 : uuidv4 , v5 : uuidv5 }=require('uuid')
 const mnemonicwords =require('mnemonic-words')
 const getrandomint=(min, max)=> {
@@ -137,7 +138,9 @@ module.exports={
 	,	generaterandomhex, 
 	getrandomwords ,
 	getrandomint ,shufflearray,
-	LOGGER:console.log , cyrb53 , hash53:cyrb53 , hashFnv32a,gettimestr
+	LOGGER:console.log ,
+	PARSER
+	, cyrb53 , hash53:cyrb53 , hashFnv32a,gettimestr
 	, create_uuid_via_namespace 
 	, isuuid 
 	, gettimestr_raw 

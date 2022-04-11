@@ -28,6 +28,10 @@ module.exports = function(sequelize, DataTypes) {
     subkey_: {
       type: DataTypes.STRING(100),
       allowNull: true
+    },
+    subvalue_: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,

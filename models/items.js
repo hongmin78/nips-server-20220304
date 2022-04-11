@@ -76,7 +76,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(40),
       allowNull: true,
       defaultValue: "on_reserve",
-      comment: '0:on_reserve,1:assigned,2:user_owned'
+      comment: '0:on_reserve,1:assigned,-1:user_owned'
+    },
+    roundnumber: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,
