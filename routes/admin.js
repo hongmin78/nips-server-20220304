@@ -1,7 +1,17 @@
 var express = require('express');
 var router = express.Router();
 const { REFERERCODELEN}=require('../configs/configs')
-const { findone, createrow }=require('../utils/db')
+const {
+  findone,
+  findall,
+  createrow,
+  updaterow,
+  countrows_scalar,
+  createorupdaterow,
+  fieldexists,
+  tableexists,
+  updateorcreaterow,
+} = require("../utils/db");
 const { respok , resperr}=require( '../utils/rest')
 const { generateSlug } =require( 'random-word-slugs')
 const {LOGGER,generaterandomstr 
@@ -20,14 +30,17 @@ const ejs = require("ejs");
 
 
 router.post('/login', async(req,res)=>{
-	const {username , pw }=req.body
-	LOGGER('pM34zwlLCQ',req.body) //	respok(res);return
-	if(username && pw){} else {resperr(res,messages.MSG_ARGMISSING);return}
-	let respfind = await findone('admin' , { username : username, pw: pw} )
-	if ( respfind){
+  const {username , pw }=req.body
+  LOGGER('pM34zwlLCQ',req.body) //  respok(res);return
+  if(username && pw){
+    let respfind = await findone('admins', { username : username, pw: pw} )
+    if ( respfind){
     respok ( res, null,null, null)
   }
-	else { resperr(res,messages.MSG_DATANOTFOUND ) ;return }
+  else { resperr(res,messages.MSG_DATANOTFOUND ) ;return }
+  } else {resperr(res,messages.MSG_ARGMISSING);return}
+ 
+
 
 
 })
