@@ -15,6 +15,7 @@ const {updaterow
 	, updateorcreaterow
 	, incrementroworcreate
 	, incrementrow
+	, createifnoneexistent
 }=require('../utils/db')
 const { query_with_arg }=require('../utils/contract-calls')
 const { ADDRESSES}=require('../configs/addresses')
@@ -75,7 +76,7 @@ const handle_pay_case = async( jdata )=>{
 	if(respcirc){
 		let { price ,roundnumber , countchangehands }= respcirc
 		if( +roundnumber < MAX_ROUND_TO_REACH ){ // max not reached yet 
-			updaterow ( 'items'
+			await updaterow ( 'items'
 			, { itemid }
 			, {	salestatus : 1
 				, salesstatusstr : 'ASSIGNED' 
@@ -91,9 +92,12 @@ const handle_pay_case = async( jdata )=>{
 				, roundnumber : 1 + +roundnumber
 				, countchangehands : 1 + +countchangehands
 			})
+			await updaterow ('users', {username} , { 				
+    		lastroundmadepaymentfor : roundnumber 
+				, lasttimemadepaymentat : moment().unix() 
+			} ) 
 		} //	
 		else { // max reached
-			
 		}
 	}
 	else { // no circ defined, should not have happened, give a fallback
@@ -106,7 +110,6 @@ const handle_pay_case = async( jdata )=>{
 			, priceunitcurrency : PAYMENT_ADDRESS_DEF 
 		} )
 	}
-
 }
 /** circulations
   itemid            | varchar(80)         | YES  |     | NULL                |                               |
@@ -140,15 +143,21 @@ logactions
 | nettype      | varchar(20)      | YES  |     | NULL                |                               |
 | status       | tinyint(4)       | YES 
 */
-const	handle_clear_delinquent_case = async ( jdata)=>{
+const	handle_clear_delinquent_case = async ( jdata )=>{
 	let { uuid , username , itemid , strauxdata , txhash } = jdata //	await moverow ('delinquencies', { itemid } , 'logdelinquents', {} )	
-	findall('delinquencies' , {username} ).then(async list=>{
+	findall ( 'delinquencies' , {username} ).then(async list=>{
 		list.forEach ( async (elem)=>{
-			await moverow ('delinquencies'
+			await moverow  ( 'delinquencies'
 				, { id : elem.id } 
 				, 'logdelinquents', { txhash } 
 			)
-			updaterow('ballots', { username } , {active : 1 } )
+			await updaterow('ballots', { username } , {active : 1 } )
+/*			await incrementrow ( {
+					table : 'logrounds'
+				, jfilter : {  }
+				, fieldname : 'countdelinquenciesresolved'
+				, incvalue : +1
+			}) */
 		})
 	})
 }

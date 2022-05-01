@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('ballots', {
+  return sequelize.define('banners', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -17,21 +17,20 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true
     },
-    username: {
-      type: DataTypes.STRING(80),
+    imageurlpc: {
+      type: DataTypes.STRING(500),
       allowNull: true
     },
-    isstaked: {
-      type: DataTypes.INTEGER(4),
+    imageurlmobile: {
+      type: DataTypes.STRING(500),
       allowNull: true
     },
-    counthelditems: {
-      type: DataTypes.INTEGER(10).UNSIGNED,
-      allowNull: true,
-      defaultValue: 0
+    writer: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     },
-    lastassigneddate: {
-      type: DataTypes.STRING(20),
+    uuid: {
+      type: DataTypes.STRING(50),
       allowNull: true
     },
     active: {
@@ -39,12 +38,21 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: 1
     },
-    nettype: {
-      type: DataTypes.STRING(40),
+    isinuse: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
+    },
+    filenamepc: {
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    filenamemobile: {
+      type: DataTypes.STRING(500),
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'ballots'
+    tableName: 'banners'
   });
 };

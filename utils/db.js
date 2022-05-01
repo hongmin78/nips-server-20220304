@@ -77,8 +77,8 @@ const findall_select_columns=async(table , jfilter,acols)=>{
 	}
 }
 const updatetable=async(table,jfilter,jupdates)=>  { return await db[table].update(jupdates,{where:jfilter})}
-const updaterow=updatetable
-
+const updaterow = updatetable
+const updaterows = updatetable
 /** const tableexists=async tablename=>{
 	let resp=await db.sequelize.query(`SHOW TABLES LIKE '${tablename}'`)
 	return resp[0][0]
@@ -157,7 +157,9 @@ const moverow=async(fromtable, jfilter, totable , auxdata)=>{
 module.exports={findone,findall,
 	findall_select_columns
 	, togglefield 
-	, updatetable, updaterow
+	, updatetable
+	, updaterow
+	, updaterows
 	, getrandomrow_filter
 	, getrandomrow 
 	, tableexists

@@ -90,6 +90,18 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER(10).UNSIGNED,
       allowNull: true,
       defaultValue: 0
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    lastroundmadepaymentfor: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    lasttimemadepaymentat: {
+      type: DataTypes.BIGINT,
+      allowNull: true
     }
   }, {
     sequelize,

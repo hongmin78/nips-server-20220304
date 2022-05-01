@@ -37,6 +37,7 @@ const MAP_TABLENAME_QUERY_ALLOWED={
 	settings : 1
 	, categories: 1
 	, itembalances : 1
+	,circulations : 1
 }
 const expand_fieldval_matches=( fieldname , arrfieldvalues ) =>{
 	let arr_field_matches =	arrfieldvalues.map ( elem => { let jdata={} ; jdata[fieldname] = { [Op.like] : elem }; return jdata } )

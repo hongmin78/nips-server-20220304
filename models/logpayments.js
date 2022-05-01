@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('ballots', {
+  return sequelize.define('logpayments', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -21,30 +21,33 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(80),
       allowNull: true
     },
-    isstaked: {
-      type: DataTypes.INTEGER(4),
+    amount: {
+      type: DataTypes.STRING(40),
       allowNull: true
     },
-    counthelditems: {
-      type: DataTypes.INTEGER(10).UNSIGNED,
-      allowNull: true,
-      defaultValue: 0
+    typestr: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     },
-    lastassigneddate: {
-      type: DataTypes.STRING(20),
+    paymeansname: {
+      type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    paymeansaddress: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    txhash: {
+      type: DataTypes.STRING(80),
       allowNull: true
     },
     active: {
       type: DataTypes.INTEGER(4),
       allowNull: true,
       defaultValue: 1
-    },
-    nettype: {
-      type: DataTypes.STRING(40),
-      allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'ballots'
+    tableName: 'logpayments'
   });
 };

@@ -36,6 +36,17 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
+db['items'].hasMany(db['itemhistory'], {foreignKey:'itemid', sourceKey:'itemid'})
+db['itemhistory'].belongsTo(db['items'], {foreignKey:'itemid', targetKey:'itemid'})
+
+db['items'].hasOne(db['circulations'], {as:'current_info', foreignKey:'itemid', sourceKey:'itemid'})
+db['circulations'].belongsTo(db['items'], {foreignKey:'itemid', targetKey:'itemid'})
+
+db['circulations'].hasOne(db['users'], {foreignKey:'username', sourceKey:'username'})
+db['users'].belongsTo(db['circulations'], {foreignKey:'username', targetKey:'username'})
+
+
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

@@ -8,13 +8,33 @@ const db=require('../models')
 const { queryitemdata , queryitemdata_user }=require('../utils/db-custom')
 
 router.get('/item/:itemid', async (req,res)=>{
+	console.log('hello')
 	let {itemid}=req.params
-	findone('items', {itemid}).then(async resp=>{
-	//	let respdetail = await queryitemdata(itemid) // .then(resp=>
-		respok ( res, null,null,{ respdata: {... resp
-//		, ... respdetail
-		 } } ) 
-	})	
+	db['items'].findOne({
+		where:{
+			itemid
+		},
+		include:[{
+			model: db['itemhistory']
+		},
+		{
+			model: db['circulations'],
+			as:'current_info',
+			include:[{
+				model: db['users']
+			}]
+		}
+		]
+	}).then((resp)=>{
+		console.log('hello')
+		respok(res, null, null, {respdata: resp})
+	})
+// 	findone('items', {itemid}).then(async resp=>{
+// 	//	let respdetail = await queryitemdata(itemid) // .then(resp=>
+// 		respok ( res, null,null,{ respdata: {... resp
+// //		, ... respdetail
+// 		 } } ) 
+// 	})	
 })
 /* GET home page. */
 /** router.get('/item/:itemid', (req,res)=>{
