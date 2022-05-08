@@ -45,6 +45,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER(10).UNSIGNED,
       allowNull: true,
       defaultValue: 1
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     }
   }, {
     sequelize,

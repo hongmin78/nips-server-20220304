@@ -4,11 +4,14 @@ const pathname_images='/var/www/html/assets-kingkong/images'
 const fs=require('fs')
 const db=require('../models')
 const pathname_metadata='/var/www/html/assets-kingkong/json'
+let nettype='ETH_TESTNET'
 let listdir = fs.readdirSync( pathname_images ) 
 
 const LOGGER=console.log
-let URL_IMAGES_DEF=		`http://nips1.net/assets-kingkong/images`
-let URL_METADATA_DEF =	`http://nips1.net/assets-kingkong/json`
+// let URL_IMAGES_DEF=		`http://nips1.net/assets-kingkong/images`
+// let URL_METADATA_DEF =	`http://nips1.net/assets-kingkong/json`
+let URL_IMAGES_DEF=`https://nftinfinity.world/assets-kingkong/images`
+let URL_METADATA_DEF=`https://nftinfinity.world/assets-kingkong/json`
 
 LOGGER(listdir)
 let {get_ipfsformatcid_file}=require('../utils/ipfscid')
@@ -46,6 +49,7 @@ const main=async _=>{
 			, metadataurl 
 			, metadata
 			, group_
+			, nettype
 		})
 //		if ( i > 3){break }
 //		time1=moment()

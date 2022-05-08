@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('circulations', {
+  return sequelize.define('logfeepayments', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -17,41 +17,44 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true
     },
-    itemid: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
     username: {
       type: DataTypes.STRING(80),
       allowNull: true
     },
-    roundnumber: {
-      type: DataTypes.INTEGER(11),
-      allowNull: true
-    },
-    price: {
-      type: DataTypes.STRING(40),
-      allowNull: true
-    },
-    priceunit: {
+    txhash: {
       type: DataTypes.STRING(80),
       allowNull: true
     },
-    priceunitcurrency: {
+    amount: {
+      type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    amountfloat: {
+      type: DataTypes.DOUBLE,
+      allowNull: true
+    },
+    paymeansname: {
+      type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    paymeansaddress: {
       type: DataTypes.STRING(80),
       allowNull: true
     },
-    countchangehands: {
-      type: DataTypes.BIGINT,
-      allowNull: true,
-      defaultValue: 0
+    buyer: {
+      type: DataTypes.STRING(80),
+      allowNull: true
     },
-    nettype: {
-      type: DataTypes.STRING(40),
+    seller: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    feerate: {
+      type: DataTypes.STRING(20),
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'circulations'
+    tableName: 'logfeepayments'
   });
 };

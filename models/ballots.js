@@ -42,6 +42,19 @@ module.exports = function(sequelize, DataTypes) {
     nettype: {
       type: DataTypes.STRING(40),
       allowNull: true
+    },
+    lastroundmadepaymentfor: {
+      type: DataTypes.INTEGER(11),
+      allowNull: true,
+      defaultValue: -4
+    },
+    lasttimemadepaymentat: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    countdelinquencies: {
+      type: DataTypes.BIGINT,
+      allowNull: true
     }
   }, {
     sequelize,

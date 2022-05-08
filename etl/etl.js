@@ -2,11 +2,14 @@
 const pathname='/var/www/html/assets/images'
 const fs=require('fs')
 const db=require('../models')
+let nettype='ETH_TESTNET'
 
 let listdir = fs.readdirSync( pathname ) 
 const LOGGER=console.log
-let URL_IMAGES_DEF=`http://nips1.net/assets/images`
-let URL_METADATA_DEF=`http://nips1.net/assets/json`
+// let URL_IMAGES_DEF=`http://nips1.net/assets/images`
+// let URL_METADATA_DEF=`http://nips1.net/assets/json`
+let URL_IMAGES_DEF=`https://nftinfinity.world/assets/images`
+let URL_METADATA_DEF=`https://nftinfinity.world/assets/json`
 
 LOGGER(listdir)
 let {get_ipfsformatcid_file}=require('../utils/ipfscid')
@@ -32,7 +35,8 @@ const main=async _=>{
 			itemid
 			, titlename
 			, url
-			, metadataurl 
+			, metadataurl
+			, nettype
 		})
 //		if ( i > 3){break }
 //		time1=moment()

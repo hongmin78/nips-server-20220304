@@ -75,13 +75,16 @@ module.exports = function(sequelize, DataTypes) {
     salesstatusstr: {
       type: DataTypes.STRING(40),
       allowNull: true,
-      defaultValue: "on_reserve",
-      comment: '0:on_reserve,1:assigned,-1:user_owned'
+      comment: '0:on_reserve,1:assigned,-1:user_owned,-2:retired,-3:perished'
     },
     roundnumber: {
       type: DataTypes.BIGINT,
       allowNull: true,
       defaultValue: 0
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     }
   }, {
     sequelize,

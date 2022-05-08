@@ -101,9 +101,14 @@ router.post("/email/request", (req, res) => {
 let { createnicks } = require("../utils/users");
 router.post("/signup", async (req, res) => {
   LOGGER(req.body);
-  const { walletAddress: walletaddress, email, password, referral: referer, nickname } = req.body;
+  const { walletAddress: walletaddress
+		, email
+		, password
+		, referral: referer
+		, nickname
+		, nettype } = req.body;
   LOGGER(req.body);
-  if (walletaddress && email && password && referer) {
+  if (walletaddress && email && password && referer && nettype ) {
   } else {
     resperr(res, messages.MSG_ARGMISSING);
     return;
@@ -157,6 +162,7 @@ router.post("/signup", async (req, res) => {
       uuid,
       myreferercode,
       nickname,
+			nettype
     });
     respok(res, null, null, { respdata: uuid });
   });

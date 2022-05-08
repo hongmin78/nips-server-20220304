@@ -17,7 +17,7 @@ const {updaterow
 	, incrementrow
 	, createifnoneexistent
 }=require('../utils/db')
-const { query_with_arg }=require('../utils/contract-calls')
+const { query_with_arg }=require( '../utils/contract-calls' )
 const { ADDRESSES}=require('../configs/addresses')
 /** const {updaterow : updaterow_mon , createrow : createrow_mon
   , findone : findone_mon
@@ -41,7 +41,7 @@ let MAX_ROUND_TO_REACH_DEF = 17
 const enqueue_tx_toclose=async(txhash , uuid , nettype )=>{
 	switch (nettype){
 		case 'ETH_TESTNET':
-		case 'ETH-TESTNET': //			enqueue_tx_eth (txhash , uuid , nettype ) //		break
+		case 'ETH-TESTNET': //			enqu eue_tx_eth (txhash , uuid , nettype ) //		break
 		case 'BSC_MAINNET':
 		case 'BSC-MAINNET':
 			enqueue_tx_eth (txhash , uuid , nettype ) //			enqu eue_tx_bsc (txhash , uuid , nettype )
@@ -52,12 +52,14 @@ const handle_pay_case = async( jdata )=>{
 	let {uuid , username , itemid , strauxdata , txhash }=jdata
 	await moverow( 'receivables', { itemid } , 'logsales', { txhash }) // uuid
 	await updaterow( 'itemhistory' , {uuid} , {status : 1 } )
-	let amount,currency,currencyaddress
+	let amount,currency,currencyaddress , feerate
+	let jauxdata
 	if ( strauxdata ){
-		let jdata=PARSER( strauxdata )
-		amount = jdata.amount
-		currency = jdata.currency
-		currencyaddress = jdata.currencyaddress
+		jauxdata=PARSER( strauxdata )
+		amount = jauxdata.amount
+		currency = jauxdata.currency
+		currencyaddress = jauxdata.currencyaddress
+		feerate = jauxdata.feerate
 	}
 	await updateorcreaterow ( 'itembalances' ,{
 		itemid
@@ -110,7 +112,27 @@ const handle_pay_case = async( jdata )=>{
 			, priceunitcurrency : PAYMENT_ADDRESS_DEF 
 		} )
 	}
+	if ( jauxdata.referfeeamount ) { 
+		updateorcreaterow	('logfeepayments' , {
+			txhash	
+		} , {
+			username
+			, amount :jauxdata.referfeeamount
+			, paymeansname : currency
+			, paymeansaddress : currencyaddress
+			, feerate : feerate
+		} )
+	}
 }
+/* logfeepayments
+	username        | varchar(80)      | YES  |     | NULL                |                               |
+| txhash          | varchar(80)      | YES  |     | NULL                |                               |
+| amount          | varchar(40)      | YES  |     | NULL                |                               |
+| amountfloat     | double           | YES  |     | NULL                |                               |
+| paymeansname    | varchar(40)      | YES  |     | NULL                |                               |
+| paymeansaddress | varchar(80)      | YES  |     | NULL                |                               |
+| buyer           | varchar(80)      | YES  |     | NULL                |                               |
+| seller          */
 /** circulations
   itemid            | varchar(80)         | YES  |     | NULL                |                               |
 | username          | varchar(80)         | YES  |     | NULL                |                               |
@@ -190,8 +212,8 @@ const enqueue_tx_eth=async (txhash , uuid, nettype )=>{
 						await updaterow('users', { username : address }, {stakeamount : amount // stakeamount
 							, isstaked : status? 1:0
 						} )
-						await updateorcreaterow( 'ballots' , {username:address , } , { isstaked : 1 } )
-						let { currency , currencyaddress ,nettype }=PARSER ( strauxdata )
+						await updateorcreaterow( 'ballots' , {username:address , nettype : nettype? nettype:'ETH_TESTNET' } , { isstaked : 1 } )
+						let { currency , currencyaddress  }=PARSER ( strauxdata ) // ,nettype
 						await createifnoneexistent('logstakes' ,{txhash} , {
 							username : address
 // , txhash
@@ -210,7 +232,7 @@ const enqueue_tx_eth=async (txhash , uuid, nettype )=>{
 					}
 //        })
         }
-				else if (type=='APPROVE' ){
+				else if (type== 'APPROVE' ){
 					query_with_arg({
 						contractaddress : ADDRESSES.contract_usdt
 						, abikind : 'ERC20'
@@ -244,6 +266,8 @@ const init=async _=>{ let tablename='transactionstotrack'
 		if ( list && list.length ) {
 			list.forEach(elem=>{
 				let { txhash , uuid , nettype }=elem
+				if ( nettype){}
+				else { return }
 				enqueue_tx_toclose ( txhash , uuid , nettype )	
 			})
 		} else {return }

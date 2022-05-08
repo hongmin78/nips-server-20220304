@@ -19,8 +19,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     username: {
       type: DataTypes.STRING(80),
-      allowNull: true,
-      unique: true
+      allowNull: true
     },
     isstaked: {
       type: DataTypes.INTEGER(4),
@@ -96,12 +95,23 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     lastroundmadepaymentfor: {
-      type: DataTypes.INTEGER(10).UNSIGNED,
-      allowNull: true
+      type: DataTypes.INTEGER(11),
+      allowNull: true,
+      defaultValue: -4
     },
     lasttimemadepaymentat: {
       type: DataTypes.BIGINT,
       allowNull: true
+    },
+    countdelinquencies: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    get: {
+      type: DataTypes.STRING(4),
+      allowNull: false,
+      defaultValue: "0"
     }
   }, {
     sequelize,
