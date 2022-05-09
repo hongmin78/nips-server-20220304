@@ -33,7 +33,8 @@ const { queryitemdata, queryitemdata_user } = require("../utils/db-custom");
 const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
-let nettype = "ETH-TESTNET";
+// let nettype = "ETH-TESTNET";
+let nettype = "ETH_TESTNET";
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
   ASC: 1,

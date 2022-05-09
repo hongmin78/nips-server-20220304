@@ -52,6 +52,10 @@ module.exports = function(sequelize, DataTypes) {
     feerate: {
       type: DataTypes.STRING(20),
       allowNull: true
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     }
   }, {
     sequelize,

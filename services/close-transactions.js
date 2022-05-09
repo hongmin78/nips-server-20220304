@@ -31,7 +31,8 @@ const TXREQSTATUS_BLOCKCOUNT = 1 // 2 // 4 // 6
 let TX_POLL_OPTIONS={
   interval : TXREQSTATUS_POLL_INTERVAL
   , blocksToWait : TXREQSTATUS_BLOCKCOUNT
-} 
+}
+const moment=require('moment') 
 const {MIN_STAKE_AMOUNT}=require('../configs/stakes')
 const {ITEM_SALE_START_PRICE ,
 	 PAYMENT_ADDRESS_DEF ,
@@ -49,7 +50,7 @@ const enqueue_tx_toclose=async(txhash , uuid , nettype )=>{
 	}
 }
 const handle_pay_case = async( jdata )=>{
-	let {uuid , username , itemid , strauxdata , txhash }=jdata
+	let {uuid , username , itemid , strauxdata , txhash , nettype }=jdata
 	await moverow( 'receivables', { itemid } , 'logsales', { txhash }) // uuid
 	await updaterow( 'itemhistory' , {uuid} , {status : 1 } )
 	let amount,currency,currencyaddress , feerate
@@ -61,6 +62,19 @@ const handle_pay_case = async( jdata )=>{
 		currencyaddress = jauxdata.currencyaddress
 		feerate = jauxdata.feerate
 	}
+	let respitembalance= await findone('itembalances', {
+		itemid , nettype
+	} ) 
+	if (respitembalance){
+		await incrementrow(
+			{		table : 'ballots'
+				, jfilter : { username : respitembalance.username , nettype }
+				, fieldname : 'counthelditems'
+				, incvalue : -1 
+			} )	
+		await moverow('itembalances', {id: respitembalance.id} , 'logitembalances' , {} )
+	}
+	else {}
 	await updateorcreaterow ( 'itembalances' ,{
 		itemid
 		} , { username
@@ -68,13 +82,20 @@ const handle_pay_case = async( jdata )=>{
 		, buyprice : amount
 		, paymeans : currency
 		, paymeansaddress : currencyaddress  //	, amount
+		, nettype
 	} )
+	await incrementrow(
+		{		table : 'ballots'
+			, jfilter : { username : username , nettype }
+			, fieldname : 'counthelditems'
+			, incvalue : +1 
+		} )	
 	await incrementroworcreate( {table : 'ballots' 
 		, jfilter : { username } 
 		, fieldname : 'counthelditems' 
 		, incvalue : +1 
 	})
-	let respcirc = await findone('circulations', { itemid } )
+	let respcirc = await findone( 'circulations' , { itemid } )
 	if(respcirc){
 		let { price ,roundnumber , countchangehands }= respcirc
 		if( +roundnumber < MAX_ROUND_TO_REACH ){ // max not reached yet 
@@ -205,7 +226,7 @@ const enqueue_tx_eth=async (txhash , uuid, nettype )=>{
  	amount //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
         })
 				if ( type=='PAY' ){
-					handle_pay_case( { uuid , username : address , itemid , strauxdata , txhash })
+					handle_pay_case( { uuid , username : address , itemid , strauxdata , txhash , nettype })
 				}
         else if(type=='STAKE'){
 					if ( true || +amount>= MIN_STAKE_AMOUNT ){
