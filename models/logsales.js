@@ -61,6 +61,10 @@ module.exports = function(sequelize, DataTypes) {
     seller: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     }
   }, {
     sequelize,

@@ -71,26 +71,28 @@ router.put("/:address", filehandler.single("file"), async (req, res) => {
 });
 
 /* GET users listing. */
-// router.get("/info/:username", async(req, res) => {
-//   let { username } = req.params;
-// 	let {nettype}=req.query
-//   findone("users", { username , nettype }).then(async(resp) => {
-//     if (resp) {
-//     } else {
-//       resperr(res, messages.MSG_DATANOTFOUND);
-//       return;
-//     }
-// 		let respreferer = await findone('users', { myreferercode : resp.referer , nettype } )
-//     respok(res, null, null, { respdata: {
-// 			... resp
-// 			, refereraddress : respreferer.username
-// 		} });
-//   });
-// });
-// router.get("/randomreferercode", (req, res) => {
-//   let code = generaterandomstr_charset(REFERERCODELEN, "notconfusing");
-//   respok(res, null, null, { payload: { code } });
-// });
+router.get("/info/:username", async (req, res) => {
+  let { username } = req.params;
+  let { nettype } = req.query;
+  findone("users", { username, nettype }).then(async (resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_DATANOTFOUND);
+      return;
+    }
+    let respreferer = await findone("users", { myreferercode: resp.referer, nettype });
+    respok(res, null, null, {
+      respdata: {
+        ...resp,
+        refereraddress: respreferer.username,
+      },
+    });
+  });
+});
+router.get("/randomreferercode", (req, res) => {
+  let code = generaterandomstr_charset(REFERERCODELEN, "notconfusing");
+  respok(res, null, null, { payload: { code } });
+});
 
 router.post("/signup", (req, res) => {});
 router.post("/login", async (req, res) => {
@@ -294,9 +296,13 @@ router.put("/user_active/:address", async (req, res) => {
   LOGGER("active", req.body);
   let { active } = req.body;
   let { address } = req.params;
+  let { nettype } = req.query;
+  console.log("net", nettype);
   if (active === 1 || active === 0) {
-    updaterow("users", { username: address }, { active: active }).then((resp) => {
-      respok(res);
+    await updaterow("ballots", { username: address, nettype: nettype }, { active: active }).then((resp) => {
+      updaterow("users", { username: address, nettype: nettype }, { active: active }).then((resp) => {
+        respok(res);
+      });
     });
   } else {
     resperr(res, "ARG-MISSING");

@@ -62,9 +62,9 @@ const MAP_TABLE_INVOKE_ITEMQUERY = {
 };
 const SERIAL_NUMBER_DEF = 1;
 router.post("/update-or-create-rows/:tablename", async (req, res) => {
-  LOGGER("", req.body);
+  LOGGER("", req.body );  LOGGER("", req.query );
   let { tablename, keyname, valuename } = req.params;
-  let jpostdata = { ...req.body };
+  let jpostdata = { ...req.body , ... req.query };
   let resp = await tableexists(tablename);
   if (resp) {
   } else {
@@ -73,7 +73,10 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-    await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+//		if ( talename=='settings' ) {
+	//	} else {
+    	await updateorcreaterow(tablename, { key_: elem , ... req.query }, { value_: valuetoupdateto });
+		// }
   });
   respok(res);
   mqpub(jpostdata);
@@ -81,7 +84,8 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
 router.put("/update-or-create-rows/:tablename", async (req, res) => {
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
-  let jpostdata = { ...req.body };
+  let { nettype } = req.query;
+  let jpostdata = { ...req.body , ... req.query };
   let resp = await tableexists(tablename);
   if (resp) {
   } else {
@@ -89,14 +93,14 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
     return;
   }
   KEYS(jpostdata).forEach(async (elem) => {
-	  let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-  	if (elem=='BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS' && +valuetoupdateto > (3600 * 24 ) ){
-			valuetoupdateto = +valuetoupdateto % (3600 * 24 ) 
-		}
-		if (elem=='BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS' && +valuetoupdateto > (3600 * 24 )  ){
-			valuetoupdateto = +valuetoupdateto % (3600 * 24 ) 
-		}
-    await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+    let valuetoupdateto = jpostdata[elem]; //		let jdata={}
+    if (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" && +valuetoupdateto > 3600 * 24) {
+      valuetoupdateto = +valuetoupdateto % (3600 * 24);
+    }
+    if (elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS" && +valuetoupdateto > 3600 * 24) {
+      valuetoupdateto = +valuetoupdateto % (3600 * 24);
+    }
+    await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
   });
   respok(res);
   mqpub(jpostdata);
@@ -195,6 +199,7 @@ router.get("/count/:tablename", async (req, res) => {
     respok(res, null, null, { payload: { count } });
   });
 });
+
 router.get("/rows/jsonobject/:tablename/:keyname/:valuename", (req, res) => {
   let { tablename, keyname, valuename } = req.params;
   if (tablename == "users") {
@@ -213,6 +218,27 @@ router.get("/rows/jsonobject/:tablename/:keyname/:valuename", (req, res) => {
     });
   });
 });
+
+router.get("/rows_v1/jsonobject/:tablename/:keyname/:valuename", (req, res) => {
+  let { tablename, keyname, valuename } = req.params;
+  let { nettype } = req.query;
+  if (tablename == "users") {
+    resperr(res, "ERR-RESTRICTED");
+    return;
+  }
+  tableexists(tablename).then((resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_DATANOTFOUND);
+      return;
+    }
+    findall(tablename, { subkey_: nettype }).then((list) => {
+      let jdata = convaj(list, keyname, valuename); // =(arr,keyname,valuename)=>{
+      respok(res, null, null, { respdata: jdata });
+    });
+  });
+});
+
 router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", async (req, res) => {
   // :fieldname/:fieldval/
   let { tablename, offset, limit, orderkey, orderval } = req.params;
@@ -287,38 +313,99 @@ router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", as
       });
   });
 });
-const convliker = (str) => "%" + str + "%";
-const expand_search = (tablename, liker) => {
-  switch (tablename) {
-    case "items":
-      return {
-        [Op.or]: [
-          { itemid: { [Op.like]: liker } },
-          //        , {userame:  {[Op.like] : liker }}
-          { description: { [Op.like]: liker } },
-        ],
+
+//
+
+router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
+  let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
+  let { itemdetail, userdetail, filterkey, filterval, nettype } = req.query;
+  let { searchkey } = req.query;
+  let { date0, date1 } = req.query;
+
+  console.log(date0);
+  console.log(date1);
+  const username = getusernamefromsession(req);
+  fieldexists(tablename, fieldname).then(async (resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_DATANOTFOUND);
+      return;
+    }
+    offset = +offset;
+    limit = +limit;
+    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+    } else {
+      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "offset-or-limit-invalid" } });
+      return;
+    }
+    offset = parseInt(offset);
+    limit = parseInt(limit);
+
+    if (MAP_ORDER_BY_VALUES[orderval]) {
+    } else {
+      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderby-value-invalid" } });
+      return;
+    }
+    let respfield_orderkey = await fieldexists(tablename, orderkey);
+    if (respfield_orderkey) {
+    } else {
+      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderkey-invalid" } });
+      return;
+    }
+    let jfilter = {};
+    jfilter[fieldname] = fieldval;
+    if (filterkey && filterval) {
+      let respfieldexists = await fieldexists(tablename, filterkey);
+      if (respfieldexists) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      jfilter[filterkey] = filterval;
+    } else {
+    }
+    if (searchkey) {
+      let liker = convliker(searchkey);
+      let jfilter_02 = expand_search(tablename, liker);
+      jfilter = { ...jfilter, ...jfilter_02 };
+    } else {
+    }
+    if (date0) {
+      jfilter = {
+        ...jfilter,
+        createdat: {
+          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+        },
       };
-      break;
-    case "users":
-      return {
-        [Op.or]: [
-          { username: { [Op.like]: liker } },
-          { email: { [Op.like]: liker } },
-          { myreferercode: { [Op.like]: liker } },
-        ],
+    }
+    if (date1) {
+      jfilter = {
+        ...jfilter,
+        createdat: {
+          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+        },
       };
-      break;
-    case "transactions":
-      return {
-        [Op.or]: [
-          { txhash: { [Op.like]: liker } },
-          { username: { [Op.like]: liker } },
-          { itemid: { [Op.like]: liker } },
-        ],
+    }
+    if (date0 && date1) {
+      jfilter = {
+        ...jfilter,
+        createdat: {
+          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+        },
       };
-      break;
-  }
-};
+    }
+    console.log(jfilter);
+    db[tablename]
+      .findAll({ raw: true, where: { ...jfilter, nettype: nettype }, offset, limit, order: [[orderkey, orderval]] })
+      .then(async (list_00) => {
+        let count = await countrows_scalar(tablename, jfilter);
+        respok(res, null, null, { list: list_00, payload: { count } });
+        //		if (tablename=='items'){
+        return;
+      });
+  });
+});
 router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
   let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
   let { itemdetail, userdetail, filterkey, filterval } = req.query;

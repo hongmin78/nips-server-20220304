@@ -39,6 +39,33 @@ let rmqopen = require('amqplib').connect('amqp://localhost')
 const nodeschedule=require('node-schedule')
 let scheduleddrawjob // = nodeschedule.scheduleJob 
 let jschedules={}
+const parse_q_msg=str=>{
+	if(str && str.length){}
+	else {LOGGER(`falsey call`); return }
+	let jdata = PARSER(str) //
+	if ( jdata && jdata.BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS ){
+		let { BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS : timeofday }=jdata
+		jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS']?.stop() //?.cancel ()  
+		timeofday = +timeofday
+		let hourofday = moment.unix ( timeofday ).hour()
+		hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
+		let minute = moment.unix ( timeofday).minute(); LOGGER('timeofday@draw,mq', )	
+		jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS'] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
+			func00_allocate_items_to_users( nettype )
+		})
+	} 
+	else if ( jdata && jdata.BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS ) {
+		let { BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS : timeofday } =jdata
+		jschedules['BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS']?.stop()
+		timeofday = +timeofday
+		let hourofday = moment.unix ( timeofday ).hour()
+		hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
+		let minute = moment.unix ( timeofday).minute(); LOGGER('timeofday@inspect,mq', )	
+		jschedules['BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS'] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
+			func01_inspect_payments ( nettype )
+		})
+	}
+}
 const func01_inspect_payments=async nettype=>{ // in here done payment cases are assumed to be not present
 //	const timenow=moment().startOf('hour').unix()
 	const timenow=moment().add(1, 'seconds' ).unix() // startOf('hour').unix()
@@ -104,13 +131,11 @@ const init= _ =>{
 	findone( 'settings' , { key_: 'BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS' , subkey_ : nettype  } ).then(resp=>{
 		if(resp) {
 			let { value_ : timeofday }=resp
-
 			timeofday = +timeofday   
 			let hourofday =moment.unix(timeofday).hour() // +timeofday / 3600   ;  
 			hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
 			let minute = moment.unix( timeofday).minute(); LOGGER('timeofday@draw' , timeofday  ,hourofday , minute , resp )  //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
-
-			cron.schedule( `0 ${minute} ${hourofday} * * *` , _=>{
+			jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS'] =cron.schedule( `0 ${minute} ${hourofday} * * *` , _=>{
 				func00_allocate_items_to_users( nettype )
 			})
 		}
@@ -120,13 +145,11 @@ const init= _ =>{
 	findone ( 'settings' , { key_ : 'BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS' , subkey_ : nettype }).then(resp=>{
 		if (resp){
 			let { value_ : timeofday } = resp  //			timeofdaypaymentdue = +timeofdaypaymentdue / 3600; LOGGER(timeofdaypaymentdue , resp )
-
 			timeofday = +timeofday   
 			let hourofday =moment.unix(timeofday).hour() // +timeofday / 3600   ;  
 			hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
 			let minute = moment.unix( timeofday).minute(); LOGGER('timeofday@paydue' , timeofday  ,hourofday , minute , resp )  //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
-
-			cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
+			jschedules['BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS'] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
 				func01_inspect_payments ( nettype )
 			} )
 		} else {}
@@ -442,6 +465,25 @@ false && cron.schedule( '* */21 * * *' , _=>{ LOGGER( '@moving unpaids to deliqu
 //	let nettype='BSC _MAINNET'
 	func01_inspect_payments ( nettype )
 })
+rmqopen.then(function(conn) {
+	false && LOGGER('',conn)
+  return conn.createChannel()
+}).then(function(ch) {
+  return ch.assertQueue(rmqq).then(function(ok) {
+    return ch.consume( rmqq, function(msg) {
+      if ( msg !== null) {
+				let strmsg = msg.content.toString()
+				parse_q_msg ( strmsg ) 
+        console.log( '@msg rcvd', strmsg )
+        ch.ack(msg);
+      }
+    });
+  });
+}).catch(console.warn)
+
+
+
+
 /** cron.schedule('0 0 0 * * *',async ()=>{  	LOGGER('' , moment().format('HH:mm:ss, YYYY-MM-DD') , '@nips' )
 	setTimeout(async _=>{
 //		let resplastcloseunix = await find one('settings', { key_ : 'BALLOT_LAST_CLOSE_UNIX'} )

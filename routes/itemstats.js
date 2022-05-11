@@ -11,10 +11,11 @@ const { queryitemdata , queryitemdata_user }=require('../utils/db-custom')
 let { Op }=db.Sequelize
 
 router.get('/', (req,res)=>{
+	let {nettype}=req.query
 	let aproms=[]
-	aproms[aproms.length]  = countrows_scalar( 'items' , {salestatus :0 })
-	aproms[aproms.length]  = countrows_scalar( 'items' , {salestatus : 1})
-	aproms[aproms.length]  = countrows_scalar( 'items', { salestatus : { [Op.lte] : -1 } })
+	aproms[aproms.length]  = countrows_scalar( 'items' , {salestatus : 0 , ... req.query })
+	aproms[aproms.length]  = countrows_scalar( 'items' , {salestatus : 1 , ... req.query})
+	aproms[aproms.length]  = countrows_scalar( 'items', { salestatus : { [Op.lte] : -1 } , ... req.query })
 	Promise.all ( aproms).then(resp=>{
 		respok ( res, null, null, { respdata : {
 			onreserve : resp[ 0 ] 

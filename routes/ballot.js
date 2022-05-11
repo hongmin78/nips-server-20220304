@@ -37,35 +37,56 @@ let nettype = "ETH-TESTNET";
 let rmqq = "tasks";
 let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;
+const { mqpub } = require("../services/mqpub");
 
 router.put("/update-or-create-rows/:tablename/:statusstr", async (req, res) => {
   let { tablename, keyname, valuename, statusstr } = req.params;
+  let { nettype } = req.query;
+  console.log("statusstr", req.body);
   let jpostdata = { ...req.body };
   let resp = await tableexists(tablename);
   if (statusstr == "START") {
     KEYS(jpostdata).forEach(async (elem) => {
       let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-      await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
     });
+    mqpub(jpostdata);
   }
 
   if (statusstr == "PAUSE") {
     KEYS(jpostdata).forEach(async (elem) => {
       let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-      await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
     });
+    mqpub(jpostdata);
   }
   if (statusstr == "PERIODIC_START") {
     KEYS(jpostdata).forEach(async (elem) => {
       let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-      await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
     });
+    mqpub(jpostdata);
   }
   if (statusstr == "PERIODIC_PAUSE") {
     KEYS(jpostdata).forEach(async (elem) => {
       let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-      await updateorcreaterow(tablename, { key_: elem }, { value_: valuetoupdateto });
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
     });
+    mqpub(jpostdata);
+  }
+  if (statusstr == "BALLOT_PERIODIC_DRAW_ACTIVE") {
+    KEYS(jpostdata).forEach(async (elem) => {
+      let valuetoupdateto = jpostdata[elem]; //		let jdata={}
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
+    });
+    mqpub(jpostdata);
+  }
+  if (statusstr == "BALLOT_PERIODIC_PAYMENTDUE_ACTIVE") {
+    KEYS(jpostdata).forEach(async (elem) => {
+      let valuetoupdateto = jpostdata[elem]; //		let jdata={}
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
+    });
+    mqpub(jpostdata);
   }
   respok(res);
 });
