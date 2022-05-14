@@ -29,7 +29,7 @@ const PARSER =JSON.parse
 const TXREQSTATUS_POLL_INTERVAL = 3000
 const TXREQSTATUS_BLOCKCOUNT = 1 // 2 // 4 // 6
 let TX_POLL_OPTIONS={
-  interval : TXREQSTATUS_POLL_INTERVAL
+	  interval : TXREQSTATUS_POLL_INTERVAL
   , blocksToWait : TXREQSTATUS_BLOCKCOUNT
 }
 const moment=require('moment') 
@@ -91,21 +91,21 @@ const handle_pay_case = async( jdata )=>{
 			, incvalue : +1 
 		} )	
 	await incrementroworcreate( {table : 'ballots' 
-		, jfilter : { username } 
+		, jfilter : { username , nettype } 
 		, fieldname : 'counthelditems' 
 		, incvalue : +1 
 	})
-	let respcirc = await findone( 'circulations' , { itemid } )
+	let respcirc = await findone( 'circulations' , { itemid , nettype } )
 	if(respcirc){
 		let { price ,roundnumber , countchangehands }= respcirc
 		if( +roundnumber < MAX_ROUND_TO_REACH ){ // max not reached yet 
 			await updaterow ( 'items'
-			, { itemid }
+			, { itemid , nettype }
 			, {	salestatus : 1
 				, salesstatusstr : 'ASSIGNED' 
 			}).then(resp=>{
 				incrementrow({table : 'items' // orcreate 
-					,jfilter : { itemid }
+					,jfilter : { itemid , nettype }
 					,fieldname : 'roundnumber'
 					,incvalue : +1 
 				})
@@ -115,7 +115,7 @@ const handle_pay_case = async( jdata )=>{
 				, roundnumber : 1 + +roundnumber
 				, countchangehands : 1 + +countchangehands
 			})
-			await updaterow ('users', {username} , { 				
+			await updaterow ('users', {username , nettype } , { 				
     		lastroundmadepaymentfor : roundnumber 
 				, lasttimemadepaymentat : moment().unix() 
 			} ) 
@@ -130,7 +130,8 @@ const handle_pay_case = async( jdata )=>{
 			, roundnumber : 1 // : 1 // + +roundnumber // : ''
 			, price : ITEM_SALE_START_PRICE 
 			, priceunit : PAYMENT_MEANS_DEF 
-			, priceunitcurrency : PAYMENT_ADDRESS_DEF 
+			, priceunitcurrency : PAYMENT_ADDRESS_DEF
+			, nettype 
 		} )
 	}
 	if ( jauxdata.referfeeamount ) { 
@@ -142,6 +143,7 @@ const handle_pay_case = async( jdata )=>{
 			, paymeansname : currency
 			, paymeansaddress : currencyaddress
 			, feerate : feerate
+			 ,nettype
 		} )
 	}
 }

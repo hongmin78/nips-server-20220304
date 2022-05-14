@@ -62,9 +62,10 @@ const MAP_TABLE_INVOKE_ITEMQUERY = {
 };
 const SERIAL_NUMBER_DEF = 1;
 router.post("/update-or-create-rows/:tablename", async (req, res) => {
-  LOGGER("", req.body );  LOGGER("", req.query );
+  LOGGER("", req.body);
+  LOGGER("", req.query);
   let { tablename, keyname, valuename } = req.params;
-  let jpostdata = { ...req.body , ... req.query };
+  let jpostdata = { ...req.body, ...req.query };
   let resp = await tableexists(tablename);
   if (resp) {
   } else {
@@ -73,10 +74,10 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-//		if ( talename=='settings' ) {
-	//	} else {
-    	await updateorcreaterow(tablename, { key_: elem , ... req.query }, { value_: valuetoupdateto });
-		// }
+    //		if ( talename=='settings' ) {
+    //	} else {
+    await updateorcreaterow(tablename, { key_: elem, ...req.query }, { value_: valuetoupdateto });
+    // }
   });
   respok(res);
   mqpub(jpostdata);
@@ -85,7 +86,7 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
-  let jpostdata = { ...req.body , ... req.query };
+  let jpostdata = { ...req.body, ...req.query };
   let resp = await tableexists(tablename);
   if (resp) {
   } else {
@@ -111,6 +112,12 @@ router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
   if (tablename && fieldname && fieldval) {
   } else {
     resperr(res, messaegs.MSG_ARGMISSING);
+    return;
+  }
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
     return;
   }
   fieldexists(tablename, fieldname).then(async (resp) => {
@@ -141,25 +148,26 @@ router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
   });
 });
 
-router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
-  let { tablename, fieldname, fieldval } = req.params;
-  if (tablename && fieldname && fieldval) {
-  } else {
-    resperr(res, messaegs.MSG_ARGMISSING);
-    return;
-  }
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
+false &&
+  router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
+    let { tablename, fieldname, fieldval } = req.params;
+    if (tablename && fieldname && fieldval) {
     } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
+      resperr(res, messaegs.MSG_ARGMISSING);
       return;
     }
-    let jfilter = {};
-    jfilter[fieldname] = fieldval;
-    let respfindone = await findone(tablename, { ...jfilter });
-    respok(res, null, null, { respdata: respfindone });
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      let jfilter = {};
+      jfilter[fieldname] = fieldval;
+      let respfindone = await findone(tablename, { ...jfilter });
+      respok(res, null, null, { respdata: respfindone });
+    });
   });
-});
 router.get("/max/:tablename/:fieldname", async (req, res) => {
   let { tablename, fieldname } = req.params;
   tableexists(tablename).then(async (resp) => {
@@ -242,7 +250,7 @@ router.get("/rows_v1/jsonobject/:tablename/:keyname/:valuename", (req, res) => {
 router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", async (req, res) => {
   // :fieldname/:fieldval/
   let { tablename, offset, limit, orderkey, orderval } = req.params;
-  let { fieldname, fieldvalues, itemdetail } = req.query;
+  let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
   const username = getusernamefromsession(req);
   fieldexists(tablename, fieldname).then(async (resp) => {
     if (resp) {
@@ -408,7 +416,7 @@ router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:o
 });
 router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
   let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
-  let { itemdetail, userdetail, filterkey, filterval } = req.query;
+  let { itemdetail, userdetail, filterkey, filterval, nettype, random } = req.query;
   let { searchkey } = req.query;
   let { date0, date1 } = req.query;
   console.log(date0);
@@ -484,48 +492,50 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
         },
       };
     }
+    if (nettype) {
+      jfilter["nettype"] = nettype;
+    }
     console.log(jfilter);
-    db[tablename]
-      .findAll({ raw: true, where: { ...jfilter }, offset, limit, order: [[orderkey, orderval]] })
-      .then(async (list_00) => {
-        let count = await countrows_scalar(tablename, jfilter);
-        respok(res, null, null, { list: list_00, payload: { count } });
-        //		if (tablename=='items'){
-        return;
-        if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-          let aproms = [];
-          if (username) {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata_user(elem.itemid, username);
-            });
-          } else {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata(elem.itemid);
-            });
-          }
-          Promise.all(aproms).then((list) => {
-            //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
-            //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
-            list = list.map((elem, idx) => {
-              return { ...list_00[idx], ...elem };
-            });
-            respok(res, null, null, { list });
-          });
-        } else if (userdetail) {
-          let aproms = [];
+    let order = random ? db.Sequelize.literal("rand()") : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
+    db[tablename].findAll({ raw: true, where: { ...jfilter }, offset, limit, order: order }).then(async (list_00) => {
+      let count = await countrows_scalar(tablename, jfilter);
+      //        respok(res, null, null, { list: list_00, payload: { count } });
+      //		if (tablename=='items'){
+      //      return;
+      if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+        let aproms = [];
+        if (username) {
           list_00.forEach((elem) => {
-            aproms[aproms.length] = queryuserdata(elem.username);
-          });
-          Promise.all(aproms).then((list) => {
-            list = list.map((elem, idx) => {
-              return { ...elem, ...list_00[idx] };
-            });
-            respok(res, null, null, { list });
+            aproms[aproms.length] = queryitemdata_user(elem.itemid, username, nettype);
           });
         } else {
-          respok(res, null, null, { list: list_00 });
+          list_00.forEach((elem) => {
+            aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
+          });
         }
-      });
+        Promise.all(aproms).then((list) => {
+          //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
+          //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
+          list = list.map((elem, idx) => {
+            return { ...list_00[idx], ...elem };
+          });
+          respok(res, null, null, { list, payload: { count } });
+        });
+      } else if (userdetail) {
+        let aproms = [];
+        list_00.forEach((elem) => {
+          aproms[aproms.length] = queryuserdata(elem.username);
+        });
+        Promise.all(aproms).then((list) => {
+          list = list.map((elem, idx) => {
+            return { ...elem, ...list_00[idx] };
+          });
+          respok(res, null, null, { list, payload: { count } });
+        });
+      } else {
+        respok(res, null, null, { list: list_00, payload: { count } });
+      }
+    });
   });
 });
 router.get("/:tablename", (req, res) => {
@@ -541,6 +551,12 @@ router.get("/:tablename", (req, res) => {
 });
 router.get("/:tablename/:fieldname/:fieldval", (req, res) => {
   let { tablename, fieldname, fieldval } = req.params;
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
   if (tablename == "users") {
     resperr(res, messages.MSG_NOT_PRIVILEGED);
     return;
@@ -553,6 +569,7 @@ router.get("/:tablename/:fieldname/:fieldval", (req, res) => {
     }
     let jfilter = {};
     jfilter[fieldname] = fieldval;
+    jfilter["nettype"] = nettype;
     findall(tablename, { ...jfilter }).then((resp) => {
       if (resp) {
       } else {

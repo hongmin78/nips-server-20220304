@@ -50,6 +50,10 @@ module.exports = function(sequelize, DataTypes) {
     filenamemobile: {
       type: DataTypes.STRING(500),
       allowNull: true
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     }
   }, {
     sequelize,

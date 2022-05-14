@@ -81,10 +81,11 @@ router.get("/info/:username", async (req, res) => {
       return;
     }
     let respreferer = await findone("users", { myreferercode: resp.referer, nettype });
+	
     respok(res, null, null, {
       respdata: {
         ...resp,
-        refereraddress: respreferer.username,
+        refereraddress: respreferer?.username,
       },
     });
   });

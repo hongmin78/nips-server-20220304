@@ -8,7 +8,8 @@ const { findone, createrow
 	, updaterow
 	, moverow
 	, updateorcreaterow
-	, incrementrow	
+	, incrementrow
+	, findall	
 }=require('../utils/db')
 const { respok , resperr}=require( '../utils/rest')
 const { generateSlug } =require( 'random-word-slugs')
@@ -37,9 +38,10 @@ const STR_TIME_FORMAT='YYYY-MM-DD HH:mm:ss'
 let rmqq = 'tasks'
 let rmqopen = require('amqplib').connect('amqp://localhost')
 const nodeschedule=require('node-schedule')
+let { Op } = db.Sequelize;
 let scheduleddrawjob // = nodeschedule.scheduleJob 
 let jschedules={}
-const parse_q_msg=str=>{
+const parse_q_msg=async str=>{
 	if(str && str.length){}
 	else {LOGGER(`falsey call`); return }
 	let jdata = PARSER(str) //
@@ -50,7 +52,8 @@ const parse_q_msg=str=>{
 		let hourofday = moment.unix ( timeofday ).hour()
 		hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
 		let minute = moment.unix ( timeofday).minute(); LOGGER('timeofday@draw,mq', )	
-		jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS'] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
+		jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS'] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , async _=>{
+			await func_00_03_advance_round ( nettype ) // call it here 
 			func00_allocate_items_to_users( nettype )
 		})
 	} 
@@ -118,24 +121,24 @@ const func01_inspect_payments=async nettype=>{ // in here done payment cases are
 		})
 	})
 }
-let {Op}=db.Sequelize
 let roundnumber
 const normalize_hour_from_kst_to_utc=hour=>{
 	hour -= 9
 	if ( hour>=0){ return hour}
 	else { return hour+24}
 }
-const init= _ =>{
+const init= async _ =>{
 //	let nettype = 'BS C_MAINNET'
 //	fi ndone( 'settings' , { key_: 'BALLOT_DRAW_TIME_OF_DAY' } ).then(resp=>{
-	findone( 'settings' , { key_: 'BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS' , subkey_ : nettype  } ).then(resp=>{
+	findone( 'settings' , { key_: 'BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS' ,  nettype  } ).then(async resp=>{ // subkey_ :
 		if(resp) {
 			let { value_ : timeofday }=resp
-			timeofday = +timeofday   
-			let hourofday =moment.unix(timeofday).hour() // +timeofday / 3600   ;  
-			hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
-			let minute = moment.unix( timeofday).minute(); LOGGER('timeofday@draw' , timeofday  ,hourofday , minute , resp )  //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
-			jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS'] =cron.schedule( `0 ${minute} ${hourofday} * * *` , _=>{
+			timeofday = +timeofday
+			let hourofday0 =moment.unix(timeofday).hour()  // +timeofday / 3600   ;  
+			let hourofday =	normalize_hour_from_kst_to_utc ( hourofday0 ) 
+			let minute = moment.unix( timeofday).minute(); LOGGER('timeofday@draw' , timeofday , hourofday0 , hourofday , minute , resp )  //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
+			jschedules['BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS'] =cron.schedule( `0 ${minute} ${hourofday} * * *` , async _=>{
+				await func_00_03_advance_round ( nettype ) // call it here 
 				func00_allocate_items_to_users( nettype )
 			})
 		}
@@ -199,15 +202,20 @@ const func_00_01_draw_users = async jdata =>{
 	let count_users_receivers = Math.floor( count_users * allocatefactor_bp / 10000 ) ; LOGGER( '@count_users_receivers ', count_users_receivers )
 	let roundnumber_01 = roundnumber - 3
 	let listballots_00_from_entire = await db['ballots'].findAll ({raw: true
-		, offset : 0
-		, limit :count_users_receivers
+//		, offset : 0
+	//	, limit :count_users_receivers
 		, where : { active : 1 , nettype , 
 				lastroundmadepaymentfor : { [ Op.lte ] : roundnumber_01 }
 			}
 		})
 	if ( listballots_00_from_entire && listballots_00_from_entire.length){}
-	else { return [] }  
+	else { return [] } 
+	shufflearray ( listballots_00_from_entire )
+	shufflearray ( listballots_00_from_entire )
+	listballots_00_from_entire = listballots_00_from_entire.slice ( 0, count_users_receivers)
+ 
 	let listballots_01_from_entire = listballots_00_from_entire.sort ( (a,b)=>{
+//	let listballots_01_from_entire = listballots_00_from_entire.sort ( (a,b)=>{
 //		a.counthelditems - b.counthelditems >0 ? +1 : -1
 		return a.counthelditems - b.counthelditems >0 ? -1 : +1
 	})
@@ -220,13 +228,32 @@ const func_00_01_draw_users = async jdata =>{
 	}) //	let countballots = countrows_scalar( 'ballots' , { isstaked:1 } )
 	return listballots_01_from_entire // .slice ( 0 , count_users_receivers ) */
 }
+const func_00_03_advance_round = async nettype =>{
+	return	
+	let list  = await findall ('items' , {nettype} ) // .then(async list=>{
+		list.forEach ( async elem =>{
+			let { roundoffsettoavail } = elem
+			roundoffsettoavail = +roundoffsettoavail
+			if ( roundoffsettoavail < 0 ){
+				await updaterow ( 'items' , { id : elem.id } , { roundoffsettoavail : 1 + roundoffsettoavail } )
+			} else {}
+		})
+//	})
+}
 const func_00_02_draw_items = async N =>{ // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
 	if( N>0 ) {}
-	else {return [] }
-	return await db['items'].findAll({raw: true 
+	else { return [] }
+	let list = await db['items'].findAll( { raw: true 
 		, order: [ [ 'salestatus', 'DESC' ] ]
+		, where : { group_ : 'kong'
+			, nettype
+			, roundoffsettoavail : { [Op.gte] : 0 } 
+		} 
 		, limit : N
 	})
+	shufflearray ( list )
+	shufflearray ( list )
+	return list
 }
 const MAP_SALE_STATUS={
 	ON_RESERVE : 0
@@ -279,7 +306,10 @@ const match_with_obj=async ( listreceivers0 , itemstogive )=>{
 	return listreceivers0
 }
 let FORCE_RUN_REGARDLESS_OF_SETTINGS = true
-const func00_allocate_items_to_users = async nettype =>{ /************* */  //	let listr eceivers0 =await findall( 'ballots' , {			counthelditems : 0		} )
+const decideprice=( itemid , nettype ) =>{
+	
+}
+const func00_allocate_items_to_users = async nettype =>{ /************* */  //	let listr eceivers0 =await fin dall( 'ballots' , {			counthelditems : 0		} )
 	LOGGER(`executing func00_allocate_items_to_users ${nettype} `)
 	let respfindactive = await findone( 'settings' , {key_ : 'BALLOT_PERIODIC_ACTIVE' , subkey_ : nettype } )
 	if ( FORCE_RUN_REGARDLESS_OF_SETTINGS ){}
@@ -351,7 +381,7 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 				, salesstatusstr : 'assigned' 
 			} )
 			let uuid = uuidv4() //			let duetime=moment().endOf('day').subtract(1,'hour')
-			let price01 = ITEM_SALE_START_PRICE 
+			let price01 // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE 
 			let respcirculation = await findone ( 'circulations' , { itemid , nettype } )
 			LOGGER( '@respcirculation ' , itemid , respcirculation )
 			let price
@@ -374,7 +404,7 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 						, priceunit : PAYMENT_MEANS_DEF 
 					} )
 			}
-			else { //
+			else { // freshly assigned
 				roundnumber = 1 
 				await createrow ( 'circulations' , {
 						itemid // : ''
@@ -453,6 +483,7 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 module.exports={
 		func_00_01_draw_users 
 	, func_00_02_draw_items
+	, func_00_03_advance_round 
 	, func00_allocate_items_to_users
 	, func01_inspect_payments 
 }

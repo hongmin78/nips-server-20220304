@@ -32,6 +32,14 @@ module.exports = function(sequelize, DataTypes) {
     subvalue_: {
       type: DataTypes.STRING(50),
       allowNull: true
+    },
+    note: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    nettype: {
+      type: DataTypes.STRING(40),
+      allowNull: true
     }
   }, {
     sequelize,

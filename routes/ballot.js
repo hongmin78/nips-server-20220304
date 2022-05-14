@@ -6,6 +6,7 @@ const {
   findall,
   createrow,
   updaterow,
+	deleterow ,
   countrows_scalar,
   createorupdaterow,
   fieldexists,
@@ -38,10 +39,72 @@ let rmqq = "tasks";
 let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;
 const { mqpub } = require("../services/mqpub");
-
+router.get( '/roundstate', ( req,res)=>{
+	let { nettype }=req.query
+	if ( nettype ){}
+	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
+	findone( 'settings' , {key_ : 'BALLOT_PERIODIC_ROUND_STATE' , nettype } ).then(resp=>{
+		respok ( res,null,null, {respdata : resp } )
+	})
+})
+const { 
+//		func_00_01_draw_users 
+	//, func_00_02_draw_items	, 
+		func_00_03_advance_round 
+	, func00_allocate_items_to_users
+	, func01_inspect_payments 
+}=require('../ballot/routine-daily-ETH-TESTNET')
+/** items.salestatus
+logrounds
+settings
+receivables
+itemhistory
+circulations
+delinquencies
+*/
+router.post('/init/rounds', async( req,res)=>{
+	let { nettype }=req.query
+	if ( nettype ){}
+	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
+	await updaterow ( 'items' , {nettype} , { salestatus : 0 } )
+	await updaterow ( 'settings' , { key_: 'BALLOT_PERIODIC_ROUNDNUMBER' , nettype } , { value_: 1 })
+//	await deleterow ( 'logrounds' , { nettype } ) 
+	await deleterow ( 'receivables' , { nettype } )
+	await deleterow ( 'itemhistory' , { nettype } )
+	await deleterow ( 'circulations' , { nettype } )	
+	await deleterow ( 'delinquencies' , { nettype } )
+	respok ( res ) 
+})
+router.post('/advance/roundstate' ,async (req,res)=>{
+	let { nettype }=req.query
+	if ( nettype ){}
+	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
+	findone('settings' , { key_ : 'BALLOT_PERIODIC_ROUND_STATE' , nettype } ).then(async resp=>{
+		if (resp){}
+		else {resperr(res,messages.MSG_INTERNALERR) ; return }
+		let { value_ : roundstate  } =resp
+		roundstate = +roundstate
+		switch (roundstate){
+			case 0 :
+				await func_00_03_advance_round ( nettype )
+				await func00_allocate_items_to_users( nettype )
+			break
+			case 1 :
+				await func01_inspect_payments( nettype )
+			break
+			default :
+				resperr(res,messages.MSG_INTERNALERR) ; return 
+			break 
+		}
+		await updaterow( 'settings' , { id: resp.id} , {value_ : roundstate^1 } )
+		respok ( res ) 
+	})
+})
 router.put("/update-or-create-rows/:tablename/:statusstr", async (req, res) => {
   let { tablename, keyname, valuename, statusstr } = req.params;
   let { nettype } = req.query;
+	if ( nettype ){}
+	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
   console.log("statusstr", req.body);
   let jpostdata = { ...req.body };
   let resp = await tableexists(tablename);
