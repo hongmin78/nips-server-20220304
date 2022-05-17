@@ -6,7 +6,7 @@ const {
   findall,
   createrow,
   updaterow,
-	deleterow ,
+  deleterow,
   countrows_scalar,
   createorupdaterow,
   fieldexists,
@@ -23,7 +23,7 @@ const {
   convaj,
   ISFINITE,
   separatebycommas,
-	generaterandomhex
+  generaterandomhex,
 } = require("../utils/common");
 const { respok, respreqinvalid, resperr, resperrwithstatus } = require("../utils/rest");
 const { messages } = require("../configs/messages");
@@ -40,65 +40,77 @@ let rmqq = "tasks";
 let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;
 const { mqpub } = require("../services/mqpub");
-const { handle_pay_case , handle_clear_delinquent_case } =require('../services/close-transactions') 
+const { handle_pay_case, handle_clear_delinquent_case } = require("../services/close-transactions");
 
-router.post('/manual/paydelinquency/:uuid' , (req,res)=>{
-	let { nettype } =req.query
-	if ( nettype ) {}
-	else { resperr( res, messages.MSG_ARGMISSING) ; return }
-	let { uuid } =req.params
-	findone( 'delinquencies' , { uuid , nettype } ).then(resp => {
-		if ( resp){}
-		else { resperr(res, messages.MSG_DATANOTFOUND ); return }	
-		let txhash = generaterandomhex( 64 ) ; txhash = 'dev___' +txhash
-		handle_clear_delinquent_case ( { uuid
-			, username : resp.username
-			, itemid : resp.itemid
-			, txhash 
-		})
-// { uuid , username , itemid , strauxdata , txhash }
-	})		
-})
-router.post('/manual/payitem/:uuid', async (req,res)=>{
-	let { nettype }=req.query
-	if ( nettype ){}
-	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
-	let { uuid }=req.params
-	findone('receivables' , { uuid , nettype } ).then(async resp=>{
-		if (resp){}
-		else { resperr(res, messages.MSG_DATANOTFOUND); return }
-		let { username , itemid , nettype , roundnumber } = resp // , strauxdata , txhash ,	
-		let strauxdata=STRINGER ({ amount : resp.amount
-			, currency : resp.currency
-			, currencyaddress : resp.currencyaddress
-		})
-		let txhash = generaterandomhex( 64 ) ; txhash = 'dev___' +txhash
-		await handle_pay_case( { uuid //
-			, username //
-			, itemid //
-			, txhash
-			, nettype
-			, strauxdata
-			, roundnumber // : resp 
-		})
-		respok ( res )
-	})
-})
-router.get( '/roundstate', ( req,res)=>{
-	let { nettype }=req.query
-	if ( nettype ){}
-	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
-	findone( 'settings' , {key_ : 'BALLOT_PERIODIC_ROUND_STATE' , nettype } ).then(resp=>{
-		respok ( res,null,null, {respdata : resp } )
-	})
-})
-const { 
-//		func_00_01_draw_users 
-	//, func_00_02_draw_items	, 
-		func_00_03_advance_round 
-	, func00_allocate_items_to_users
-	, func01_inspect_payments 
-}=require('../ballot/routine-daily-ETH-TESTNET')
+router.post("/manual/paydelinquency/:uuid", (req, res) => {
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
+  let { uuid } = req.params;
+  findone("delinquencies", { uuid, nettype }).then((resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_DATANOTFOUND);
+      return;
+    }
+    let txhash = generaterandomhex(64);
+    txhash = "dev___" + txhash;
+    handle_clear_delinquent_case({ uuid, username: resp.username, itemid: resp.itemid, txhash });
+    respok(res);
+    // { uuid , username , itemid , strauxdata , txhash }
+  });
+});
+router.post("/manual/payitem/:uuid", async (req, res) => {
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
+  let { uuid } = req.params;
+  findone("receivables", { uuid, nettype }).then(async (resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_DATANOTFOUND);
+      return;
+    }
+    let { username, itemid, nettype, roundnumber } = resp; // , strauxdata , txhash ,
+    let strauxdata = STRINGER({ amount: resp.amount, currency: resp.currency, currencyaddress: resp.currencyaddress });
+    let txhash = generaterandomhex(64);
+    txhash = "dev___" + txhash;
+    await handle_pay_case({
+      uuid, //
+      username, //
+      itemid, //
+      txhash,
+      nettype,
+      strauxdata,
+      roundnumber, // : resp
+    });
+    respok(res);
+  });
+});
+router.get("/roundstate", (req, res) => {
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
+  findone("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }).then((resp) => {
+    respok(res, null, null, { respdata: resp });
+  });
+});
+const {
+  //		func_00_01_draw_users
+  //, func_00_02_draw_items	,
+  func_00_03_advance_round,
+  func00_allocate_items_to_users,
+  func01_inspect_payments,
+} = require("../ballot/routine-daily-ETH-TESTNET");
 /** items.salestatus
 logrounds
 settings
@@ -107,58 +119,67 @@ itemhistory
 circulations
 delinquencies
 */
-router.post('/init/rounds', async( req,res)=>{
-	let { nettype }=req.query
-	if ( nettype ){}
-	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
-	await updaterow ( 'items' , {nettype} , { salestatus : 0 
-		, roundoffsettoavail : 0 
-	} )
-	await updaterow ( 'settings' , { key_: 'BALLOT_PERIODIC_ROUNDNUMBER' , nettype } , { value_: 0 })
-//	await deleterow ( 'logrounds' , { nettype } ) 
-	await deleterow ( 'receivables' , { nettype } )
-	await deleterow ( 'itemhistory' , { nettype } )
-	await deleterow ( 'circulations' , { nettype } )	
-	await deleterow ( 'delinquencies' , { nettype } )
-	await updaterow ( 'settings' , { key_ : 'BALLOT_PERIODIC_ROUND_STATE' , nettype } , { value_: 0 } )
-	await updaterow ( 'ballots' , { nettype } , { active : 1
-		, counthelditems : 0
-		, lastroundmadepaymentfor : -4
-	} ) // update ballots set active=1 where nettype ='ETH_TESTNET';
-	await deleterow ( 'itembalances' , { nettype } )
-	await updaterow ( 'users', {nettype} , {lastroundmadepaymentfor : -4 } )
-	respok ( res )
-})
-router.post('/advance/roundstate' ,async (req,res)=>{
-	let { nettype }=req.query
-	if ( nettype ){}
-	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
-	findone( 'settings' , { key_ : 'BALLOT_PERIODIC_ROUND_STATE' , nettype } ).then(async resp=>{
-		if (resp){}
-		else {resperr(res,messages.MSG_INTERNALERR) ; return }
-		let { value_ : roundstate } =resp
-		roundstate = +roundstate ; LOGGER('BALLOT_PERIODIC_ROUND_STATE' , roundstate )
-		switch ( roundstate ){
-			case 0 :
-				await func_00_03_advance_round ( nettype )
-				await func00_allocate_items_to_users( nettype )
-			break
-			case 1 :
-				await func01_inspect_payments( nettype )
-			break
-			default :
-				resperr(res,messages.MSG_INTERNALERR) ; return 
-			break 
-		}
-		await updaterow( 'settings' , { id: resp.id} , {value_ : roundstate^1 } )
-		respok ( res ) 
-	})
-})
+router.post("/init/rounds", async (req, res) => {
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
+  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0 });
+  await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", nettype }, { value_: 0 });
+  //	await deleterow ( 'logrounds' , { nettype } )
+  await deleterow("receivables", { nettype });
+  await deleterow("itemhistory", { nettype });
+  await deleterow("circulations", { nettype });
+  await deleterow("delinquencies", { nettype });
+  await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
+  await updaterow("ballots", { nettype }, { active: 1, counthelditems: 0, lastroundmadepaymentfor: -4 }); // update ballots set active=1 where nettype ='ETH_TESTNET';
+  await deleterow("itembalances", { nettype });
+  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4 });
+  respok(res);
+});
+router.post("/advance/roundstate", async (req, res) => {
+  let { nettype } = req.query;
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
+  findone("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }).then(async (resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_INTERNALERR);
+      return;
+    }
+    let { value_: roundstate } = resp;
+    roundstate = +roundstate;
+    LOGGER("BALLOT_PERIODIC_ROUND_STATE", roundstate);
+    switch (roundstate) {
+      case 0:
+        await func_00_03_advance_round(nettype);
+        await func00_allocate_items_to_users(nettype);
+        break;
+      case 1:
+        await func01_inspect_payments(nettype);
+        break;
+      default:
+        resperr(res, messages.MSG_INTERNALERR);
+        return;
+        break;
+    }
+    await updaterow("settings", { id: resp.id }, { value_: roundstate ^ 1 });
+    respok(res);
+  });
+});
 router.put("/update-or-create-rows/:tablename/:statusstr", async (req, res) => {
   let { tablename, keyname, valuename, statusstr } = req.params;
   let { nettype } = req.query;
-	if ( nettype ){}
-	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
   console.log("statusstr", req.body);
   let jpostdata = { ...req.body };
   let resp = await tableexists(tablename);
