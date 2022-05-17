@@ -69,7 +69,7 @@ const parse_q_msg=async str=>{
 		})
 	}
 }
-const func01_inspect_payments=async nettype=>{ // in here done payment cases are assumed to be not present
+const func01_inspect_payments = async nettype=>{ // in here done payment cases are assumed to be not present
 //	const timenow=moment().startOf('hour').unix()
 	const timenow=moment().add(1, 'seconds' ).unix() // startOf('hour').unix()
 	let listreceivables= await db.receivables.findAll ({raw: true
@@ -97,7 +97,7 @@ const func01_inspect_payments=async nettype=>{ // in here done payment cases are
 		 } , {active : 0 } )
 		await incrementrow({
 			table : 'logrounds' 
-			, jfilter : { roundnumber }
+			, jfilter : { roundnumber , nettype }
 			, fieldname : 'countdelinquencies' // value_'
 			, incvalue : +1
 		})
@@ -146,13 +146,13 @@ const init= async _ =>{
 	})
 //	fin done ( 'settings' , { key_ : 'BALLOT_PAYMENT_DUE_TIME_OF_DAY' }).then(resp=>{
 	findone ( 'settings' , { key_ : 'BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS' , subkey_ : nettype }).then(resp=>{
-		if (resp){
-			let { value_ : timeofday } = resp  //			timeofdaypaymentdue = +timeofdaypaymentdue / 3600; LOGGER(timeofdaypaymentdue , resp )
-			timeofday = +timeofday   
+		if (resp) {
+			let { value_ : timeofday } = resp // timeofdaypaymentdue = +timeofdaypaymentdue / 3600; LOGGER(timeofdaypaymentdue , resp )
+			timeofday = +timeofday 
 			let hourofday =moment.unix(timeofday).hour() // +timeofday / 3600   ;  
 			hourofday =  			normalize_hour_from_kst_to_utc (hourofday ) 
-			let minute = moment.unix( timeofday).minute(); LOGGER('timeofday@paydue' , timeofday  ,hourofday , minute , resp )  //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
-			jschedules['BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS'] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
+			let minute = moment.unix( timeofday).minute(); LOGGER( 'timeofday@paydue' , timeofday  ,hourofday , minute , resp )  //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
+			jschedules[ 'BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS' ] = cron.schedule ( `0 ${minute} ${hourofday} * * *` , _=>{
 				func01_inspect_payments ( nettype )
 			} )
 		} else {}
@@ -160,7 +160,7 @@ const init= async _ =>{
 /********* current */
 /********* next */
 } // init
-init ()
+false && init ()
 // new stakers
 let listreceivers0
 let listreceivers1
@@ -187,11 +187,11 @@ const func_00_01_draw_users = async jdata =>{
 	let { nettype , roundnumber } =jdata 
 //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) // 
 	let count_users = await countrows_scalar( 'users' , { nettype } )
-	LOGGER('count_users ',count_users )
+	LOGGER( 'count_users ',count_users )
 	if( count_users > 0){}
 	else { return [] }
 	let allocatefactor_bp = J_ALLOCATE_FACTORS.DEF // _BP_DEF  
-	let respallocatefactor = await findone( 'settings' , {key_ : 'BALLOT_DRAW_FRACTION_BP' } )
+	let respallocatefactor = await findone( 'settings' , {key_ : 'BALLOT_DRAW_FRACTION_BP' , nettype } )
 	if (respallocatefactor) {
 		let {value_ :allocatefactor_settings } =respallocatefactor
 		allocatefactor_settings =	+allocatefactor_settings
@@ -199,13 +199,15 @@ const func_00_01_draw_users = async jdata =>{
 			allocatefactor_bp =  allocatefactor_settings 
 		}
 	} else {}
-	let count_users_receivers = Math.floor( count_users * allocatefactor_bp / 10000 ) ; LOGGER( '@count_users_receivers ', count_users_receivers )
+	let count_users_receivers = Math.floor( count_users * allocatefactor_bp / 10000 ) ;
 	let roundnumber_01 = roundnumber - 3
+	 LOGGER( '@count_users_receivers ', count_users_receivers , roundnumber_01 , roundnumber )
 	let listballots_00_from_entire = await db['ballots'].findAll ({raw: true
 //		, offset : 0
 	//	, limit :count_users_receivers
-		, where : { active : 1 , nettype , 
-				lastroundmadepaymentfor : { [ Op.lte ] : roundnumber_01 }
+		, where : { active : 1 
+				, nettype 
+				, lastroundmadepaymentfor : { [ Op.lte ] : roundnumber_01 }
 			}
 		})
 	if ( listballots_00_from_entire && listballots_00_from_entire.length){}
@@ -229,7 +231,7 @@ const func_00_01_draw_users = async jdata =>{
 	return listballots_01_from_entire // .slice ( 0 , count_users_receivers ) */
 }
 const func_00_03_advance_round = async nettype =>{
-	return	
+//	return	
 	let list  = await findall ('items' , {nettype} ) // .then(async list=>{
 		list.forEach ( async elem =>{
 			let { roundoffsettoavail } = elem
@@ -336,6 +338,7 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 	}
 
 	let listreceivers0 = await func_00_01_draw_users( {nettype , roundnumber : round_number_global } )
+	LOGGER( '@listreceivers0: ' , listreceivers0.length , listreceivers0 )
 	shufflearray(listreceivers0)
 	shufflearray(listreceivers0) // possibly once is not enough
 	LOGGER( '@listreceivers0: ' , listreceivers0.length , listreceivers0 )
@@ -419,8 +422,8 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 			}
 			let seller // =  ? '' : ''
 			if ( +roundnumber >1 ) {
-				let respitembalance= await findone( 'itembalances' , {itemid , nettype } )
-				if ( respitembalance && respitembalance.username ){
+				let respitembalance= await findone( 'itembalances' , { itemid , nettype } )
+				if ( respitembalance && respitembalance.username ) {
 					seller = respitembalance.username
 				}
 				else {seller = SALES_ACCOUNT_NONE_TICKET}
@@ -428,7 +431,7 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 			else { seller = SALES_ACCOUNT_NONE_TICKET}
 			await createrow( 'receivables' , {itemid 
 				, username 
-				, roundnumber 
+				, roundnumber : round_number_global
 				,	amount : price01  // ITEM_SALE_START_PRICE
 				, currency : PAYMENT_MEANS_DEF
 				, currencyaddress : PAYMENT_ADDRESS_DEF
@@ -479,6 +482,9 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 		} )
 	}
 	else {}
+	await updaterow ('settings' , { key_:"BALLOT_PERIODIC_ROUND_STATE" , nettype } , {
+		value_ : 1
+	} )
 }
 module.exports={
 		func_00_01_draw_users 

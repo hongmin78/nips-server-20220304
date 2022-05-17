@@ -28,7 +28,7 @@ const { getweirep
 const PARSER =JSON.parse    
 const TXREQSTATUS_POLL_INTERVAL = 3000
 const TXREQSTATUS_BLOCKCOUNT = 1 // 2 // 4 // 6
-let TX_POLL_OPTIONS={
+let TX_POLL_OPTIONS = {
 	  interval : TXREQSTATUS_POLL_INTERVAL
   , blocksToWait : TXREQSTATUS_BLOCKCOUNT
 }
@@ -39,6 +39,7 @@ const {ITEM_SALE_START_PRICE ,
 	PAYMENT_MEANS_DEF , 
 	MAX_ROUND_TO_REACH}=require('../configs/receivables')
 let MAX_ROUND_TO_REACH_DEF = 17
+const ROUNDOFFSETTOAVAIL_DEF = -3 
 const enqueue_tx_toclose=async(txhash , uuid , nettype )=>{
 	switch (nettype){
 		case 'ETH_TESTNET':
@@ -50,8 +51,8 @@ const enqueue_tx_toclose=async(txhash , uuid , nettype )=>{
 	}
 }
 const handle_pay_case = async( jdata )=>{
-	let {uuid , username , itemid , strauxdata , txhash , nettype }=jdata
-	await moverow( 'receivables', { itemid } , 'logsales', { txhash }) // uuid
+	let { uuid , username , itemid , strauxdata , txhash , nettype , roundnumber }=jdata
+	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
 	await updaterow( 'itemhistory' , {uuid} , {status : 1 } )
 	let amount,currency,currencyaddress , feerate
 	let jauxdata
@@ -72,17 +73,17 @@ const handle_pay_case = async( jdata )=>{
 				, fieldname : 'counthelditems'
 				, incvalue : -1 
 			} )	
-		await moverow('itembalances', {id: respitembalance.id} , 'logitembalances' , {} )
+		await moverow( 'itembalances', {id: respitembalance.id} , 'logitembalances' , {} )
 	}
 	else {}
 	await updateorcreaterow ( 'itembalances' ,{
-		itemid
+		itemid , nettype
 		} , { username
 		, status : 1
 		, buyprice : amount
 		, paymeans : currency
 		, paymeansaddress : currencyaddress  //	, amount
-		, nettype
+//		, nettype
 	} )
 	await incrementrow(
 		{		table : 'ballots'
@@ -95,6 +96,9 @@ const handle_pay_case = async( jdata )=>{
 		, fieldname : 'counthelditems' 
 		, incvalue : +1 
 	})
+	await updaterow ( 'ballots' , { username, nettype } , {
+		lastroundmadepaymentfor : roundnumber 
+	} )
 	let respcirc = await findone( 'circulations' , { itemid , nettype } )
 	if(respcirc){
 		let { price ,roundnumber , countchangehands }= respcirc
@@ -102,15 +106,16 @@ const handle_pay_case = async( jdata )=>{
 			await updaterow ( 'items'
 			, { itemid , nettype }
 			, {	salestatus : 1
-				, salesstatusstr : 'ASSIGNED' 
+				, salesstatusstr : 'ASSIGNED'
+				, roundoffsettoavail : ROUNDOFFSETTOAVAIL_DEF   
 			}).then(resp=>{
-				incrementrow({table : 'items' // orcreate 
+				incrementrow({ table : 'items' // orcreate 
 					,jfilter : { itemid , nettype }
 					,fieldname : 'roundnumber'
 					,incvalue : +1 
 				})
 			})
-			await updaterow ('circulations', {id: respcirc.id }, { 
+			await updaterow ( 'circulations', {id: respcirc.id }, { 
 				price : price 
 				, roundnumber : 1 + +roundnumber
 				, countchangehands : 1 + +countchangehands
@@ -222,13 +227,13 @@ const enqueue_tx_eth=async (txhash , uuid, nettype )=>{
         else { LOGGER('YFSoB0x0Nm@empty-table' , txhash  );return }
 				let str_txauxdata = resp
         let jparams = PARSER( str_txauxdata )
-        let {type , tables, address , amount, itemid , strauxdata }=jparams // itemid 
+        let {type , tables, address , amount, itemid , strauxdata , roundnumber }=jparams // itemid 
 
         KEYS( tables ).forEach(async tablename=>{
  	amount //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
         })
 				if ( type=='PAY' ){
-					handle_pay_case( { uuid , username : address , itemid , strauxdata , txhash , nettype })
+					handle_pay_case( { uuid , username : address , itemid , strauxdata , txhash , nettype , roundnumber})
 				}
         else if(type=='STAKE'){
 					if ( true || +amount>= MIN_STAKE_AMOUNT ){
@@ -299,6 +304,8 @@ const init=async _=>{ let tablename='transactionstotrack'
 init()
 module.exports={
   enqueue_tx_toclose
+	,	handle_pay_case // ( { uuid , username : address , itemid , strauxdata , txhash , nettype })
+	, handle_clear_delinquent_case 
 }
 /** const enqueue_tx_bsc=async (txhash , uuid, nettype )=>{
 	setTimeout(_=>{
