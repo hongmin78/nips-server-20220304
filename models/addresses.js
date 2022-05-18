@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('logpayments', {
+  return sequelize.define('addresses', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -17,41 +17,28 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true
     },
-    username: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
-    amount: {
+    role: {
       type: DataTypes.STRING(40),
       allowNull: true
     },
-    typestr: {
+    rateinpercent: {
       type: DataTypes.STRING(40),
       allowNull: true
     },
-    paymeansname: {
-      type: DataTypes.STRING(40),
+    rateinbp: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
       allowNull: true
-    },
-    paymeansaddress: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
-    txhash: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
-    active: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true,
-      defaultValue: 1
     },
     nettype: {
-      type: DataTypes.STRING(40),
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    address: {
+      type: DataTypes.STRING(80),
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'logpayments'
+    tableName: 'addresses'
   });
 };

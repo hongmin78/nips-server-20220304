@@ -29,8 +29,8 @@ const { getuseragent
 } =require('../utils/session')
 const db=require('../models')
 const cron=require('node-cron')
-const {	SALES_ACCOUNT_TICKET
-	, SALES_ACCOUNT_NONE_TICKET
+const {	// SALES_A CCOUNT_TICKET
+//	, SALES_ACC OUNT_NONE_TICKET
 }=require( '../configs/receivables' )
 const moment=require('moment-timezone')
 moment.tz.setDefault('Etc/UTC')
@@ -41,6 +41,15 @@ const nodeschedule=require('node-schedule')
 let { Op } = db.Sequelize;
 let scheduleddrawjob // = nodeschedule.scheduleJob 
 let jschedules={}
+const get_sales_account=async ( role , nettype ) =>{
+	let resp = await findone('addresses', { role  , nettype } )
+	if ( resp && resp ) {
+		let { address } =resp
+		return address
+	}
+	else {return null }
+}
+
 const parse_q_msg=async str=>{
 	if(str && str.length){}
 	else {LOGGER(`falsey call`); return }
@@ -91,8 +100,10 @@ const func01_inspect_payments = async nettype=>{ // in here done payment cases a
 		await moverow ( 'receivables' , { id : elem.id } , 'delinquencies', {
 			amount : +elem.amount * delinq_discount_factor / 10000
 		} ) //
-		let { roundnumber , itemid , username , amount }=elem 
-		await updaterow ( 'ballots' , {username
+		let { roundnumber , itemid , username , amount }=elem
+		let uuid= uuidv4() 
+		await updaterow ( 'ballots' , 
+			{username
 			, nettype
 		 } , {active : 0 } )
 		await incrementrow({
@@ -115,12 +126,34 @@ const func01_inspect_payments = async nettype=>{ // in here done payment cases a
 //			, priceunit : PAYMENT_MEANS_DEF 
 			, amount
 			, status : -1
-			, uuid : uuidv4() 
+			, uuid // : 
 			, typestr : 'DELINQUENT' // TENTATIVE_ASSIGN'
 			, nettype
 		})
+		let { nettype } = elem // , itemid
+		await updaterow ( 'items' , { nettype , itemid } , { isdelinquent : 1 } )
+		let roundnumber_global = await getroundnumber_global ( nettype ) // round_number_global  
+		await createrow ( 'logactions' , {
+			username
+			, typestr: 'DELINQUENT'
+			, uuid // : uuidv4() 
+			, price : amount
+			, itemid
+			, roundnumber : roundnumber_global
+		})
 	})
 }
+const getroundnumber_global=async nettype=>{	let round_number_global 
+	let respballotround = await findone( 'settings' , { key_ : 'BALLOT_PERIODIC_ROUNDNUMBER' , subkey_ : nettype } )
+	if ( respballotround ){
+		let { value_ }=respballotround
+		round_number_global = 1 + +value_
+	} else {round_number_global = 1
+	}
+	return round_number_global 
+}
+/******
+*/
 let roundnumber
 const normalize_hour_from_kst_to_utc=hour=>{
 	hour -= 9
@@ -309,7 +342,6 @@ const match_with_obj=async ( listreceivers0 , itemstogive )=>{
 }
 let FORCE_RUN_REGARDLESS_OF_SETTINGS = true
 const decideprice=( itemid , nettype ) =>{
-	
 }
 const func00_allocate_items_to_users = async nettype =>{ /************* */  //	let listr eceivers0 =await fin dall( 'ballots' , {			counthelditems : 0		} )
 	LOGGER(`executing func00_allocate_items_to_users ${nettype} `)
@@ -375,36 +407,47 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 //		else { ; }
 		listreceivers0 = await match_with_obj ( listreceivers0 , itemstogive )
 		for ( let i=0 ; i< NMin ; i++) {
-			let { itemid } = itemstogive[ i ]
+			let item = itemstogive[ i ]
+			let { itemid , isdelinquent : itemisdelinquent } = item 
 			let { username } = listreceivers0[ i ]
-			await updaterow( 'items' , { itemid 
+			await updaterow( 'items' , { 
+					itemid 
 				, nettype
 			} , {
 				salestatus : MAP_SALE_STATUS[ 'ASSIGNED' ] 
 				, salesstatusstr : 'assigned' 
 			} )
+//		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
 			let uuid = uuidv4() //			let duetime=moment().endOf('day').subtract(1,'hour')
 			let price01 // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE 
 			let respcirculation = await findone ( 'circulations' , { itemid , nettype } )
 			LOGGER( '@respcirculation ' , itemid , respcirculation )
 			let price
 			let roundnumber
-			if ( respcirculation ){ // 
+			if ( respcirculation ){ //
 				let { price : price00 , roundnumber } = respcirculation
-				let resppriceincrease = await findone('settings' , { key_ : 'BALLOT_PRICE_INCREASE_FACTOR' } )
-				if (resppriceincrease ){ 
-					price01 = +price00 * +resppriceincrease.value_  }
+				let resppriceincrease = await findone('settings' , { key_ : 'BALLOT_PRICE_INCREASE_FACTOR' , nettype } )
+				if ( resppriceincrease ){
+					if ( itemisdelinquent ) {
+						price01 = +price00
+					}
+					else {
+						price01 = +price00 * +resppriceincrease.value_  
+					}
+				}
 				else {
-					price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF }
+					price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF
+				}
 				roundnumber = 1 + +roundnumber
-				updaterow ( 'circulations' , {
+				await updaterow ( 'circulations' , {
 						itemid // : ''
-					, username // : ''
+//					, username // : ''
 					, nettype
 					} , {
 					 roundnumber // : 1 + +roundnumber // : ''
 						, price : price01 // ITEM_SALE_START_PRICE 
 						, priceunit : PAYMENT_MEANS_DEF 
+						, username // : ''
 					} )
 			}
 			else { // freshly assigned
@@ -420,6 +463,8 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 				} )
 				price01 = ITEM_SALE_START_PRICE 
 			}
+let  SALES_ACCOUNT_NONE_TICKET = await get_sales_account ( 'SALES_ACCOUNT_NONE_TICKET' , nettype )
+		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
 			let seller // =  ? '' : ''
 			if ( +roundnumber >1 ) {
 				let respitembalance= await findone( 'itembalances' , { itemid , nettype } )
@@ -438,7 +483,7 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 				, uuid
 				, duetimeunix : duetimeunix? duetimeunix : null  // : duetime.unix()
 				, duetime : duetime? duetime.format(STR_TIME_FORMAT) : null
-				, seller // : roundnumber>0?  : SALES_ACCOUNT_NONE_TICKET
+				, seller // : roundnumber>0?  : SALES_ACCOUNT_NONE_TI CKET
 				, nettype
 			} )
 			await createrow( 'itemhistory' , {
@@ -480,11 +525,13 @@ const func00_allocate_items_to_users = async nettype =>{ /************* */  //	l
 			, totalitemsassigned : NMin // ??''
 	//		, totalitemsinpossession : ''
 		} )
+//		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
 	}
 	else {}
 	await updaterow ('settings' , { key_:"BALLOT_PERIODIC_ROUND_STATE" , nettype } , {
 		value_ : 1
 	} )
+	
 }
 module.exports={
 		func_00_01_draw_users 
@@ -578,11 +625,11 @@ rmqopen.then(function(conn) {
 //	let listitemsheld = await findall ('itembalances' , { } )
 /*  (`id`,`createdat`,`username`,`itemid`,`amount`,`currency`,`currencyaddress`,`roundnumber`,`uuid`,`duetimeunix`,`duetime`,`active`)
 */
-/*   '0xdd9938393815bce3695956cac73c3123aa1f6b1d',
+/*   '0xdd993 8393815bce3695956cac73c3123aa1f6b1d',
       'QmdjurLkauqEBSTm77uhbFsVTqMoLUDW2AFm6Bb8STMzzU',
       100,
       'USDT',
-      '0x34da0872bb4b215345f6e47ed6514d8c4cd5f8e0',
+      '0x34da0 872bb4b215345f6e47ed6514d8c4cd5f8e0',
       1,
       'ea90cfbc-41e1-40d4-9acc-3964ab4e01e9',
       'Invalid date',

@@ -74,6 +74,8 @@ router.put("/:address", filehandler.single("file"), async (req, res) => {
 router.get("/info/:username", async (req, res) => {
   let { username } = req.params;
   let { nettype } = req.query;
+	if ( nettype ) {}
+	else { resperr(res,messages.MSG_ARGMISSING) ; return } 
   findone("users", { username, nettype }).then(async (resp) => {
     if (resp) {
     } else {
@@ -81,11 +83,38 @@ router.get("/info/:username", async (req, res) => {
       return;
     }
     let respreferer = await findone("users", { myreferercode: resp.referer, nettype });
-	
+		let aproms=[]
+		aproms[ aproms.length ] = findall ( 'ballots' , { username , nettype } ) // 0
+		aproms[ aproms.length ] = findall ( 'circulations' , { username , nettype } ) // 1
+		aproms[ aproms.length ] = findall ( 'delinquencies' , { username , nettype } ) // 2
+		aproms[ aproms.length ] = findall ( 'itembalances' , { username , nettype } ) // 3
+		aproms[ aproms.length ] = findall ( 'logactions' , { username , nettype } ) // 4
+		aproms[ aproms.length ] = findall ( 'logdelinquents' , { username , nettype} ) // 5
+		aproms[ aproms.length ] = findall ( 'logfeepayments' , { username , nettype } ) // 6
+		aproms[ aproms.length ] = findall ( 'logitembalances' , { username , nettype } ) // 7
+		aproms[ aproms.length ] = findall ( 'logpayments', { username , nettype } ) // 8
+		aproms[ aproms.length ] = findall ( 'logsales' , { username , nettype } ) // 9
+		aproms[ aproms.length ] = findall ( 'receivables', { username , nettype } ) // 10
+		aproms[ aproms.length ] = findall ( 'transactions', { username , nettype } ) // 11
+		let aresps = await Promise.all ( aproms)
+			
     respok(res, null, null, {
       respdata: {
         ...resp,
         refereraddress: respreferer?.username,
+'ballots' : aresps[0] , 
+'circulations' :  aresps[0]  , 
+'delinquencies' : aresps[1]  ,
+'itembalances' :  aresps[2]    , 
+'logactions' :   aresps[3], 
+'logdelinquents' :  aresps[4] ,
+'logfeepayments' :  aresps[5] ,
+'logitembalances' :  aresps[6],
+'logpayments' :  aresps[7], 
+'logsales' :  aresps[ 8 ] , 
+'receivables' :  aresps[ 9 ], 
+'transactions' :  aresps[ 10 ],
+info : resp
       },
     });
   });

@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('logfeepayments', {
+  return sequelize.define('refererfeepayments', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -68,9 +68,13 @@ module.exports = function(sequelize, DataTypes) {
     refereraddress: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    uuid: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'logfeepayments'
+    tableName: 'refererfeepayments'
   });
 };
