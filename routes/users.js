@@ -102,18 +102,18 @@ router.get("/info/:username", async (req, res) => {
       respdata: {
         ...resp,
         refereraddress: respreferer?.username,
-'ballots' : aresps[0] , 
-'circulations' :  aresps[0]  , 
-'delinquencies' : aresps[1]  ,
-'itembalances' :  aresps[2]    , 
-'logactions' :   aresps[3], 
-'logdelinquents' :  aresps[4] ,
-'logfeepayments' :  aresps[5] ,
-'logitembalances' :  aresps[6],
-'logpayments' :  aresps[7], 
-'logsales' :  aresps[ 8 ] , 
-'receivables' :  aresps[ 9 ], 
-'transactions' :  aresps[ 10 ],
+'ballots' : aresps[0] , // 0 
+'circulations' :  aresps[1]  , // 1 
+'delinquencies' : aresps[2]  , // 2
+'itembalances' :  aresps[3]    ,  // 3
+'logactions' :   aresps[4],  // 4
+'logdelinquents' :  aresps[5] , // 5
+'logfeepayments' :  aresps[6] , // 6
+'logitembalances' :  aresps[7], // 7
+'logpayments' :  aresps[8], // 8
+'logsales' :  aresps[ 9 ] ,  // 9
+'receivables' :  aresps[ 10 ], // 10
+'transactions' :  aresps[ 11 ], // 11
 info : resp
       },
     });

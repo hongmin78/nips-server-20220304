@@ -201,23 +201,35 @@ const handle_pay_case = async (jdata) => {
         refereraddress,
       }
     );
-		await updateorcreaterow (
+		let resprefererfeepayment = await findone(
 			'refererfeepayments'
-			, { uuid }
-			, {
-        amount: referfeeamount,
-        amountfloat: referfeeamount,
-        paymeansname: currency,
-        paymeansaddress: currencyaddress,
-        feerate: feerate,
-        nettype,
-        buyer, // : username
-        seller, // :''
-        referer: refereraddress, // :''
-        referercode,
-        refereraddress,
-  		}
+			, { seller , refereraddress , nettype }
 		)
+		if ( resprefererfeepayment ){
+			await updaterow ( 'refererfeepayments'
+				, { id : resprefererfeepayment.id } 	
+				, {
+	        amount: + resprefererfeepayment.amount + +referfeeamount,
+  	      amountfloat: + resprefererfeepayment.amount + +referfeeamount,
+				}
+			)
+		} else {
+			await createrow ( 'refererfeepayments'
+				, {
+	        amount: referfeeamount,
+  	      amountfloat: referfeeamount,
+    	    paymeansname: currency,
+	        paymeansaddress: currencyaddress,
+  	      feerate: feerate,
+    	    nettype,
+      	  buyer, // : username
+	        seller, // :''
+  	      referer: refereraddress, // :''
+    	    referercode,
+      	  refereraddress,
+	  		}
+			)
+		}
   }
   await moverow("receivables", { itemid, nettype }, "logsales", { txhash }); // uuid
 	
@@ -265,11 +277,11 @@ logactions
 */
 const handle_clear_delinquent_case = async (jdata) => {
   let { uuid, username, itemid, strauxdata, txhash, nettype } = jdata; //	await moverow ('delinquencies', { itemid } , 'logdelinquents', {} )
-  findall("delinquencies", { username }).then(async (list) => {
+  findall("delinquencies", { username , nettype }).then(async (list) => {
     list.forEach(async (elem) => {
       await moverow("delinquencies", { id: elem.id }, "logdelinquents", { txhash });
-      await updaterow("ballots", { username }, { active: 1 });
-      await updaterow("users", { username }, { active: 1 });
+      await updaterow("ballots", { username }, { active: 1, isdelinquent: 0  });
+      await updaterow("users", { username }, { active: 1 , isdelinquent: 0  });
       //			await updaterow ( 'items' , { itemid,  nettype } , {isdelinquent : 0 } ) // not yet
       /*			await incrementrow ( {
 					table : 'logrounds'

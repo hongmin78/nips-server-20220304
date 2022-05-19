@@ -35,6 +35,7 @@ const TOKENLEN = 48;
 let { Op } = db.Sequelize;
 // let nettype = "ETH-TESTNET";
 let nettype = "ETH_TESTNET";
+const convliker=str=>'%' + str + '%'
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
   ASC: 1,

@@ -55,6 +55,11 @@ module.exports = function(sequelize, DataTypes) {
     countdelinquencies: {
       type: DataTypes.BIGINT,
       allowNull: true
+    },
+    isdelinquent: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,

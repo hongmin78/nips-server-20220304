@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('logfeepayments', {
+  return sequelize.define('statrefererfeepayments', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -75,6 +75,6 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'logfeepayments'
+    tableName: 'statrefererfeepayments'
   });
 };

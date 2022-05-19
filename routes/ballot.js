@@ -58,7 +58,7 @@ router.post("/manual/paydelinquency/:uuid", (req, res) => {
     }
     let txhash = generaterandomhex(64);
     txhash = "dev___" + txhash;
-    handle_clear_delinquent_case({ uuid, username: resp.username, itemid: resp.itemid, txhash });
+    handle_clear_delinquent_case({ uuid, username: resp.username, itemid: resp.itemid, txhash, nettype });
     respok(res);
     // { uuid , username , itemid , strauxdata , txhash }
   });
@@ -126,7 +126,7 @@ router.post("/init/rounds", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
-  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0 });
+  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0, isdelinquent: 0 });
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", nettype }, { value_: 0 });
   //	await deleterow ( 'logrounds' , { nettype } )
   await deleterow("receivables", { nettype });
@@ -134,9 +134,13 @@ router.post("/init/rounds", async (req, res) => {
   await deleterow("circulations", { nettype });
   await deleterow("delinquencies", { nettype });
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
-  await updaterow("ballots", { nettype }, { active: 1, counthelditems: 0, lastroundmadepaymentfor: -4 }); // update ballots set active=1 where nettype ='ETH_TESTNET';
+  await updaterow(
+    "ballots",
+    { nettype },
+    { counthelditems: 0, lastroundmadepaymentfor: -4, isdelinquent: 0, active: 1 }
+  ); // update ballots set active=1 where nettype ='ETH_TESTNET';
   await deleterow("itembalances", { nettype });
-  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4 });
+  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4, isdelinquent: 0, active: 1 });
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
@@ -146,6 +150,7 @@ router.post("/advance/roundstate", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
+  LOGGER("@nettype", `_${nettype}_`);
   findone("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }).then(async (resp) => {
     if (resp) {
     } else {
@@ -154,6 +159,7 @@ router.post("/advance/roundstate", async (req, res) => {
     }
     let { value_: roundstate } = resp;
     roundstate = +roundstate;
+
     LOGGER("BALLOT_PERIODIC_ROUND_STATE", roundstate);
     switch (roundstate) {
       case 0:
