@@ -375,7 +375,7 @@ router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:o
     }
     if (searchkey) {
       let liker = convliker(searchkey);
-      let jfilter_02 = expand_search(tablename, liker);
+      let jfilter_02 =get_search_table_fields(tablename, liker) //  expand_search(tablename, liker);
       jfilter = { ...jfilter, ...jfilter_02 };
     } else {
     }
@@ -464,7 +464,7 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
     }
     if (searchkey) {
       let liker = convliker(searchkey);
-      let jfilter_02 = expand_search(tablename, liker);
+      let jfilter_02 = get_search_table_fields(tablename, liker) // expand_search(tablename, liker);
       jfilter = { ...jfilter, ...jfilter_02 };
     } else {
     }
@@ -612,9 +612,18 @@ const get_search_table_fields = (tablename, liker) => {
           { buyer: { [Op.like]: liker } },
           { seller: { [Op.like]: liker } },
         ],
-      };
-      //  , {nettype : {[Op.like] : liker} }}
+      };       //  , {nettype : {[Op.like] : liker} }}
       break;
+		case 'users' : 
+			return {
+        [Op.or]: [
+          { username: { [Op.like]: liker } },
+          { email : { [Op.like]: liker } },
+          { address : { [Op.like]: liker } },
+          { nickname : { [Op.like]: liker } },
+        ],
+			}
+		break
     default:
       return { [Op.or]: [{ name: { [Op.like]: liker } }, { address: { [Op.like]: liker } }] };
   }

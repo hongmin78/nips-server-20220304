@@ -17,7 +17,7 @@ router.post("/:txhash", async (req, res) => {
   let uuid = create_uuid_via_namespace(txhash);
   LOGGER(txhash, req.body);
   let { username, auxdata, typestr, nettype, itemid } = req.body;
-/**	if (nettype){}
+  /**	if (nettype){}
 	else if ( nettype=auxdata.nettype ) {}
 	else {} */
   let objtype = getobjtype(auxdata);
@@ -72,9 +72,9 @@ router.post("/:txhash", async (req, res) => {
       amount: auxdata?.amount,
     }
   );
-  let roundnumber = 0;
   if (itemid) {
-    let resproundnumber = await findone( "settings" , { key_: 'BALLOT_PERIODIC_ROUNDNUMBER' , nettype }); // "BALLOT_ROUND_NUMBER" 
+    let resproundnumber = await findone("settings", { key_: "BALLOT_ROUND_NUMBER" });
+    let roundnumber = 0;
     if (resproundnumber && ISFINITE(+resproundnumber?.value_)) {
       roundnumber = +resproundnumber?.value_;
     }
@@ -111,7 +111,6 @@ router.post("/:txhash", async (req, res) => {
             amount: auxdata?.amount,
             itemid,
             strauxdata,
-						roundnumber
           })
         )
         .then((resp) => {
@@ -129,7 +128,7 @@ router.post("/:txhash", async (req, res) => {
       active: 1,
       status: -1,
       auxdata: strauxdata,
-      amoun: auxdata?.amountt,
+      amount: auxdata?.amount,
       currency: auxdata?.currency,
       currencyaddress: auxdata?.currencyaddress,
       nettype,

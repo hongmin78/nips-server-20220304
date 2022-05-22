@@ -119,6 +119,11 @@ const func01_inspect_payments = async (nettype) => {
       itemid,
       roundnumber: roundnumber_global,
     });
+		findall ( 'itembalances' , { username , nettype } ).then( async list =>{
+			list.forEach ( async elem => {
+				await moverow ('itembalances' , { id : elem.id } , 'logitembalances' , { } )
+			}) 
+		}) 
   });
 };
 const parse_q_msg = async (str) => {
@@ -307,7 +312,11 @@ const func_00_03_advance_round = async (nettype) => {
   });
   //	})
 };
-const func_00_02_draw_items = async (N) => {
+const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = _=>{
+	findall ( '' )
+
+}
+const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {
   // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
   if (N > 0) {
   } else {
@@ -323,6 +332,9 @@ const func_00_02_draw_items = async (N) => {
   shufflearray(list);
   return list;
 };
+// const func_00_02_draw_items = func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances 
+const func_00_02_draw_items = func_00_02_draw_items_this_ver_takes_N_arg 
+
 const MAP_SALE_STATUS = {
   ON_RESERVE: 0,
   ASSIGNED: 1,

@@ -126,7 +126,7 @@ router.post("/init/rounds", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
-  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0, isdelinquent: 0 });
+  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0, isdelinquent: 0, roundnumber: 0 });
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", nettype }, { value_: 0 });
   //	await deleterow ( 'logrounds' , { nettype } )
   await deleterow("receivables", { nettype });
