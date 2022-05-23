@@ -35,7 +35,7 @@ const { queryitemdata, queryitemdata_user } = require("../utils/db-custom");
 const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
-let nettype = "ETH-TESTNET";
+let { nettype } = require('../configs/net' ) // = "ETH-TESTNET";
 let rmqq = "tasks";
 let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;

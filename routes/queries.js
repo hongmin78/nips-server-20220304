@@ -34,7 +34,7 @@ const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
 // let nettype = "ETH-TEST NET";
-let nettype = "ETH_TESTNET";
+let { nettype } =require( '../configs/net' ) // "ETH_TESTNET";
 const convliker=str=>'%' + str + '%'
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
