@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-let {nettype} =require('../configs/net') // "ETH_TESTNET";
+let { nettype } = require("../configs/net"); // "ETH_TESTNET";
 //	let nettype = "ETH_TESTNET";
 const { REFERERCODELEN } = require("../configs/configs");
 const {
@@ -169,8 +169,11 @@ const parse_q_msg = async (str) => {
     return;
   }
   let jdata = PARSER(str); //
-	if ( jdata && jdata?.nettype == nettype ){}
-	else { LOGGER('@cli called mainnet') ; return } 	
+  if (jdata && jdata?.nettype == nettype) {
+  } else {
+    LOGGER("@cli called mainnet");
+    return;
+  }
   if (jdata && jdata.BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS) {
     let { BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS: timeofday } = jdata;
     jschedules["BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS"]?.stop(); //?.cancel ()
@@ -282,9 +285,10 @@ const J_ALLOCATE_FACTORS = {
   MIN: 0,
 };
 const func_00_01_draw_users = async (jdata) => {
-  let { nettype, roundnumber } = jdata;
+  let { roundnumber } = jdata;
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
-  let count_users = await countrows_scalar("users", { nettype });
+  // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
+  let count_users = await countrows_scalar("ballots", { active: 1, nettype });
   LOGGER("count_users ", count_users);
   if (count_users > 0) {
   } else {
@@ -433,7 +437,7 @@ let FORCE_RUN_REGARDLESS_OF_SETTINGS = true;
 const decideprice = (itemid, nettype) => {};
 const func00_allocate_items_to_users = async (nettype) => {
   /************* */ //	let listr eceivers0 =await fin dall( 'ballots' , {			counthelditems : 0		} )
-  LOGGER(`executing func00_allocate_items_to_users ${nettype} `)
+  LOGGER(`executing func00_allocate_items_to_users ${nettype} `);
   let respfindactive = await findone("settings", { key_: "BALLOT_PERIODIC_ACTIVE", subkey_: nettype });
   if (FORCE_RUN_REGARDLESS_OF_SETTINGS) {
   } else if (respfindactive) {
@@ -459,7 +463,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     round_number_global = 1;
   }
   let listreceivers0 = await func_00_01_draw_users({ nettype, roundnumber: round_number_global });
-//  LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
+  //  LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
   LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
@@ -478,9 +482,10 @@ const func00_allocate_items_to_users = async (nettype) => {
   );
   if (listreceivers0 && listreceivers0.length) {
     NReceivers = listreceivers0.length; // draw_items()
-//    itemstogive = await func_00_02_draw_items(NReceivers);
-	 itemstogive = await func_00_02_draw_items_this_ver_takes_N_arg(NReceivers)
-    NItemstogive = itemstogive.length; LOGGER( '@itemstogive : ' , itemstogive , NItemstogive )
+    //    itemstogive = await func_00_02_draw_items(NReceivers);
+    itemstogive = await func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
+    NItemstogive = itemstogive.length;
+    LOGGER("@itemstogive : ", itemstogive, NItemstogive);
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
     if (NMin > 0) {

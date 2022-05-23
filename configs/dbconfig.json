@@ -1,11 +1,9 @@
-
 {
   "development": {
     "host": "localhost",
     "username": "nips",
-    "password": "BWcSwUjpnay7jTW8yjvX"
-    , "database":"nipsethtestnet"
-    , "dialect": "mariadb"
+    "password": "BWcSwUjpnay7jTW8yjvX",
+    "database": "nipsethtestnet",
+    "dialect": "mariadb"
   }
 }
-

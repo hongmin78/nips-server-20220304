@@ -35,7 +35,7 @@ const { queryitemdata, queryitemdata_user } = require("../utils/db-custom");
 const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
-let { nettype } = require('../configs/net' ) // = "ETH-TESTNET";
+let { nettype } = require("../configs/net"); // = "ETH-TESTNET";
 let rmqq = "tasks";
 let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;
@@ -119,7 +119,7 @@ const {
   func00_allocate_items_to_users,
   func01_inspect_payments,
   // func_00_04_handle_max_round_reached,
-} = require("../ballot/routine-daily-ETH_TESTNET" ) // routine-daily-BSC_MAINNET");
+} = require("../ballot/routine-daily-ETH_TESTNET"); // routine-daily-BSC_MAINNET");
 /** items.salestatus
 logrounds
 settings
@@ -146,10 +146,10 @@ router.post("/init/rounds", async (req, res) => {
   await updaterow(
     "ballots",
     { nettype },
-    { counthelditems: 0, lastroundmadepaymentfor: -4, isdelinquent: 0, active: 1 }
+    { counthelditems: 0, lastroundmadepaymentfor: -4, isdelinquent: 0, active: 0 }
   ); // update ballots set active=1 where nettype ='ETH_TESTNET';
   await deleterow("itembalances", { nettype });
-  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4, isdelinquent: 0, active: 1 });
+  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4, isdelinquent: 0, active: 0 });
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
