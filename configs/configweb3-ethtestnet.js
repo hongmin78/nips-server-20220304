@@ -5,7 +5,8 @@ const infuraurlmain=   '' // 'https://mainnet.infura.io/v3/cd35bc8ac4c14bc5b464e
 //  const infuraurlropsten= 'https://data-seed-prebsc-1-s3.binance.org:8545/'
 //    const infuraurlropsten= 'https://data-seed-prebsc-2-s3.binance.org:8545/'
 // const infuraurlropsten='https://ropsten.infura.io/v3/cd35bc8ac4c14bc5b464e267e88ee9d0'  ???
-const infuraurlropsten='https://ropsten.infura.io/v3/5799d55e1e66488786f26d987bfcfd05'
+// const infuraurlropsten='https://ropsten.infura.io/v3/5799d55e1e66488786f26d987bfcfd05' // overused
+const infuraurlropsten='https://ropsten.infura.io/v3/3a28b2c1b046451fbb232774b64e3253'
 
 const NETCLASS='testnet' // require('fs').readFileSync('NETTYPE.cfg').toString().replace(/ /g,'');console.log(NETCLASS)
 const jnetkind={mainnet:'mainnet',testnet:'ropsten'}

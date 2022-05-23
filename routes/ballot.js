@@ -119,7 +119,7 @@ const {
   func00_allocate_items_to_users,
   func01_inspect_payments,
   // func_00_04_handle_max_round_reached,
-} = require("../ballot/routine-daily-BSC_MAINNET");
+} = require("../ballot/routine-daily-ETH_TESTNET" ) // routine-daily-BSC_MAINNET");
 /** items.salestatus
 logrounds
 settings

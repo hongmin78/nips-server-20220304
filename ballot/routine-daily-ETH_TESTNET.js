@@ -169,6 +169,8 @@ const parse_q_msg = async (str) => {
     return;
   }
   let jdata = PARSER(str); //
+	if ( jdata && jdata?.nettype == nettype ){}
+	else { LOGGER('@cli called mainnet') ; return } 	
   if (jdata && jdata.BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS) {
     let { BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS: timeofday } = jdata;
     jschedules["BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS"]?.stop(); //?.cancel ()

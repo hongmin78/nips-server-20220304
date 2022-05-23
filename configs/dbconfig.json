@@ -4,7 +4,7 @@
     "host": "localhost",
     "username": "nips",
     "password": "BWcSwUjpnay7jTW8yjvX"
-    , "database":"nips"
+    , "database":"nipsethtestnet"
     , "dialect": "mariadb"
   }
 }

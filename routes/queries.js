@@ -33,7 +33,7 @@ const { queryitemdata, queryitemdata_user } = require("../utils/db-custom");
 const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
-// let nettype = "ETH-TESTNET";
+// let nettype = "ETH-TEST NET";
 let nettype = "ETH_TESTNET";
 const convliker=str=>'%' + str + '%'
 const { mqpub } = require("../services/mqpub");
@@ -66,6 +66,9 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   LOGGER("", req.body);
   LOGGER("", req.query);
   let { tablename, keyname, valuename } = req.params;
+  let { nettype } = req.query;
+if ( nettype ) {}
+	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
   let jpostdata = { ...req.body, ...req.query };
   let resp = await tableexists(tablename);
   if (resp) {
@@ -87,6 +90,8 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
+	if ( nettype ) {}
+	else { resperr( res, messages.MSG_ARGMISSING ) ; return }
   let jpostdata = { ...req.body, ...req.query };
   let resp = await tableexists(tablename);
   if (resp) {
@@ -612,7 +617,7 @@ const get_search_table_fields = (tablename, liker) => {
           { buyer: { [Op.like]: liker } },
           { seller: { [Op.like]: liker } },
         ],
-      };       //  , {nettype : {[Op.like] : liker} }}
+      };       //  , {net type : {[Op.like] : liker} }}
       break;
 		case 'users' : 
 			return {
