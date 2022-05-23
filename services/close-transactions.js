@@ -1,7 +1,9 @@
 const { jweb3 } = require("../configs/configweb3");
 const awaitTransactionMined = require("await-transaction-mined");
 const cliredisa = require("async-redis").createClient();
-const { LOGGER, STRINGER, KEYS, gettimestr } = require("../utils/common");
+const { LOGGER, STRINGER, KEYS, gettimestr
+	, create_uuid_via_namespace
+} = require("../utils/common");
 const {
   updaterow,
   findone,
@@ -29,16 +31,71 @@ let TX_POLL_OPTIONS = {
   interval: TXREQSTATUS_POLL_INTERVAL,
   blocksToWait: TXREQSTATUS_BLOCKCOUNT,
 };
-const moment = require("moment");
-const { MIN_STAKE_AMOUNT } = require("../configs/stakes");
+const moment = require("moment")
+const { MIN_STAKE_AMOUNT } = require( "../configs/stakes" );
 const {
   ITEM_SALE_START_PRICE,
   PAYMENT_ADDRESS_DEF,
   PAYMENT_MEANS_DEF,
   MAX_ROUND_TO_REACH,
 } = require("../configs/receivables");
-let MAX_ROUND_TO_REACH_DEF = 17;
+// const { pick_kong_items_ on_item_max_round_reached } = require ('./match-helpers')
+let MAX_ROUND_REACH_RELATED_PARAMS = { 
+	MAX_ROUND_TO_REACH_DEF : 17 
+	, COUNT_KONGS_TO_ASSIGN : 2
+}
 const ROUNDOFFSETTOAVAIL_DEF = -3;
+const close_sale = async (jdata) => {
+  let { itemid, contractaddress, tokenid, orderuuid, username, nettype , txhash } = jdata;
+  let resporder = await findone("orders", { uuid: orderuuid });
+  let seller;
+  if (resporder && resporder.seller) {
+    seller = resporder.seller;
+  } else {
+  }
+  await moverow("orders", { uuid: orderuuid }, "logorders", { isfulfilled: 1 });
+  await createifnoneexistent(
+    "itemhistory",
+    {      txhash,
+    },
+    {
+      itemid,
+      //		, datahash
+      tokenid,
+      //		, url
+      seller,
+      buyer: username,
+      price: resporder?.price,
+	    txhash,
+      //		, txhash
+      txtype: 1,
+      uuid: orderuuid,
+      isonchain: 1,
+      //		, chaintype : nett
+      typestr: "BUY",
+      //		, type
+      bidder: username,
+      strikeprice: resporder?.price,
+      from_: seller,
+      to_: username,
+      nettype,
+      status: 1,
+      //		, normprice
+    }
+	);
+	await updateorcreaterow ( 'itembalances' , {
+		itemid 
+		, nettype
+	} , {
+		username
+	}	)
+	await updaterow ( 'items' , {
+		itemid
+		, nettype
+	} , {
+		contractaddress
+	})
+};
 const enqueue_tx_toclose = async (txhash, uuid, nettype) => {
   switch (nettype) {
     case "ETH_TESTNET":
@@ -67,7 +124,8 @@ const get_pay_related_users = async (uuid, nettype) => {
   return { seller, buyer, refereraddress, referercode };
 };
 const handle_pay_case = async (jdata) => {
-  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata;
+	let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata;
+	let globalroundnumber = roundnumber
   let { buyer, seller, referercode, refereraddress } = get_pay_related_users(uuid, nettype);
   //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
   await updaterow("itemhistory", { uuid }, { status: 1 });
@@ -121,18 +179,15 @@ const handle_pay_case = async (jdata) => {
     fieldname: "counthelditems",
     incvalue: +1,
   });
-  await updaterow(
+  await updaterow (
     "ballots",
     { username, nettype },
-    {
-      lastroundmadepaymentfor: roundnumber,
-    }
+    {      lastroundmadepaymentfor: roundnumber,    }
   );
-  let respcirc = await findone("circulations", { itemid, nettype });
+  let respcirc = await findone( "circulations", { itemid, nettype });
   if (respcirc) {
     let { price, roundnumber, countchangehands } = respcirc;
-    if (+roundnumber < MAX_ROUND_TO_REACH) {
-      // max not reached yet
+    if (+roundnumber < MAX_ROUND_TO_REACH) {       // max not reached yet
       await updaterow(
         "items",
         { itemid, nettype },
@@ -145,11 +200,9 @@ const handle_pay_case = async (jdata) => {
           incvalue: +1,
         });
       });
-      await updaterow(
-        "circulations",
+      await updaterow (        "circulations",
         { id: respcirc.id },
-        {
-          //				price : price 				,
+        {          //				price : price 				,
           roundnumber: 1 + +roundnumber,
           countchangehands: 1 + +countchangehands,
         }
@@ -157,14 +210,24 @@ const handle_pay_case = async (jdata) => {
       await updaterow(
         "users",
         { username, nettype },
-        {
-          lastroundmadepaymentfor: roundnumber,
+        {	lastroundmadepaymentfor: roundnumber,
           lasttimemadepaymentat: moment().unix(),
         }
       );
     } //
-    else {
-      // max reached
+		else {			// max reached
+			await createrow ( 'maxroundreached' , {
+				username // : ''
+			, itemid // : ''
+			, nettype // : ''
+			, uuid : create_uuid_via_namespace ( `${username}_${itemid}_${nettype}`)
+			, itemroundnumber : roundnumber
+			, amountpaid : ''
+			, txhash // : ''
+			, globalroundnumber // : ''
+			})
+			await updaterow ('users' , { username , nettype } , {ismaxreached : 1 } )
+			await updaterow ('items' , { itemid , nettype } , {ismaxreached : 1 } )
     }
   } else {
     // no circ defined, should not have happened, give a fallback
@@ -203,7 +266,10 @@ const handle_pay_case = async (jdata) => {
       }
     );
   }
-  await moverow("receivables", { itemid, nettype }, "logsales", { txhash }); // uuid
+	await moverow("receivables"
+	, { itemid, nettype }
+	, "logsales"
+	, { txhash }); // uuid
 };
 /* logfeepayments
 	username        | varchar(80)      | YES  |     | NULL                |                               |
@@ -350,7 +416,17 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
           });
         } else if (type == "CLEAR_DELINQUENT") {
           handle_clear_delinquent_case({ uuid, username: address, itemid, strauxdata, txhash, nettype });
-        }
+        } else if ( type == 'BUY_NFT_ITEM' ) {
+					close_sale({
+						itemid,
+						contractaddress,
+						tokenid,
+						orderuuid,
+						username: address,
+						nettype,
+						txhash
+					})
+				}
         updaterow("transactionstotrack", { txhash }, { active: 0 });
         //				deleterow( 'transactionstotrack' , {					txhash				} )
       });

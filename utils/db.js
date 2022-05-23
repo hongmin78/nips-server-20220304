@@ -4,8 +4,17 @@ const {LOGGER}=require('./common')
 const findone=async(table,jfilter)=>          { return await db[table].findOne({raw:true,where:jfilter})}
 const findall=async(table,jfilter)=>          { return await db[table].findAll({raw:true,where:jfilter})}
 
-const getrandomrow_filter=async (tablename, jfilter)=>{
-  let aresp= await db[tablename].findAll({raw : true , order: db.Sequelize.literal('rand()'), limit: 1
+const getrandomrow_filter_multiple_rows = async (tablename, jfilter , N )=>{
+	let aresp= await db[tablename].findAll({raw : true 
+		, order: db.Sequelize.literal('rand()')
+		, limit: N
+		, where : { ... jfilter } 
+	 })
+  return aresp && aresp[0] ? aresp  : null
+}
+const getrandomrow_filter = async (tablename, jfilter)=>{
+	let aresp= await db[tablename].findAll({raw : true 
+		, order: db.Sequelize.literal('rand()'), limit: 1
 		, where : { ... jfilter } 
 	 })
   return aresp && aresp[0] ? aresp[0] : null
@@ -160,6 +169,7 @@ module.exports={findone,findall,
 	, updatetable
 	, updaterow
 	, updaterows
+	, getrandomrow_filter_multiple_rows
 	, getrandomrow_filter
 	, getrandomrow 
 	, tableexists

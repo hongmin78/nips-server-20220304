@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
-// let nettype='BSC_MAINNET'
 let nettype = "ETH_TESTNET";
+//	let nettype = "ETH_TESTNET";
 const { REFERERCODELEN } = require("../configs/configs");
 const {
   findone,
@@ -32,15 +32,25 @@ const { getuseragent, getipaddress } = require("../utils/session");
 const db = require("../models");
 const cron = require("node-cron");
 const {
-  // SALES_A CCOUNT_TICKET
-  //	, SALES_ACC OUNT_NONE_TICKET
-} = require("../configs/receivables");
+  pick_kong_items_on_item_max_round_reached,
+  handle_perish_item_case,
+  handle_assign_item_case,
+  handle_give_an_item_ownership_case,
+  getroundnumber_global,
+} = require("../services/match-helpers");
 const moment = require("moment-timezone");
 moment.tz.setDefault("Etc/UTC");
 const STR_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
 let rmqq = "tasks";
 let rmqopen = require("amqplib").connect("amqp://localhost");
 const nodeschedule = require("node-schedule");
+const {
+  ITEM_SALE_START_PRICE,
+  PAYMENT_MEANS_DEF,
+  PAYMENT_ADDRESS_DEF,
+  PRICE_INCREASE_FACTOR_DEF,
+} = require("../configs/receivables");
+
 let { Op } = db.Sequelize;
 let scheduleddrawjob; // = nodeschedule.scheduleJob
 let jschedules = {};
@@ -53,16 +63,42 @@ const get_sales_account = async (role, nettype) => {
     return null;
   }
 };
+let MAX_ROUND_REACH_RELATED_PARAMS = {
+  MAX_ROUND_TO_REACH_DEF: 17,
+  COUNT_KONGS_TO_ASSIGN: 2,
+};
+// const func_00_04_handle_max_round_reached = async (nettype) => {
+//   let list_maxroundreached = await findall("maxroundreached", { nettype });
+//   if (list_maxroundreached && list_maxroundreached.length) {
+//   } else {
+//     LOGGER("@max round reached, no items past max");
+//     return;
+//   }
+//   list_maxroundreached.forEach(async (elemmatch, idx) => {
+//     let { itemid, username, nettype } = elemmatch;
+//     await handle_perish_item_case(itemid, nettype);
+//     let listkongs = await pick_kong_items_on_item_max_round_reached(MAX_ROUND_REACH_RELATED_PARAMS, nettype);
+//     listkongs.forEach(async (elemkong) => {
+//       let item = await findone("items", { itemid: elemkong.itemid, nettype });
+//       await handle_assign_item_case(item, username, nettype);
+//     });
+//     await handle_give_an_item_ownership_case(username, nettype);
+//   });
+//   list_maxroundreached.forEach(async (elemmatch, idx) => {
+//     let { itemid, username, nettype } = elemmatch;
+//     await updaterow("users", { username, nettype }, { ismaxreached: 0 });
+//     await updaterow("items", { itemid, nettype }, { ismaxreached: 0 });
+//     await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
+//   });
+// };
 const func01_inspect_payments = async (nettype) => {
-  // in here done payment cases are assumed to be not present
-  //	const timenow=moment().startOf('hour').unix()
+  // in here done payment cases are assumed to be not present  //	const timenow=moment().startOf('hour').unix()
   const timenow = moment().add(1, "seconds").unix(); // startOf('hour').unix()
   let listreceivables = await db.receivables.findAll({
     raw: true,
     where: { active: 1, nettype },
     //		, where : { duetimeunix : { [Op.lte] : timenow } }
-  }); // findall ('receivables' , {  } )
-
+  }); // findall ('receivables' , {} )
   LOGGER("timenow@inspect", timenow, nettype);
   if (listreceivables.length > 0) {
   } else {
@@ -119,11 +155,11 @@ const func01_inspect_payments = async (nettype) => {
       itemid,
       roundnumber: roundnumber_global,
     });
-		findall ( 'itembalances' , { username , nettype } ).then( async list =>{
-			list.forEach ( async elem => {
-				await moverow ('itembalances' , { id : elem.id } , 'logitembalances' , { } )
-			}) 
-		}) 
+    findall("itembalances", { username, nettype }).then(async (list) => {
+      list.forEach(async (elem) => {
+        await moverow("itembalances", { id: elem.id }, "logitembalances", {});
+      });
+    });
   });
 };
 const parse_q_msg = async (str) => {
@@ -145,7 +181,8 @@ const parse_q_msg = async (str) => {
       `0 ${minute} ${hourofday} * * *`,
       async (_) => {
         await func_00_03_advance_round(nettype); // call it here
-        func00_allocate_items_to_users(nettype);
+        await func00_allocate_items_to_users(nettype);
+        // await func_00_04_handle_max_round_reached(nettype);
       }
     );
   } else if (jdata && jdata.BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS) {
@@ -164,8 +201,7 @@ const parse_q_msg = async (str) => {
     );
   }
 };
-
-const getroundnumber_global = async (nettype) => {
+/**  const getroundnumber_global = async (nettype) => {
   let round_number_global;
   let respballotround = await findone("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", subkey_: nettype });
   if (respballotround) {
@@ -175,9 +211,8 @@ const getroundnumber_global = async (nettype) => {
     round_number_global = 1;
   }
   return round_number_global;
-};
-/******
- */
+}; */
+/****** */
 let roundnumber;
 const normalize_hour_from_kst_to_utc = (hour) => {
   hour -= 9;
@@ -203,7 +238,8 @@ const init = async (_) => {
         `0 ${minute} ${hourofday} * * *`,
         async (_) => {
           await func_00_03_advance_round(nettype); // call it here
-          func00_allocate_items_to_users(nettype);
+          await func00_allocate_items_to_users(nettype);
+          // await func_00_04_handle_max_round_reached(nettype);
         }
       );
     } else {
@@ -230,7 +266,7 @@ const init = async (_) => {
   /********* current */
   /********* next */
 }; // init
-false && init();
+true && init();
 // new stakers
 let listreceivers0;
 let listreceivers1;
@@ -238,12 +274,6 @@ let listitemstoassign;
 const draw_items = (N) => {
   return db["items"].findAll({ raw: true, where: { salestatus: 0 }, offset: 0, limit: N });
 };
-const {
-  ITEM_SALE_START_PRICE,
-  PAYMENT_MEANS_DEF,
-  PAYMENT_ADDRESS_DEF,
-  PRICE_INCREASE_FACTOR_DEF,
-} = require("../configs/receivables");
 const J_ALLOCATE_FACTORS = {
   DEF: 1500,
   MAX: 5000,
@@ -276,6 +306,7 @@ const func_00_01_draw_users = async (jdata) => {
     //		, offset : 0
     //	, limit :count_users_receivers
     where: { active: 1, isdelinquent: 0, nettype, lastroundmadepaymentfor: { [Op.lte]: roundnumber_01 } },
+    ismaxroundreached: 0,
   });
   if (listballots_00_from_entire && listballots_00_from_entire.length) {
   } else {
@@ -284,7 +315,6 @@ const func_00_01_draw_users = async (jdata) => {
   shufflearray(listballots_00_from_entire);
   shufflearray(listballots_00_from_entire);
   listballots_00_from_entire = listballots_00_from_entire.slice(0, count_users_receivers);
-
   let listballots_01_from_entire = listballots_00_from_entire.sort((a, b) => {
     //	let listballots_01_from_entire = listballots_00_from_entire.sort ( (a,b)=>{
     //		a.counthelditems - b.counthelditems >0 ? +1 : -1
@@ -312,10 +342,9 @@ const func_00_03_advance_round = async (nettype) => {
   });
   //	})
 };
-const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = _=>{
-	findall ( '' )
-
-}
+const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = (_) => {
+  //	findall ( '' )
+};
 const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {
   // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
   if (N > 0) {
@@ -325,15 +354,23 @@ const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {
   let list = await db["items"].findAll({
     raw: true,
     order: [["salestatus", "DESC"]],
-    where: { group_: "kong", nettype, roundoffsettoavail: { [Op.gte]: 0 } },
+    where: { group_: "kong", nettype, roundoffsettoavail: { [Op.gte]: 0 }, ismaxroundreached: 0 },
     limit: N,
   });
+  if (list.length >= N) {
+  } else {
+    createrow("alerts", {
+      typestr: "KINGKONG_RESERVE_RAN_OUT",
+      message: "KINGKONG_RESERVE_RAN_OUT",
+      functionname: "func_00_02_draw_items_this_ver_takes_N_arg",
+    });
+  }
   shufflearray(list);
   shufflearray(list);
   return list;
 };
-// const func_00_02_draw_items = func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances 
-const func_00_02_draw_items = func_00_02_draw_items_this_ver_takes_N_arg 
+// const func_00_02_draw_items = func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances
+const func_00_02_draw_items = func_00_02_draw_items_this_ver_takes_N_arg;
 
 const MAP_SALE_STATUS = {
   ON_RESERVE: 0,
@@ -394,7 +431,7 @@ let FORCE_RUN_REGARDLESS_OF_SETTINGS = true;
 const decideprice = (itemid, nettype) => {};
 const func00_allocate_items_to_users = async (nettype) => {
   /************* */ //	let listr eceivers0 =await fin dall( 'ballots' , {			counthelditems : 0		} )
-  LOGGER(`executing func00_allocate_items_to_users ${nettype} `);
+  LOGGER(`executing func00_allocate_items_to_users ${nettype} `)
   let respfindactive = await findone("settings", { key_: "BALLOT_PERIODIC_ACTIVE", subkey_: nettype });
   if (FORCE_RUN_REGARDLESS_OF_SETTINGS) {
   } else if (respfindactive) {
@@ -405,10 +442,7 @@ const func00_allocate_items_to_users = async (nettype) => {
       return;
     }
   } else {
-  }
-  //	let listreceivers0 = await func_00_01_draw_users( nettype )
-  //shufflearray(listreceivers0)
-  //	shufflearray(listreceivers0) // possibly once is not enough
+  } //	let listreceivers0 = await func_00_01_draw_users( nettype )  //shufflearray(listreceivers0)   //	shufflearray(listreceivers0)
   //LOGGER( '@lis treceivers0: ' , listreceivers0.length , listreceivers0 )
   let NReceivers;
   let itemstogive;
@@ -422,13 +456,11 @@ const func00_allocate_items_to_users = async (nettype) => {
   } else {
     round_number_global = 1;
   }
-
   let listreceivers0 = await func_00_01_draw_users({ nettype, roundnumber: round_number_global });
-  LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
+//  LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
   LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
-
   let timenow = moment();
   let timenowunix = timenow.unix();
   let timenowstr = timenow.format(STR_TIME_FORMAT);
@@ -443,9 +475,10 @@ const func00_allocate_items_to_users = async (nettype) => {
     { totalitemsassigned: 0 }
   );
   if (listreceivers0 && listreceivers0.length) {
-    NReceivers = listreceivers0.length; // draw_items( )
-    itemstogive = await func_00_02_draw_items(NReceivers);
-    NItemstogive = itemstogive.length;
+    NReceivers = listreceivers0.length; // draw_items()
+//    itemstogive = await func_00_02_draw_items(NReceivers);
+	 itemstogive = await func_00_02_draw_items_this_ver_takes_N_arg(NReceivers)
+    NItemstogive = itemstogive.length; LOGGER( '@itemstogive : ' , itemstogive , NItemstogive )
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
     if (NMin > 0) {
@@ -470,14 +503,8 @@ const func00_allocate_items_to_users = async (nettype) => {
       let { username } = listreceivers0[i];
       await updaterow(
         "items",
-        {
-          itemid,
-          nettype,
-        },
-        {
-          salestatus: MAP_SALE_STATUS["ASSIGNED"],
-          salesstatusstr: "assigned",
-        }
+        { itemid, nettype },
+        { salestatus: MAP_SALE_STATUS["ASSIGNED"], salesstatusstr: "assigned" }
       );
       //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
       let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
@@ -615,6 +642,7 @@ module.exports = {
   func_00_03_advance_round,
   func00_allocate_items_to_users,
   func01_inspect_payments,
+  // func_00_04_handle_max_round_reached,
 };
 // const cron = require('node-cron')
 false &&

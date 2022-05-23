@@ -112,6 +112,16 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(4),
       allowNull: false,
       defaultValue: "0"
+    },
+    countmaxroundreached: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true,
+      defaultValue: 0
+    },
+    ismaxreached: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,
