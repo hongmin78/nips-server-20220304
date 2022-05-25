@@ -84,7 +84,7 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   mqpub(jpostdata);
 });
 const B_APPLY_OFFSET_KST = true
-router.put("/update-or-create-rows/:tablename", async (req, res) => { const B_ADJUST_TO_UTC_ON_SERVER_SIDE = fales
+router.put("/update-or-create-rows/:tablename", async (req, res) => { const B_ADJUST_TO_UTC_ON_SERVER_SIDE = false
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
