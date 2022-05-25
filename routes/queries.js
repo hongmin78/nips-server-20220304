@@ -34,7 +34,7 @@ const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
 // let nettype = "ETH-TEST NET";
-let { nettype } =require( '../configs/net' ) // "ETH_TESTNET";
+let nettype = "BSC_MAINNET";
 const convliker=str=>'%' + str + '%'
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
@@ -66,9 +66,6 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   LOGGER("", req.body);
   LOGGER("", req.query);
   let { tablename, keyname, valuename } = req.params;
-  let { nettype } = req.query;
-if ( nettype ) {}
-	else {resperr( res, messages.MSG_ARGMISSING ) ; return }
   let jpostdata = { ...req.body, ...req.query };
   let resp = await tableexists(tablename);
   if (resp) {
@@ -86,12 +83,11 @@ if ( nettype ) {}
   respok(res);
   mqpub(jpostdata);
 });
+const B_APPLY_OFFSET_KST = true
 router.put("/update-or-create-rows/:tablename", async (req, res) => {
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
-	if ( nettype ) {}
-	else { resperr( res, messages.MSG_ARGMISSING ) ; return }
   let jpostdata = { ...req.body, ...req.query };
   let resp = await tableexists(tablename);
   if (resp) {
@@ -101,11 +97,12 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-    if (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" && +valuetoupdateto > 3600 * 24) {
-      valuetoupdateto = +valuetoupdateto % (3600 * 24);
-    }
-    if (elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS" && +valuetoupdateto > 3600 * 24) {
-      valuetoupdateto = +valuetoupdateto % (3600 * 24);
+    if (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS") {  //			&& +valuetoupdateto > 3600 * 24) {
+				valuetoupdateto  = +valuetoupdateto  
+			if ( B_APPLY_OFFSET_KST ) {
+				valuetoupdateto -= 3600* 9 
+			}
+      valuetoupdateto = valuetoupdateto % (3600 * 24);
     }
     await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
   });
@@ -617,7 +614,7 @@ const get_search_table_fields = (tablename, liker) => {
           { buyer: { [Op.like]: liker } },
           { seller: { [Op.like]: liker } },
         ],
-      };       //  , {net type : {[Op.like] : liker} }}
+      };       //  , {nettype : {[Op.like] : liker} }}
       break;
 		case 'users' : 
 			return {
