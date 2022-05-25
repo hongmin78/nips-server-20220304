@@ -31,6 +31,14 @@ const getroundnumber_global = async (nettype) => {
   }
   return round_number_global;
 }
+
+/** const get_MAX_ROUND_TO_REACH_=async nettype=>{
+	const MAX_ROUND_TO_REACH_DEF = 17
+	
+	let resp = await	findone ('settings', { nettype , key_: 'MAX_ROUND_TO_REACH_DEF' } ) 
+	if ( resp ) {}
+	else { return  
+} */
 const pick_kong_items_on_item_max_round_reached =async ( MAX_ROUND_REACH_RELATED_PARAMS 
 	, nettype
 )	=>{

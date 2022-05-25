@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
-let nettype = "ETH_TESTNET";
-//	let nettype = "ETH_TESTNET";
+//let nettype = "ETH_TESTN ET";
+let nettype = "BSC_MAINNET";
 const { REFERERCODELEN } = require("../configs/configs");
 const {
   findone,

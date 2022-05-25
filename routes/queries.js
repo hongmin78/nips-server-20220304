@@ -33,8 +33,8 @@ const { queryitemdata, queryitemdata_user } = require("../utils/db-custom");
 const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
-// let nettype = "ETH-TESTNET";
-let nettype = "ETH_TESTNET";
+// let nettype = "ETH-TEST NET";
+let nettype = "BSC_MAINNET";
 const convliker=str=>'%' + str + '%'
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
@@ -83,7 +83,8 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   respok(res);
   mqpub(jpostdata);
 });
-router.put("/update-or-create-rows/:tablename", async (req, res) => {
+const B_APPLY_OFFSET_KST = true
+router.put("/update-or-create-rows/:tablename", async (req, res) => { const B_ADJUST_TO_UTC_ON_SERVER_SIDE = fales
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
@@ -96,11 +97,12 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-    if (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" && +valuetoupdateto > 3600 * 24) {
-      valuetoupdateto = +valuetoupdateto % (3600 * 24);
-    }
-    if (elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS" && +valuetoupdateto > 3600 * 24) {
-      valuetoupdateto = +valuetoupdateto % (3600 * 24);
+    if (B_ADJUST_TO_UTC_ON_SERVER_SIDE && ( elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS") ) {  //			&& +valuetoupdateto > 3600 * 24) {
+				valuetoupdateto  = +valuetoupdateto  
+			if ( B_APPLY_OFFSET_KST ) {
+				valuetoupdateto -= 3600* 9 
+			}
+      valuetoupdateto = valuetoupdateto % (3600 * 24);
     }
     await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
   });

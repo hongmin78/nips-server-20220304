@@ -370,7 +370,7 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
             );
             await updateorcreaterow(
               "ballots",
-              { username: address, nettype: nettype ? nettype : "ETH_TESTNET" },
+              { username: address, nettype: nettype ? nettype : 'BSC_MAINNET'  }, // "ETH_TES TNET"
               { isstaked: 1 }
             );
             let { currency, currencyaddress } = PARSER(strauxdata); // ,nettype
