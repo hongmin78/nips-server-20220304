@@ -39,6 +39,7 @@ const {
   getroundnumber_global,
 } = require("../services/match-helpers");
 const moment = require("moment-timezone");
+const B_CALL_OFFSET_KST_TO_UTC= false
 moment.tz.setDefault("Etc/UTC");
 const STR_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
 let rmqq = "tasks";
@@ -176,12 +177,12 @@ const parse_q_msg = async (str) => {
   }
   if (jdata && jdata.BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS) {
     let { BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS: timeofday } = jdata;
-    jschedules["BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS"]?.stop(); //?.cancel ()
+    jschedules[ "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" ]?.stop(); //?.cancel ()
     timeofday = +timeofday;
     let hourofday = moment.unix(timeofday).hour();
-    hourofday = normalize_hour_from_kst_to_utc(hourofday);
+if(B_CALL_OFFSET_KST_TO_UTC){    hourofday = normalize_hour_from_kst_to_utc(hourofday);}
     let minute = moment.unix(timeofday).minute();
-    LOGGER("timeofday@draw,mq");
+    LOGGER("timeofday@draw,mq", hourofday , minute );
     jschedules["BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS"] = cron.schedule(
       `0 ${minute} ${hourofday} * * *`,
       async (_) => {
@@ -195,9 +196,9 @@ const parse_q_msg = async (str) => {
     jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"]?.stop();
     timeofday = +timeofday;
     let hourofday = moment.unix(timeofday).hour();
-    hourofday = normalize_hour_from_kst_to_utc(hourofday);
+if(B_CALL_OFFSET_KST_TO_UTC){    hourofday = normalize_hour_from_kst_to_utc(hourofday);}
     let minute = moment.unix(timeofday).minute();
-    LOGGER("timeofday@inspect,mq");
+    LOGGER("timeofday@inspect,mq", hourofday , minute );
     jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] = cron.schedule(
       `0 ${minute} ${hourofday} * * *`,
       (_) => {
@@ -236,7 +237,8 @@ const init = async (_) => {
       let { value_: timeofday } = resp;
       timeofday = +timeofday;
       let hourofday0 = moment.unix(timeofday).hour(); // +timeofday / 3600   ;
-      let hourofday = normalize_hour_from_kst_to_utc(hourofday0);
+      let hourofday = hourofday0 
+if(B_CALL_OFFSET_KST_TO_UTC){	hourofday = 	normalize_hour_from_kst_to_utc(hourofday0);	}
       let minute = moment.unix(timeofday).minute();
       LOGGER("timeofday@draw", timeofday, hourofday0, hourofday, minute, resp); //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
       jschedules["BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS"] = cron.schedule(
@@ -256,7 +258,7 @@ const init = async (_) => {
       let { value_: timeofday } = resp; // timeofdaypaymentdue = +timeofdaypaymentdue / 3600; LOGGER(timeofdaypaymentdue , resp )
       timeofday = +timeofday;
       let hourofday = moment.unix(timeofday).hour(); // +timeofday / 3600   ;
-      hourofday = normalize_hour_from_kst_to_utc(hourofday);
+if(B_CALL_OFFSET_KST_TO_UTC){     hourofday = normalize_hour_from_kst_to_utc(hourofday); }
       let minute = moment.unix(timeofday).minute();
       LOGGER("timeofday@paydue", timeofday, hourofday, minute, resp); //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
       jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] = cron.schedule(
