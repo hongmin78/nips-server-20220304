@@ -119,7 +119,7 @@ const {
   func_00_03_advance_round,
   func00_allocate_items_to_users,
   func01_inspect_payments,
-  // func_00_04_handle_max_round_reached,
+  func_00_04_handle_max_round_reached,
 } = require("../ballot/routine-daily-common"); // BSC_ MAINNET
 /** items.salestatus
 logrounds
@@ -171,7 +171,7 @@ router.post("/advance/roundstate", async (req, res) => {
       case 0:
         await func_00_03_advance_round(nettype);
         await func00_allocate_items_to_users(nettype);
-        // await func_00_04_handle_max_round_reached(nettype);
+        await func_00_04_handle_max_round_reached(nettype);
         break;
       case 1:
         await func01_inspect_payments(nettype);

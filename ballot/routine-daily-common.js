@@ -68,30 +68,30 @@ let MAX_ROUND_REACH_RELATED_PARAMS = {
   MAX_ROUND_TO_REACH_DEF: 17,
   COUNT_KONGS_TO_ASSIGN: 2,
 };
-// const func_00_04_handle_max_round_reached = async (nettype) => {
-//   let list_maxroundreached = await findall("maxroundreached", { nettype });
-//   if (list_maxroundreached && list_maxroundreached.length) {
-//   } else {
-//     LOGGER("@max round reached, no items past max");
-//     return;
-//   }
-//   list_maxroundreached.forEach(async (elemmatch, idx) => {
-//     let { itemid, username, nettype } = elemmatch;
-//     await handle_perish_item_case(itemid, nettype);
-//     let listkongs = await pick_kong_items_on_item_max_round_reached(MAX_ROUND_REACH_RELATED_PARAMS, nettype);
-//     listkongs.forEach(async (elemkong) => {
-//       let item = await findone("items", { itemid: elemkong.itemid, nettype });
-//       await handle_assign_item_case(item, username, nettype);
-//     });
-//     await handle_give_an_item_ownership_case(username, nettype);
-//   });
-//   list_maxroundreached.forEach(async (elemmatch, idx) => {
-//     let { itemid, username, nettype } = elemmatch;
-//     await updaterow("users", { username, nettype }, { ismaxreached: 0 });
-//     await updaterow("items", { itemid, nettype }, { ismaxreached: 0 });
-//     await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
-//   });
-// };
+ const func_00_04_handle_max_round_reached = async (nettype) => {
+   let list_maxroundreached = await findall("maxroundreached", { nettype });
+   if (list_maxroundreached && list_maxroundreached.length) {
+   } else {
+     LOGGER("@max round reached, no items past max");
+     return;
+   }
+   list_maxroundreached.forEach(async (elemmatch, idx) => {
+     let { itemid, username, nettype } = elemmatch;
+     await handle_perish_item_case(itemid, nettype);
+     let listkongs = await pick_kong_items_on_item_max_round_reached(MAX_ROUND_REACH_RELATED_PARAMS, nettype);
+     listkongs.forEach(async (elemkong) => {
+       let item = await findone("items", { itemid: elemkong.itemid, nettype });
+       await handle_assign_item_case(item, username, nettype);
+     });
+     await handle_give_an_item_ownership_case(username, nettype);
+   });
+   list_maxroundreached.forEach(async (elemmatch, idx) => {
+     let { itemid, username, nettype } = elemmatch;
+     await updaterow("users", { username, nettype }, { ismaxreached: 0 });
+     await updaterow("items", { itemid, nettype }, { ismaxreached: 0 });
+     await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
+   });
+ };
 const func01_inspect_payments = async (nettype) => {
   // in here done payment cases are assumed to be not present  //	const timenow=moment().startOf('hour').unix()
   const timenow = moment().add(1, "seconds").unix(); // startOf('hour').unix()
@@ -188,7 +188,7 @@ if(B_CALL_OFFSET_KST_TO_UTC){    hourofday = normalize_hour_from_kst_to_utc(hour
       async (_) => {
         await func_00_03_advance_round(nettype); // call it here
         await func00_allocate_items_to_users(nettype);
-        // await func_00_04_handle_max_round_reached(nettype);
+        await func_00_04_handle_max_round_reached(nettype);
       }
     );
   } else if (jdata && jdata.BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS) {
@@ -246,7 +246,7 @@ if(B_CALL_OFFSET_KST_TO_UTC){	hourofday = 	normalize_hour_from_kst_to_utc(hourof
         async (_) => {
           await func_00_03_advance_round(nettype); // call it here
           await func00_allocate_items_to_users(nettype);
-          // await func_00_04_handle_max_round_reached(nettype);
+          await func_00_04_handle_max_round_reached(nettype);
         }
       );
     } else {
@@ -652,7 +652,7 @@ module.exports = {
   func_00_03_advance_round,
   func00_allocate_items_to_users,
   func01_inspect_payments,
-  // func_00_04_handle_max_round_reached,
+  func_00_04_handle_max_round_reached,
 };
 // const cron = require('node-cron')
 false &&
