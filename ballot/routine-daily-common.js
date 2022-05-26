@@ -2,7 +2,9 @@ var express = require("express");
 var router = express.Router();
 let { nettype } = require("../configs/net"); // "ETH_TESTNET";
 //	let nettype = "ETH_TESTNET";
-const { REFERERCODELEN } = require("../configs/configs");
+const { REFERERCODELEN
+	, B_ASSIGN_DELINQUENT_ITEMS
+ } = require("../configs/configs");
 const {
   findone,
   createrow,
@@ -350,11 +352,30 @@ const func_00_03_advance_round = async (nettype) => {
   });
   //	})
 };
-const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = (_) => {
-  //	findall ( '' )
+const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = async N => {  //	findall ( '' )
+	if ( N > 0 ){}
+	else { return [] }
+	let list_00 = await db[ 'items' ].findAll ({
+		raw : true
+		, where : { group_ : 'kong' , nettype , ismaxroundreached : 0 , isdelinquent : 1 }
+	})
+	let countdelinquent = list_00.length
+	let list =[]
+	if ( list_00.length >= N ){
+
+	} else {
+		let list_01 = await db[ 'items' ].findAll({
+			raw : true
+			, where : { group_ : 'kong' , nettype , ismaxroundreached : 0 , isdelinquent : 0 } 
+			, limit : N- countdelinquent 
+		})
+		list = [ ... list_00 , ... list_01 ]
+	}
+  shufflearray(list );
+  shufflearray(list );
+  return list;
 };
-const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {
-  // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
+const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {   // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
   if (N > 0) {
   } else {
     return [];
@@ -378,7 +399,7 @@ const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {
   return list;
 };
 // const func_00_02_draw_items = func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances
-const func_00_02_draw_items = func_00_02_draw_items_this_ver_takes_N_arg;
+const func_00_02_draw_items = B_ASSIGN_DELINQUENT_ITEMS ? func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances : func_00_02_draw_items_this_ver_takes_N_arg;
 
 const MAP_SALE_STATUS = {
   ON_RESERVE: 0,
@@ -485,7 +506,7 @@ const func00_allocate_items_to_users = async (nettype) => {
   if (listreceivers0 && listreceivers0.length) {
     NReceivers = listreceivers0.length; // draw_items()
     //    itemstogive = await func_00_02_draw_items(NReceivers);
-    itemstogive = await func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
+    itemstogive = await func_00_02_draw_items (NReceivers) //  func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
     NItemstogive = itemstogive.length;
     LOGGER("@itemstogive : ", itemstogive, NItemstogive);
     // less-than exceptions later

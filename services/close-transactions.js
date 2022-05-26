@@ -229,6 +229,35 @@ const handle_pay_case = async (jdata) => {
 			await updaterow ('users' , { username , nettype } , {ismaxreached : 1 } )
 			await updaterow ('items' , { itemid , nettype } , {ismaxreached : 1 } )
     }
+      await updaterow (        "circulations",
+        { id: respcirc.id },
+        {          //				price : price 				,
+          roundnumber: 1 + +roundnumber,
+          countchangehands: 1 + +countchangehands,
+        }
+      );
+      await updaterow(
+        "users",
+        { username, nettype },
+        {	lastroundmadepaymentfor: roundnumber,
+          lasttimemadepaymentat: moment().unix(),
+        }
+      );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
   } else {
     // no circ defined, should not have happened, give a fallback
     await createrow("circulations", {
