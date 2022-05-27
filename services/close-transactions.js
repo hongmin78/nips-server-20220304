@@ -37,13 +37,14 @@ const {
   ITEM_SALE_START_PRICE,
   PAYMENT_ADDRESS_DEF,
   PAYMENT_MEANS_DEF,
-  MAX_ROUND_TO_REACH,
+//  MAX_RO UND_TO_REACH,
 } = require("../configs/receivables");
-// const { pick_kong_items_ on_item_max_round_reached } = require ('./match-helpers')
-let MAX_ROUND_REACH_RELATED_PARAMS = { 
-	MAX_ROUND_TO_REACH_DEF : 17 
-	, COUNT_KONGS_TO_ASSIGN : 2
-}
+const { get_MAX_ROUND_TO_REACH , // pick_kong_items_ on_item_max_round_reached 
+} = require ('./match-helpers')
+/** let MAX_R OUND_REACH_RELATED_PARAMS = { 
+	MAX_ROU ND_TO_REACH_DEF : 17 
+//	, COUNT_KONGS_TO_ASSIGN : 2
+} */
 const ROUNDOFFSETTOAVAIL_DEF = -3;
 const close_sale = async (jdata) => {
   let { itemid, contractaddress, tokenid, orderuuid, username, nettype , txhash } = jdata;
@@ -187,6 +188,7 @@ const handle_pay_case = async (jdata) => {
   let respcirc = await findone( "circulations", { itemid, nettype });
   if (respcirc) {
     let { price, roundnumber, countchangehands } = respcirc;
+		let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH ( nettype )
     if (+roundnumber < MAX_ROUND_TO_REACH) {       // max not reached yet
       await updaterow(
         "items",

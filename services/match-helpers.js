@@ -31,22 +31,24 @@ const getroundnumber_global = async (nettype) => {
   }
   return round_number_global;
 }
-
-/** const get_MAX_ROUND_TO_REACH_=async nettype=>{
+const get_MAX_ROUND_TO_REACH=async nettype=>{
 	const MAX_ROUND_TO_REACH_DEF = 17
-	
-	let resp = await	findone ('settings', { nettype , key_: 'MAX_ROUND_TO_REACH_DEF' } ) 
-	if ( resp ) {}
-	else { return  
-} */
-const pick_kong_items_on_item_max_round_reached =async ( MAX_ROUND_REACH_RELATED_PARAMS 
-	, nettype
-)	=>{
+	let resp = await	findone ( 'settings', { nettype , key_: 'MAX_ROUND_TO_REACH_DEF' } ) 
+	if ( resp && resp.value_ ) { return resp.value_ }
+	else { return  MAX_ROUND_TO_REACH_DEF } 
+}
+const pick_kong_items_on_item_max_round_reached =async ( // MAX_RO UND_REACH_RELATED_PARAMS 	, 
+	nettype
+)	=>{	let COUNT_KONGS_TO_ASSIGN_ON_MAX_ROUND_DEF = 2
+	let counttoassign =COUNT_KONGS_TO_ASSIGN_ON_MAX_ROUND_DEF
+	let respcounttoassign = await findone ( 'settings' , { key_: 'COUNT_KONGS_TO_ASSIGN_ON_MAX_ROUND' , nettype} )
+	if (respcounttoassign && respcounttoassign.value_ ){ counttoassign = respcounttoassign.value_ }
+	else {}
 	 return getrandomrow_filter_multiple_rows ( 'items' 
 	 , { salestatus : 0
 			, nettype
 		} 
-	 , MAX_ROUND_REACH_RELATED_PARAMS.COUNT_KONGS_TO_ASSIGN
+	 , counttoassign // MAX_RO UND_REACH_RELATED_PARAMS. COUNT_KONGS_TO_ASSIGN
 	) 
 }
 const handle_perish_item_case =async ( itemid , nettype )=>{
@@ -220,6 +222,7 @@ const handle_assign_item_case=async ( item , username , nettype )=>{
 
 module.exports={
 	getroundnumber_global
+	, get_MAX_ROUND_TO_REACH
 	, pick_kong_items_on_item_max_round_reached
 	, handle_perish_item_case
 	, handle_assign_item_case

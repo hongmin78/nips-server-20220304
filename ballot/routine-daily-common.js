@@ -66,10 +66,10 @@ const get_sales_account = async (role, nettype) => {
     return null;
   }
 };
-let MAX_ROUND_REACH_RELATED_PARAMS = {
-  MAX_ROUND_TO_REACH_DEF: 17,
+/** let MAX_RO UND_REACH_RELATED_PARAMS = {
+  MAX_RO UND_TO_REACH_DEF: 17,
   COUNT_KONGS_TO_ASSIGN: 2,
-};
+}; */
  const func_00_04_handle_max_round_reached = async (nettype) => {
    let list_maxroundreached = await findall("maxroundreached", { nettype });
    if (list_maxroundreached && list_maxroundreached.length) {
@@ -80,7 +80,7 @@ let MAX_ROUND_REACH_RELATED_PARAMS = {
    list_maxroundreached.forEach(async (elemmatch, idx) => {
      let { itemid, username, nettype } = elemmatch;
      await handle_perish_item_case(itemid, nettype);
-     let listkongs = await pick_kong_items_on_item_max_round_reached(MAX_ROUND_REACH_RELATED_PARAMS, nettype);
+     let listkongs = await pick_kong_items_on_item_max_round_reached( nettype); // MAX_R OUND_REACH_RELATED_PARAMS,
      listkongs.forEach(async (elemkong) => {
        let item = await findone("items", { itemid: elemkong.itemid, nettype });
        await handle_assign_item_case(item, username, nettype);
@@ -362,7 +362,6 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
 	let countdelinquent = list_00.length
 	let list =[]
 	if ( list_00.length >= N ){
-
 	} else {
 		let list_01 = await db[ 'items' ].findAll({
 			raw : true
