@@ -25,7 +25,8 @@ const {
   shufflearray,
   uuidv4,
   PARSER,
-  KEYS,
+	KEYS,
+	convaj
 } = require("../utils/common");
 const { messages } = require("../configs/messages");
 const { isethaddressvalid } = require("../utils/validates");
@@ -280,9 +281,9 @@ true && init();
 let listreceivers0;
 let listreceivers1;
 let listitemstoassign;
-const draw_items = (N) => {
+/** const draw_items = (N) => {
   return db["items"].findAll({ raw: true, where: { salestatus: 0 }, offset: 0, limit: N });
-};
+};*/
 const J_ALLOCATE_FACTORS = {
   DEF: 1500,
   MAX: 5000,
@@ -355,13 +356,21 @@ const func_00_03_advance_round = async (nettype) => {
 const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = async N => {  //	findall ( '' )
 	if ( N > 0 ){}
 	else { return [] }
+	/** delinquent items */
 	let list_00 = await db[ 'items' ].findAll ({
 		raw : true
 		, where : { group_ : 'kong' , nettype , ismaxroundreached : 0 , isdelinquent : 1 }
 	})
 	let countdelinquent = list_00.length
 	let list =[]
-	if ( list_00.length >= N ){
+	let list_01 = await db[ 'items' ].findAll ({raw : true
+		, order : [ [ 'salestatus' , 'DESC' ] ]
+		, where : { group_: 'kong' , nettype , roundoffsettoavail : { [Op.gte ] : 0 } , ismaxroundreached : 0 , isdelinquent : 0 }
+		, limit : N
+		}
+	)
+	list = [ ... list_00 , ... list_01 ]
+/** this portion limits item count to N	if ( list_00.length >= N ){
 	} else {
 		let list_01 = await db[ 'items' ].findAll({
 			raw : true
@@ -369,7 +378,7 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
 			, limit : N- countdelinquent 
 		})
 		list = [ ... list_00 , ... list_01 ]
-	}
+	} */
   shufflearray(list );
   shufflearray(list );
   return list;
@@ -377,12 +386,12 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
 const func_00_02_draw_items_this_ver_takes_N_arg = async (N) => {   // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
   if (N > 0) {
   } else {
-    return [];
+    return []
   }
   let list = await db["items"].findAll({
     raw: true,
     order: [["salestatus", "DESC"]],
-    where: { group_: "kong", nettype, roundoffsettoavail: { [Op.gte]: 0 }, ismaxroundreached: 0 },
+    where: { group_: "kong", nettype, roundoffsettoavail: { [Op.gte]: 0 }, ismaxroundreached: 0 }, //  , isdelinquent : 0 
     limit: N,
   });
   if (list.length >= N) {
@@ -418,23 +427,39 @@ const MAP_BALLOT_STATUS = {
   0: false,
   PAUSE: false,
 };
-const match_with_obj = async (listreceivers0, itemstogive) => {
+const randomly_pick_from_array_while_ensuring_each_included_atleast_once = (arr0 , targetsize) =>{
+	let arr = [ ... arr0 ]
+	shufflearray ( arr )
+	shufflearray ( arr )
+	return [ ... arr , ... getRandomElementsFromArray ( arr0 , targetsize - arr0.length ) ] 
+}
+const match_with_obj = match_with_obj_one_to_many
+const match_with_obj_one_to_many = async (listreceivers0, itemstogive ) => {
   let aproms = [];
   listreceivers0.forEach((elem) => {
     let { username } = elem;
-    aproms[aproms.length] = findone("circulations", { username, nettype });
-  });
-  const n_max_tries = 10;
-  const max_score_achievable = listreceivers0.length;
+    aproms[aproms.length] = findall("circulations", { username, nettype });
+	});
+	const N_items = itemstogive.length	
+  const n_max_tries = 20;
+	listreceivers0_exp = listreceivers0.length < N_items ? randomly_pick_from_array_while_ensuring_each_included_atleast_once ( listreceivers0 , N_items ) : listreceivers0 
+	listreceivers0 = listreceivers0_exp
+
+  let max_score_achievable // = listreceivers0.length ;
   let max_score_achieved = -1000000;
-  let aresolves = await Promise.all(aproms);
-  let listreceivers_at_maxscore = [];
-  for (let idxtries = 0; idxtries < n_max_tries; idxtries++) {
-    shufflearray(listreceivers0);
+	let aresolves = await Promise.all(aproms);
+	let map_item_user = convaj ( aresolves , 'itemid' , 'username' )
+	aresolves = aresolves.flat ()
+	max_score_achievable = Math.max ( listreceivers0.length , aresolves.length )
+	let listreceivers_at_maxscore = []
+
+  for ( let idxtries = 0; idxtries < n_max_tries; idxtries++) {
+    shufflearray(listreceivers0 );
     let score = 0;
-    for (let idxcirc = 0; idxcirc < max_score_achievable; idxcirc++) {
+    for (let idxcirc = 0; idxcirc < N_items; idxcirc++) {
       if (aresolves[idxcirc]) {
-        if (aresolves[idxcirc].itemid == itemstogive[idxcirc].itemid) {
+//        if (aresolves[idxcirc].itemid == itemstogive[idxcirc].itemid ) {
+				if ( map_item_user[itemstogive [ idxcirc ].itemid ] ) {
         } else {
           ++score;
         }
@@ -525,7 +550,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     //			LOGGER( 'inner' , respduetime , duetime , duetimeunix )
     //	}
     //		else { ; }
-    listreceivers0 = await match_with_obj(listreceivers0, itemstogive);
+    listreceivers0 = await match_with_obj( listreceivers0, itemstogive );
     for (let i = 0; i < NMin; i++) {
       let item = itemstogive[i];
       let { itemid, isdelinquent: itemisdelinquent } = item;
@@ -533,7 +558,7 @@ const func00_allocate_items_to_users = async (nettype) => {
       await updaterow(
         "items",
         { itemid, nettype },
-        { salestatus: MAP_SALE_STATUS["ASSIGNED"], salesstatusstr: "assigned" }
+        { salestatus: MAP_SALE_STATUS[ "ASSIGNED" ] , salesstatusstr: "assigned" }
       );
       //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
       let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
@@ -555,7 +580,7 @@ const func00_allocate_items_to_users = async (nettype) => {
         } else {
           price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
         }
-        LOGGER("@respcirculation ", itemid, respcirculation, price00, price01);
+        LOGGER( "@respcirculation ", itemid, respcirculation, price00, price01);
         roundnumber = 1 + +roundnumber;
         await updaterow(
           "circulations",
@@ -706,6 +731,44 @@ rmqopen
     });
   })
   .catch(console.warn);
+
+	const match_with_obj_one_to_one = async (listreceivers0, itemstogive) => {
+		let aproms = [];
+		listreceivers0.forEach((elem) => {
+			let { username } = elem;
+			aproms[aproms.length] = findone("circulations", { username, nettype });
+		});
+		const n_max_tries = 20;
+		const max_score_achievable = listreceivers0.length ;
+		let max_score_achieved = -1000000;
+		let aresolves = await Promise.all(aproms);
+		let listreceivers_at_maxscore = [];
+		for ( let idxtries = 0; idxtries < n_max_tries; idxtries++) {
+			shufflearray(listreceivers0);
+			let score = 0;
+			for (let idxcirc = 0; idxcirc < max_score_achievable; idxcirc++) {
+				if (aresolves[idxcirc]) {
+					if (aresolves[idxcirc].itemid == itemstogive[idxcirc].itemid) {
+					} else {
+						++score;
+					}
+				} else {
+					// first time user is assigned a
+					++score;
+				}
+			}
+			if (score == max_score_achievable) {
+				listreceivers_at_maxscore = listreceivers0;
+				break;
+			} else {
+				if (score > max_score_achieved) {
+					max_score_achieved = score;
+					listreceivers_at_maxscore = listreceivers0;
+				}
+			}
+		}
+		return listreceivers0;
+	};
 
 /** cron.schedule('0 0 0 * * *',async ()=>{  	LOGGER('' , moment().format('HH:mm:ss, YYYY-MM-DD') , '@nips' )
 	setTimeout(async _=>{
