@@ -84,7 +84,7 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   mqpub(jpostdata);
 });
 const B_APPLY_OFFSET_KST = true
-router.put("/update-or-create-rows/:tablename", async (req, res) => {
+router.put("/update-or-create-rows/:tablename", async (req, res) => { const B_ADJUST_TO_UTC_ON_SERVER_SIDE = false
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
@@ -97,7 +97,7 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-    if (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS") {  //			&& +valuetoupdateto > 3600 * 24) {
+    if (B_ADJUST_TO_UTC_ON_SERVER_SIDE && ( elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS") ) {  //			&& +valuetoupdateto > 3600 * 24) {
 				valuetoupdateto  = +valuetoupdateto  
 			if ( B_APPLY_OFFSET_KST ) {
 				valuetoupdateto -= 3600* 9 

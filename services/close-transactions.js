@@ -37,13 +37,14 @@ const {
   ITEM_SALE_START_PRICE,
   PAYMENT_ADDRESS_DEF,
   PAYMENT_MEANS_DEF,
-  MAX_ROUND_TO_REACH,
+//  MAX_RO UND_TO_REACH,
 } = require("../configs/receivables");
-// const { pick_kong_items_ on_item_max_round_reached } = require ('./match-helpers')
-let MAX_ROUND_REACH_RELATED_PARAMS = { 
-	MAX_ROUND_TO_REACH_DEF : 17 
-	, COUNT_KONGS_TO_ASSIGN : 2
-}
+const { get_MAX_ROUND_TO_REACH , // pick_kong_items_ on_item_max_round_reached 
+} = require ('./match-helpers')
+/** let MAX_R OUND_REACH_RELATED_PARAMS = { 
+	MAX_ROU ND_TO_REACH_DEF : 17 
+//	, COUNT_KONGS_TO_ASSIGN : 2
+} */
 const ROUNDOFFSETTOAVAIL_DEF = -3;
 const close_sale = async (jdata) => {
   let { itemid, contractaddress, tokenid, orderuuid, username, nettype , txhash } = jdata;
@@ -187,6 +188,7 @@ const handle_pay_case = async (jdata) => {
   let respcirc = await findone( "circulations", { itemid, nettype });
   if (respcirc) {
     let { price, roundnumber, countchangehands } = respcirc;
+		let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH ( nettype )
     if (+roundnumber < MAX_ROUND_TO_REACH) {       // max not reached yet
       await updaterow(
         "items",
@@ -229,6 +231,35 @@ const handle_pay_case = async (jdata) => {
 			await updaterow ('users' , { username , nettype } , {ismaxreached : 1 } )
 			await updaterow ('items' , { itemid , nettype } , {ismaxreached : 1 } )
     }
+      await updaterow (        "circulations",
+        { id: respcirc.id },
+        {          //				price : price 				,
+          roundnumber: 1 + +roundnumber,
+          countchangehands: 1 + +countchangehands,
+        }
+      );
+      await updaterow(
+        "users",
+        { username, nettype },
+        {	lastroundmadepaymentfor: roundnumber,
+          lasttimemadepaymentat: moment().unix(),
+        }
+      );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
   } else {
     // no circ defined, should not have happened, give a fallback
     await createrow("circulations", {
@@ -370,7 +401,7 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
             );
             await updateorcreaterow(
               "ballots",
-              { username: address, nettype: nettype ? nettype : "ETH_TESTNET" },
+              { username: address, nettype: nettype ? nettype : 'BSC_MAINNET'  }, // "ETH_TES TNET"
               { isstaked: 1 }
             );
             let { currency, currencyaddress } = PARSER(strauxdata); // ,nettype

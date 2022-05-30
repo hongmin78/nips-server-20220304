@@ -1,7 +1,12 @@
 var express = require('express');
 var router = express.Router();
+<<<<<<< HEAD
 // let nettype='BSC_MAINNET'
 let { nettype } =require('../configs/net' ) // 'ETH_TESTNET'
+=======
+let nettype='BSC_MAINNET'
+// let nettype='ETH_TEST NET'
+>>>>>>> origin/main
 const { REFERERCODELEN}=require('../configs/configs')
 const { findone, createrow
 	, countrows_scalar
