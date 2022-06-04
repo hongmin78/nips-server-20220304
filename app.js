@@ -18,6 +18,7 @@ const devtestrouter = require("./routes/devtest");
 const adminRouter = require("./routes/admin");
 const itemstatsrouter = require("./routes/itemstats");
 const testsrouter = require("./routes/tests");
+const ordersrouter = require("./routes/orders");
 const LOGGER = console.log;
 const cors = require("cors");
 var app = express();
@@ -49,6 +50,7 @@ app.use("/devtest", devtestrouter);
 app.use("/admin", adminRouter);
 app.use("/itemstats", itemstatsrouter);
 app.use("/tests", testsrouter);
+app.use("/orders", ordersrouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

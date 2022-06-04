@@ -1,7 +1,19 @@
 var express = require("express");
 var router = express.Router();
-let { create_uuid_via_namespace, generaterandomstr, ISFINITE, uuidv4 } = require("../utils/common");
-let { findone, findall, createrow, updateorcreaterow, updaterow, moverow } = require("../utils/db");
+let {
+  create_uuid_via_namespace,
+  generaterandomstr,
+  ISFINITE,
+  uuidv4,
+} = require("../utils/common");
+let {
+  findone,
+  findall,
+  createrow,
+  updateorcreaterow,
+  updaterow,
+  moverow,
+} = require("../utils/db");
 let { respok, resperr } = require("../utils/rest");
 const { messages } = require("../configs/messages");
 const LOGGER = console.log;
@@ -21,7 +33,8 @@ const validate_expiry = (expiry) => {
     return false;
   }
 };
-router.delete( "/:fieldname/:fieldval" , async (req, res) => {  LOGGER("", req.body);
+router.delete("/:fieldname/:fieldval", async (req, res) => {
+  LOGGER("", req.body);
   let { fieldname, fieldval } = req.params;
   let { username } = req.body;
   if (username) {
@@ -46,7 +59,11 @@ router.delete( "/:fieldname/:fieldval" , async (req, res) => {  LOGGER("", req.b
       typestr: "CANCEL_SALE",
       uuid, // : generaterandomstr(40)
     });
-    await updateorcreaterow("items", { itemid: resp.itemid }, { salestatus: 0 });
+    await updateorcreaterow(
+      "items",
+      { itemid: resp.itemid },
+      { salestatus: 0 }
+    );
   });
 });
 //		moverow(fromtable, jfilter, totable , auxdata)
@@ -116,13 +133,15 @@ router.post("/", async (req, res) => {
   if (itemid) {
   } else if (contractaddress && tokenid) {
   } else {
-    resperr(res, messages.MSG_ARGINVALID, null, { reason: "item not specified" });
+    resperr(res, messages.MSG_ARGINVALID, null, {
+      reason: "item not specified",
+    });
     return;
   }
-	let {signature , msg }=jsignature
-  if (jsignature && jsignature?.signature) {
-  } else {
-  }
+  // let {signature , msg }=jsignature
+  // if (jsignature && jsignature?.signature) {
+  // } else {
+  // }
   let uuid;
   if (contractaddress && tokenid) {
     let respitem = await findone("items", { itemid });
@@ -134,25 +153,33 @@ router.post("/", async (req, res) => {
     }
   } else {
   }
-  if (expiry && ISFINITE(+expiry)) {
-  } else {
-    resperr(res, messages.MSG_ARGMISSING);
-    return;
-  }
+  // if (expiry && ISFINITE(+expiry)) {
+  // } else {
+  //   resperr(res, messages.MSG_ARGMISSING);
+  //   return;
+  // }
 
-  if (validate_expiry(expiry)) {
-  } else {
-    resperr(res, messages.MSG_ARGINVALID);
-    return;
-  }
-  uuid = create_uuid_via_namespace(`${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`); // `${contractaddress}_${tokenid}`
+  // if (validate_expiry(expiry)) {
+  // } else {
+  //   resperr(res, messages.MSG_ARGINVALID);
+  //   return;
+  // }
+  uuid = create_uuid_via_namespace(
+    `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
+  ); // `${contractaddress}_${tokenid}`
 
   let resporder = await findone("orders", { uuid });
   if (resporder) {
   } // resperr( res, messages.MSG_DATADUPLICATE); return }
   else {
   }
-  await updateorcreaterow("orders", { uuid }, { ...req.body , signature , msg:msg?msg:null });
+  // await updateorcreaterow("orders", { uuid }, { ...req.body , signature , msg:msg?msg:null });
+  // await updateorcreaterow(
+  //   "orders",
+  //   { uuid },
+  //   { ...req.body, msg: msg ? msg : null }
+  // );
+  await updateorcreaterow("orders", { uuid }, { ...req.body });
   respok(res, null, null, { uuid });
   updateorcreaterow(
     "items",
