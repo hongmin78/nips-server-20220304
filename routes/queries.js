@@ -23,7 +23,12 @@ const {
   separatebycommas,
   convaj,
 } = require("../utils/common");
-const { respok, respreqinvalid, resperr, resperrwithstatus } = require("../utils/rest");
+const {
+  respok,
+  respreqinvalid,
+  resperr,
+  resperrwithstatus,
+} = require("../utils/rest");
 const { messages } = require("../configs/messages");
 const { getuseragent, getipaddress } = require("../utils/session"); // const {sendemail, sendemail_customcontents_withtimecheck}=require('../services/mailer')
 const { validateemail } = require("../utils/validates");
@@ -35,7 +40,7 @@ const TOKENLEN = 48;
 let { Op } = db.Sequelize;
 // let nettype = "ETH-TEST NET";
 let nettype = "BSC_MAINNET";
-const convliker=str=>'%' + str + '%'
+const convliker = (str) => "%" + str + "%";
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
   ASC: 1,
@@ -77,14 +82,19 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
     //		if ( talename=='settings' ) {
     //	} else {
-    await updateorcreaterow(tablename, { key_: elem, ...req.query }, { value_: valuetoupdateto });
+    await updateorcreaterow(
+      tablename,
+      { key_: elem, ...req.query },
+      { value_: valuetoupdateto }
+    );
     // }
   });
   respok(res);
   mqpub(jpostdata);
 });
-const B_APPLY_OFFSET_KST = true
-router.put("/update-or-create-rows/:tablename", async (req, res) => { const B_ADJUST_TO_UTC_ON_SERVER_SIDE = false
+const B_APPLY_OFFSET_KST = true;
+router.put("/update-or-create-rows/:tablename", async (req, res) => {
+  const B_ADJUST_TO_UTC_ON_SERVER_SIDE = false;
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
@@ -97,14 +107,23 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => { const B_AD
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-    if (B_ADJUST_TO_UTC_ON_SERVER_SIDE && ( elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS") ) {  //			&& +valuetoupdateto > 3600 * 24) {
-				valuetoupdateto  = +valuetoupdateto  
-			if ( B_APPLY_OFFSET_KST ) {
-				valuetoupdateto -= 3600* 9 
-			}
+    if (
+      B_ADJUST_TO_UTC_ON_SERVER_SIDE &&
+      (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" ||
+        elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS")
+    ) {
+      //			&& +valuetoupdateto > 3600 * 24) {
+      valuetoupdateto = +valuetoupdateto;
+      if (B_APPLY_OFFSET_KST) {
+        valuetoupdateto -= 3600 * 9;
+      }
       valuetoupdateto = valuetoupdateto % (3600 * 24);
     }
-    await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
+    await updateorcreaterow(
+      tablename,
+      { key_: elem, subkey_: nettype },
+      { value_: valuetoupdateto }
+    );
   });
   respok(res);
   mqpub(jpostdata);
@@ -139,7 +158,9 @@ router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
         let respfieldex = await fieldexists(tablename, elem);
         if (respfieldex) {
         } else {
-          resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: elem } });
+          resperr(res, messages.MSG_ARGINVALID, null, {
+            payload: { reason: elem },
+          });
           return;
         }
       }
@@ -176,14 +197,18 @@ router.get("/max/:tablename/:fieldname", async (req, res) => {
   tableexists(tablename).then(async (resp) => {
     if (resp) {
     } else {
-      resperr(res, messages.MSG_DATANOTFOUND, null, { payload: { reason: "tablename" } });
+      resperr(res, messages.MSG_DATANOTFOUND, null, {
+        payload: { reason: "tablename" },
+      });
       return;
     }
 
     let respfieldexists = await fieldexists(tablename, fieldname);
     if (respfieldexists) {
     } else {
-      resperr(res, messages.MSG_DATANOTFOUND, null, { payload: { reason: "fieldname" } });
+      resperr(res, messages.MSG_DATANOTFOUND, null, {
+        payload: { reason: "fieldname" },
+      });
       return;
     }
 
@@ -250,297 +275,359 @@ router.get("/rows_v1/jsonobject/:tablename/:keyname/:valuename", (req, res) => {
   });
 });
 
-router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  // :fieldname/:fieldval/
-  let { tablename, offset, limit, orderkey, orderval } = req.params;
-  let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
-  const username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "offset-or-limit-invalid" } });
-      return;
-    }
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderby-value-invalid" } });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderkey-invalid" } });
-      return;
-    }
+router.get(
+  "/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    // :fieldname/:fieldval/
+    let { tablename, offset, limit, orderkey, orderval } = req.params;
+    let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
+    const username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
 
-    let jfilter = {};
-    let { fieldname, fieldvalues } = req.query;
-    if (fieldname && fieldvalues) {
-      if (fieldvalues.length) {
-        if (fieldvalues.match(/\,/) && fieldvalues.match(/(?<big>[a-zA-Z0-9]+)/)) {
-          let arrfieldvalues = separatebycommas(fieldvalues);
-          LOGGER("pPPlj4EEMG", arrfieldvalues);
-          jfilter = expand_fieldval_matches(fieldname, arrfieldvalues);
+      let jfilter = {};
+      let { fieldname, fieldvalues } = req.query;
+      if (fieldname && fieldvalues) {
+        if (fieldvalues.length) {
+          if (
+            fieldvalues.match(/\,/) &&
+            fieldvalues.match(/(?<big>[a-zA-Z0-9]+)/)
+          ) {
+            let arrfieldvalues = separatebycommas(fieldvalues);
+            LOGGER("pPPlj4EEMG", arrfieldvalues);
+            jfilter = expand_fieldval_matches(fieldname, arrfieldvalues);
+          } else {
+            jfilter[fieldname] = fieldvalues;
+          }
         } else {
-          jfilter[fieldname] = fieldvalues;
         }
       } else {
-      }
-    } else {
-    } //		jfilter[ fieldname ]	=fieldval
-    db[tablename]
-      .findAll({ raw: true, where: { ...jfilter }, offset, limit, order: [[orderkey, orderval]] })
-      .then((list_00) => {
-        //		if (tablename=='items'){
-        if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-          let aproms = [];
-          if (username) {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata_user(elem.itemid, username);
+      } //		jfilter[ fieldname ]	=fieldval
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter },
+          offset,
+          limit,
+          order: [[orderkey, orderval]],
+        })
+        .then((list_00) => {
+          //		if (tablename=='items'){
+          if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+            let aproms = [];
+            if (username) {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata_user(
+                  elem.itemid,
+                  username
+                );
+              });
+            } else {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata(elem.itemid);
+              });
+            }
+            Promise.all(aproms).then((list) => {
+              //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
+              //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
+              list = list.map((elem, idx) => {
+                return { ...list_00[idx], ...elem };
+              });
+              respok(res, null, null, { list });
             });
           } else {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata(elem.itemid);
-            });
+            respok(res, null, null, { list: list_00 });
           }
-          Promise.all(aproms).then((list) => {
-            //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
-            //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
-            list = list.map((elem, idx) => {
-              return { ...list_00[idx], ...elem };
-            });
-            respok(res, null, null, { list });
-          });
-        } else {
-          respok(res, null, null, { list: list_00 });
-        }
-      });
-  });
-});
+        });
+    });
+  }
+);
 
 //
 
-router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
-  let { itemdetail, userdetail, filterkey, filterval, nettype } = req.query;
-  let { searchkey } = req.query;
-  let { date0, date1 } = req.query;
+router.get(
+  "/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } =
+      req.params;
+    let { itemdetail, userdetail, filterkey, filterval, nettype } = req.query;
+    let { searchkey } = req.query;
+    let { date0, date1 } = req.query;
 
-  console.log(date0);
-  console.log(date1);
-  const username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "offset-or-limit-invalid" } });
-      return;
-    }
-    offset = parseInt(offset);
-    limit = parseInt(limit);
-
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderby-value-invalid" } });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderkey-invalid" } });
-      return;
-    }
-    let jfilter = {};
-    jfilter[fieldname] = fieldval;
-    if (filterkey && filterval) {
-      let respfieldexists = await fieldexists(tablename, filterkey);
-      if (respfieldexists) {
+    console.log(date0);
+    console.log(date1);
+    const username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
       } else {
         resperr(res, messages.MSG_DATANOTFOUND);
         return;
       }
-      jfilter[filterkey] = filterval;
-    } else {
-    }
-    if (searchkey) {
-      let liker = convliker(searchkey);
-      let jfilter_02 =get_search_table_fields(tablename, liker) //  expand_search(tablename, liker);
-      jfilter = { ...jfilter, ...jfilter_02 };
-    } else {
-    }
-    if (date0) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date0 && date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    console.log(jfilter);
-    db[tablename]
-      .findAll({ raw: true, where: { ...jfilter, nettype: nettype }, offset, limit, order: [[orderkey, orderval]] })
-      .then(async (list_00) => {
-        let count = await countrows_scalar(tablename, jfilter);
-        respok(res, null, null, { list: list_00, payload: { count } });
-        //		if (tablename=='items'){
-        return;
-      });
-  });
-});
-router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
-  let { itemdetail, userdetail, filterkey, filterval, nettype, random } = req.query;
-  let { searchkey } = req.query;
-  let { date0, date1 } = req.query;
-  console.log(date0);
-  console.log(date1);
-  const username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "offset-or-limit-invalid" } });
-      return;
-    }
-    offset = parseInt(offset);
-    limit = parseInt(limit);
-
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderby-value-invalid" } });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, { payload: { reason: "orderkey-invalid" } });
-      return;
-    }
-    let jfilter = {};
-    jfilter[fieldname] = fieldval;
-    if (filterkey && filterval) {
-      let respfieldexists = await fieldexists(tablename, filterkey);
-      if (respfieldexists) {
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
       } else {
-        resperr(res, messages.MSG_DATANOTFOUND);
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
         return;
       }
-      jfilter[filterkey] = filterval;
-    } else {
-    }
-    if (searchkey) {
-      let liker = convliker(searchkey);
-      let jfilter_02 = get_search_table_fields(tablename, liker) // expand_search(tablename, liker);
-      jfilter = { ...jfilter, ...jfilter_02 };
-    } else {
-    }
-    if (date0) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date0 && date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (nettype) {
-      jfilter["nettype"] = nettype;
-    }
-    console.log(jfilter);
-    let order = random ? db.Sequelize.literal("rand()") : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
-    db[tablename].findAll({ raw: true, where: { ...jfilter }, offset, limit, order: order }).then(async (list_00) => {
-      let count = await countrows_scalar(tablename, jfilter);
-      //        respok(res, null, null, { list: list_00, payload: { count } });
-      //		if (tablename=='items'){
-      //      return;
-      if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-        let aproms = [];
-        if (username) {
-          list_00.forEach((elem) => {
-            aproms[aproms.length] = queryitemdata_user(elem.itemid, username, nettype);
-          });
+      offset = parseInt(offset);
+      limit = parseInt(limit);
+
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+      let jfilter = {};
+      jfilter[fieldname] = fieldval;
+      if (filterkey && filterval) {
+        let respfieldexists = await fieldexists(tablename, filterkey);
+        if (respfieldexists) {
         } else {
+          resperr(res, messages.MSG_DATANOTFOUND);
+          return;
+        }
+        jfilter[filterkey] = filterval;
+      } else {
+      }
+      if (searchkey) {
+        let liker = convliker(searchkey);
+        let jfilter_02 = get_search_table_fields(tablename, liker); //  expand_search(tablename, liker);
+        jfilter = { ...jfilter, ...jfilter_02 };
+      } else {
+      }
+      if (date0) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date0 && date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      console.log(jfilter);
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter, nettype: nettype },
+          offset,
+          limit,
+          order: [[orderkey, orderval]],
+        })
+        .then(async (list_00) => {
+          let count = await countrows_scalar(tablename, jfilter);
+          respok(res, null, null, { list: list_00, payload: { count } });
+          //		if (tablename=='items'){
+          return;
+        });
+    });
+  }
+);
+router.get(
+  "/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } =
+      req.params;
+    let { itemdetail, userdetail, filterkey, filterval, nettype, random } =
+      req.query;
+    let { searchkey } = req.query;
+    let { date0, date1 } = req.query;
+    console.log(date0);
+    console.log(date1);
+    const username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      offset = parseInt(offset);
+      limit = parseInt(limit);
+
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+      let jfilter = {};
+      jfilter[fieldname] = fieldval;
+      if (filterkey && filterval) {
+        let respfieldexists = await fieldexists(tablename, filterkey);
+        if (respfieldexists) {
+        } else {
+          resperr(res, messages.MSG_DATANOTFOUND);
+          return;
+        }
+        jfilter[filterkey] = filterval;
+      } else {
+      }
+      if (searchkey) {
+        let liker = convliker(searchkey);
+        let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
+        jfilter = { ...jfilter, ...jfilter_02 };
+      } else {
+      }
+      if (date0) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date0 && date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (nettype) {
+        jfilter["nettype"] = nettype;
+      }
+      console.log(jfilter);
+      let order = random
+        ? db.Sequelize.literal("rand()")
+        : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter },
+          offset,
+          limit,
+          order: order,
+        })
+        .then(async (list_00) => {
+          let count = await countrows_scalar(tablename, jfilter);
+          //        respok(res, null, null, { list: list_00, payload: { count } });
+          //		if (tablename=='items'){
+          //      return;
+          // if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+          let aproms = [];
+          // if (username) {
+          //   list_00.forEach((elem) => {
+          //     aproms[aproms.length] = queryitemdata_user(
+          //       elem.itemid,
+          //       username,
+          //       nettype
+          //     );
+          //   });
+          // } else {
           list_00.forEach((elem) => {
             aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
           });
-        }
-        Promise.all(aproms).then((list) => {
-          //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
-          //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
-          list = list.map((elem, idx) => {
-            return { ...list_00[idx], ...elem };
+          // }
+          Promise.all(aproms).then((list) => {
+            //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
+            //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
+            list = list.map((elem, idx) => {
+              return { ...list_00[idx], ...elem };
+            });
+            respok(res, null, null, { list, payload: { count } });
           });
-          respok(res, null, null, { list, payload: { count } });
+          // } else if (userdetail) {
+          //   let aproms = [];
+          //   list_00.forEach((elem) => {
+          //     aproms[aproms.length] = queryuserdata(elem.username);
+          //   });
+          //   Promise.all(aproms).then((list) => {
+          //     list = list.map((elem, idx) => {
+          //       return { ...elem, ...list_00[idx] };
+          //     });
+          //     respok(res, null, null, { list, payload: { count } });
+          //   });
+          // } else {
+          // respok(res, null, null, { list: list_00, payload: { count } });
+          // }
         });
-      } else if (userdetail) {
-        let aproms = [];
-        list_00.forEach((elem) => {
-          aproms[aproms.length] = queryuserdata(elem.username);
-        });
-        Promise.all(aproms).then((list) => {
-          list = list.map((elem, idx) => {
-            return { ...elem, ...list_00[idx] };
-          });
-          respok(res, null, null, { list, payload: { count } });
-        });
-      } else {
-        respok(res, null, null, { list: list_00, payload: { count } });
-      }
     });
-  });
-});
+  }
+);
 router.get("/:tablename", (req, res) => {
   let { tablename } = req.params;
   if (MAP_TABLENAME_QUERY_ALLOWED[tablename]) {
@@ -614,19 +701,24 @@ const get_search_table_fields = (tablename, liker) => {
           { buyer: { [Op.like]: liker } },
           { seller: { [Op.like]: liker } },
         ],
-      };       //  , {nettype : {[Op.like] : liker} }}
+      }; //  , {nettype : {[Op.like] : liker} }}
       break;
-		case 'users' : 
-			return {
+    case "users":
+      return {
         [Op.or]: [
           { username: { [Op.like]: liker } },
-          { email : { [Op.like]: liker } },
-          { address : { [Op.like]: liker } },
-          { nickname : { [Op.like]: liker } },
+          { email: { [Op.like]: liker } },
+          { address: { [Op.like]: liker } },
+          { nickname: { [Op.like]: liker } },
         ],
-			}
-		break
+      };
+      break;
     default:
-      return { [Op.or]: [{ name: { [Op.like]: liker } }, { address: { [Op.like]: liker } }] };
+      return {
+        [Op.or]: [
+          { name: { [Op.like]: liker } },
+          { address: { [Op.like]: liker } },
+        ],
+      };
   }
 };
