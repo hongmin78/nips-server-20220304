@@ -45,9 +45,13 @@ router.get("/item/:itemid", async (req, res) => {
       let itembalances = aresps[0];
       let circulations = aresps[1];
       let itemhistory = aresps[2];
+      let order_detail = await findone("orders", {
+        itemid: resp.itemid,
+      });
       respok(res, null, null, {
         respdata: {
           ...resp,
+          order_detail,
           itembalances, // : STRINGER(itembalances)
           circulations, // : STRINGER(circulations )
           itemhistory,

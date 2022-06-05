@@ -73,7 +73,9 @@ router.post("/:txhash", async (req, res) => {
     }
   );
   if (itemid) {
-    let resproundnumber = await findone("settings", { key_: "BALLOT_ROUND_NUMBER" });
+    let resproundnumber = await findone("settings", {
+      key_: "BALLOT_ROUND_NUMBER",
+    });
     let roundnumber = 0;
     if (resproundnumber && ISFINITE(+resproundnumber?.value_)) {
       roundnumber = +resproundnumber?.value_;
@@ -116,8 +118,8 @@ router.post("/:txhash", async (req, res) => {
         .then((resp) => {
           enqueue_tx_toclose(txhash, uuid, nettype);
         });
-			break;
-			case "BUY_NFT_ITEM":
+      break;
+    case "BUY_NFT_ITEM":
       cliredisa
         .hset(
           "TX-TABLES",
@@ -135,7 +137,7 @@ router.post("/:txhash", async (req, res) => {
             tokenid,
             uuid,
             strauxdata,
-						orderuuid : req.body.auxdata.uuid
+            orderuuid: req.body.auxdata.uuid,
           })
         )
         .then((resp) => {
@@ -143,7 +145,7 @@ router.post("/:txhash", async (req, res) => {
         });
       /*****/
       break;
-		}
+  }
   createifnoneexistent(
     "transactionstotrack",
     { txhash },
