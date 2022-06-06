@@ -11,15 +11,24 @@ router.get("/item/:itemid", async (req, res) => {
   //	console.log('hello')
   let { nettype } = req.query;
   let { itemid } = req.params;
+
   if (nettype) {
   } else {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
   let aproms = [];
-  aproms[aproms.length] = findone("itembalances", { itemid, nettype });
+
+  // aproms[aproms.length] = findone("itembalances", { itemid, nettype });
   aproms[aproms.length] = findone("circulations", { itemid, nettype });
   aproms[aproms.length] = findall("itemhistory", { itemid, nettype });
+  let resp = await db["itembalances"].findOne({
+    raw: true,
+    where: { itemid, nettype },
+  });
+
+  console.log("ITEMBALANCE", resp);
+
   db["items"]
     .findOne({
       raw: true,
@@ -45,13 +54,19 @@ router.get("/item/:itemid", async (req, res) => {
       let itembalances = aresps[0];
       let circulations = aresps[1];
       let itemhistory = aresps[2];
-      let order_detail = await findone("orders", {
-        itemid: resp.itemid,
-      });
+      let ticket_details = aresps[3];
+      let item_order_detail = {};
+      if (resp && resp.itemid) {
+        item_order_detail = await findone("orders", {
+          itemid: resp.itemid,
+        });
+      }
+
       respok(res, null, null, {
         respdata: {
           ...resp,
-          order_detail,
+          item_order_detail,
+          ticket_details,
           itembalances, // : STRINGER(itembalances)
           circulations, // : STRINGER(circulations )
           itemhistory,
