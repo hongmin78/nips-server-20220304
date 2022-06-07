@@ -33,9 +33,9 @@ const { queryitemdata, queryitemdata_user } = require("../utils/db-custom");
 const { queryuserdata } = require("../utils/db-custom-user");
 const TOKENLEN = 48;
 let { Op } = db.Sequelize;
-// let nettype = "ETH-TEST NET";
-let nettype = "BSC_MAINNET";
-const convliker=str=>'%' + str + '%'
+let nettype = "ETH-TESTNET";
+// let nettype = "BSC_MAINNET";
+const convliker = (str) => "%" + str + "%";
 const { mqpub } = require("../services/mqpub");
 const MAP_ORDER_BY_VALUES = {
   ASC: 1,
@@ -83,8 +83,9 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
   respok(res);
   mqpub(jpostdata);
 });
-const B_APPLY_OFFSET_KST = true
+const B_APPLY_OFFSET_KST = true;
 router.put("/update-or-create-rows/:tablename", async (req, res) => {
+  const B_ADJUST_TO_UTC_ON_SERVER_SIDE = false;
   LOGGER("", req.body);
   let { tablename, keyname, valuename } = req.params;
   let { nettype } = req.query;
@@ -97,11 +98,15 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
   }
   KEYS(jpostdata).forEach(async (elem) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
-    if (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS") {  //			&& +valuetoupdateto > 3600 * 24) {
-				valuetoupdateto  = +valuetoupdateto  
-			if ( B_APPLY_OFFSET_KST ) {
-				valuetoupdateto -= 3600* 9 
-			}
+    if (
+      B_ADJUST_TO_UTC_ON_SERVER_SIDE &&
+      (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS")
+    ) {
+      //			&& +valuetoupdateto > 3600 * 24) {
+      valuetoupdateto = +valuetoupdateto;
+      if (B_APPLY_OFFSET_KST) {
+        valuetoupdateto -= 3600 * 9;
+      }
       valuetoupdateto = valuetoupdateto % (3600 * 24);
     }
     await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
@@ -377,7 +382,7 @@ router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:o
     }
     if (searchkey) {
       let liker = convliker(searchkey);
-      let jfilter_02 =get_search_table_fields(tablename, liker) //  expand_search(tablename, liker);
+      let jfilter_02 = get_search_table_fields(tablename, liker); //  expand_search(tablename, liker);
       jfilter = { ...jfilter, ...jfilter_02 };
     } else {
     }
@@ -466,7 +471,7 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
     }
     if (searchkey) {
       let liker = convliker(searchkey);
-      let jfilter_02 = get_search_table_fields(tablename, liker) // expand_search(tablename, liker);
+      let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
       jfilter = { ...jfilter, ...jfilter_02 };
     } else {
     }
@@ -614,18 +619,18 @@ const get_search_table_fields = (tablename, liker) => {
           { buyer: { [Op.like]: liker } },
           { seller: { [Op.like]: liker } },
         ],
-      };       //  , {nettype : {[Op.like] : liker} }}
+      }; //  , {nettype : {[Op.like] : liker} }}
       break;
-		case 'users' : 
-			return {
+    case "users":
+      return {
         [Op.or]: [
           { username: { [Op.like]: liker } },
-          { email : { [Op.like]: liker } },
-          { address : { [Op.like]: liker } },
-          { nickname : { [Op.like]: liker } },
+          { email: { [Op.like]: liker } },
+          { address: { [Op.like]: liker } },
+          { nickname: { [Op.like]: liker } },
         ],
-			}
-		break
+      };
+      break;
     default:
       return { [Op.or]: [{ name: { [Op.like]: liker } }, { address: { [Op.like]: liker } }] };
   }

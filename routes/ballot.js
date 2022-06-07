@@ -111,15 +111,15 @@ router.get("/roundstate", (req, res) => {
 //   func00_allocate_items_to_users,
 //   func01_inspect_payments,
 //   func_00_04_handle_max_round_reached,
-// } = require("../ballot/routine-daily-ETH_TESTNET");
+// } = require("../ballot/routine-daily-ETH_TE STNET");
 const {
   //		func_00_01_draw_users
   //, func_00_02_draw_items	,
   func_00_03_advance_round,
   func00_allocate_items_to_users,
   func01_inspect_payments,
-  // func_00_04_handle_max_round_reached,
-} = require("../ballot/routine-daily-ETH_TESTNET"); // routine-daily-BSC_MAINNET");
+  func_00_04_handle_max_round_reached,
+} = require("../ballot/routine-daily-common"); // ETH_TESTNET
 /** items.salestatus
 logrounds
 settings
@@ -143,13 +143,9 @@ router.post("/init/rounds", async (req, res) => {
   await deleterow("circulations", { nettype });
   await deleterow("delinquencies", { nettype });
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
-  await updaterow(
-    "ballots",
-    { nettype },
-    { counthelditems: 0, lastroundmadepaymentfor: -4, isdelinquent: 0, active: 0 }
-  ); // update ballots set active=1 where nettype ='ETH_TESTNET';
+  await updaterow("ballots", { nettype }, { counthelditems: 0, lastroundmadepaymentfor: -4, isdelinquent: 0 }); // update ballots set active=1 where nettype ='ETH_TESTNET';
   await deleterow("itembalances", { nettype });
-  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4, isdelinquent: 0, active: 0 });
+  await updaterow("users", { nettype }, { lastroundmadepaymentfor: -4, isdelinquent: 0 });
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
@@ -174,7 +170,7 @@ router.post("/advance/roundstate", async (req, res) => {
       case 0:
         await func_00_03_advance_round(nettype);
         await func00_allocate_items_to_users(nettype);
-        // await func_00_04_handle_max_round_reached(nettype);
+        await func_00_04_handle_max_round_reached(nettype);
         break;
       case 1:
         await func01_inspect_payments(nettype);

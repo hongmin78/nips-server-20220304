@@ -111,6 +111,7 @@ const createrow = async (table, jdata) => {
 const countrows_scalar = (table, jfilter) => {
   return new Promise((resolve, reject) => {
     db[table].count({ where: { ...jfilter } }).then((resp) => {
+      LOGGER("countrows_scalarresp", jfilter, table);
       if (resp) {
         resolve(resp);
       } else {
