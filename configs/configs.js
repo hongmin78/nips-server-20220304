@@ -1,7 +1,7 @@
 const TOKENLEN = 48;
 const REFERERCODELEN = 10;
 
-const B_ASSIGN_DELINQUENT_ITEMS = false;
+const B_ASSIGN_DELINQUENT_ITEMS = true;
 const B_ALLOW_TO_ASSIGN_MULTIPLE_ITEMS_PER_USER = true;
 module.exports = {
   TOKENLEN,

@@ -238,6 +238,13 @@ router.put("/update-or-create-rows/:tablename/:statusstr", async (req, res) => {
     });
     mqpub(jpostdata);
   }
+  if (statusstr == "MAX_ROUND_TO_REACH_DEF") {
+    KEYS(jpostdata).forEach(async (elem) => {
+      let valuetoupdateto = jpostdata[elem]; //		let jdata={}
+      await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
+    });
+    mqpub(jpostdata);
+  }
   respok(res);
 });
 

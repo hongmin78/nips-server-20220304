@@ -387,7 +387,7 @@ const func01_inspect_payments = async (nettype) => {
     where: { active: 1, nettype },
     //		, where : { duetimeunix : { [Op.lte] : timenow } }
   }); // findall ('receivables' , {} )
-  LOGGER("timenow@inspect", timenow, nettype);
+  LOGGER("timenow@inspect", timenow, nettype, listreceivables);
 
   if (listreceivables.length > 0) {
   } else {
@@ -395,6 +395,7 @@ const func01_inspect_payments = async (nettype) => {
     return;
   }
   let respdelinquencydiscountfactor = await findone("settings", { key_: "BALLOT_DELINQUENCY_DISCOUNT_FACTOR_BP" });
+  LOGGER("respdelinquencydiscountfactor", respdelinquencydiscountfactor);
   let { value_: delinq_discount_factor } = respdelinquencydiscountfactor;
   listreceivables.forEach(async (elem, idx) => {
     if (+elem.amount > 0) {
@@ -408,8 +409,10 @@ const func01_inspect_payments = async (nettype) => {
     let { roundnumber, itemid, username, amount, nettype } = elem;
 
     let uuid = uuidv4();
+    await updaterow("items", { itemid, nettype }, { isdelinquent: 1 });
     await updaterow("ballots", { username, nettype }, { active: 0, isdelinquent: 1 });
     await updaterow("users", { username, nettype }, { active: 0, isdelinquent: 1 });
+
     await incrementrow({
       table: "logrounds",
       jfilter: { roundnumber, nettype },
@@ -434,7 +437,7 @@ const func01_inspect_payments = async (nettype) => {
       typestr: "DELINQUENT", // TENTATIVE_ASSIGN'
       nettype,
     });
-    await updaterow("items", { nettype, itemid }, { isdelinquent: 1 });
+
     let roundnumber_global = await getroundnumber_global(nettype); // round_number_global
     await createrow("logactions", {
       username,
@@ -583,7 +586,7 @@ const J_ALLOCATE_FACTORS = {
   MIN: 0,
 };
 
-const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = async (N) => {
+const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = async (N, nettype) => {
   //	findall ( '' )
   if (N > 0) {
   } else {
@@ -593,17 +596,24 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     raw: true,
     where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
   });
+  LOGGER("list_00", list_00.length, N);
 
   let countdelinquent = list_00.length;
   let list = [];
   if (list_00.length >= N) {
-  } else {
     let list_01 = await db["items"].findAll({
+      raw: true,
+      where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 0 },
+      limit: countdelinquent + N,
+    });
+    list = [...list_00, ...list_01];
+  } else {
+    let list_03 = await db["items"].findAll({
       raw: true,
       where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 0 },
       limit: N - countdelinquent,
     });
-    list = [...list_00, ...list_01];
+    list = [...list_00, ...list_03];
   }
   shufflearray(list);
   shufflearray(list);
