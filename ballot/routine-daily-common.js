@@ -83,18 +83,18 @@ const get_sales_account = async (role, nettype) => {
 
 const func_00_01_draw_users = async (jdata) => {
   let { roundnumber, nettype } = jdata;
-  LOGGER("jdata", jdata);
+
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
   // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
   let count_users = await countrows_scalar("ballots", { active: 1, nettype });
-  LOGGER("_count_users_ ", count_users);
+
   if (count_users > 0) {
   } else {
     return [];
   }
   let allocatefactor_bp = J_ALLOCATE_FACTORS.DEF; // _BP_DEF
   let respallocatefactor = await findone("settings", { key_: "BALLOT_DRAW_FRACTION_BP", nettype });
-  LOGGER("respallocatefactor", respallocatefactor);
+
   if (respallocatefactor) {
     let { value_: allocatefactor_settings } = respallocatefactor;
     allocatefactor_settings = +allocatefactor_settings;
@@ -167,10 +167,9 @@ const func00_allocate_items_to_users = async (nettype) => {
   }
   let listreceivers0 = await func_00_01_draw_users({ nettype, roundnumber: round_number_global });
 
-  //  LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
-  LOGGER("@listreceivers0: ", listreceivers0.length, listreceivers0);
+
   let timenow = moment();
   let timenowunix = timenow.unix();
   let timenowstr = timenow.format(STR_TIME_FORMAT);
@@ -191,7 +190,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     //    itemstogive = await func_00_02_draw_items(NReceivers);
     itemstogive = await func_00_02_draw_items(NReceivers, nettype); //  func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
     NItemstogive = itemstogive.length;
-    LOGGER("@itemstogive : ", itemstogive, NItemstogive);
+
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
     if (NMin > 0) {
@@ -210,20 +209,22 @@ const func00_allocate_items_to_users = async (nettype) => {
     //	}
     //		else { ; }
     listreceivers0 = await match_with_obj(listreceivers0, itemstogive);
+    LOGGER("listreceivers0", listreceivers0);
     for (let i = 0; i < NMin; i++) {
       let item = itemstogive[i];
-      let { itemid, isdelinquent: itemisdelinquent } = item;
+      let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
       let { username } = listreceivers0[i];
       await updaterow(
         "items",
         { itemid, nettype },
         { salestatus: MAP_SALE_STATUS["ASSIGNED"], salesstatusstr: "assigned" }
       );
+      LOGGER("item", item);
       //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
       let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
       let price01; // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE
       let respcirculation = await findone("circulations", { itemid, nettype });
-      //		LOGGER( '@respcirculation ' , itemid , respcirculation )
+
       let price;
       let roundnumber;
       if (respcirculation) {
@@ -239,7 +240,7 @@ const func00_allocate_items_to_users = async (nettype) => {
         } else {
           price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
         }
-        LOGGER("@respcirculation ", itemid, respcirculation, price00, price01);
+
         roundnumber = 1 + +roundnumber;
         await updaterow(
           "circulations",
@@ -295,6 +296,7 @@ const func00_allocate_items_to_users = async (nettype) => {
         duetime: duetime ? duetime.format(STR_TIME_FORMAT) : null,
         seller, // : roundnumber>0?  : SALES_ACCOUNT_NONE_TI CKET
         nettype,
+        group_,
       });
       await createrow("itemhistory", {
         itemid,
@@ -350,10 +352,10 @@ const func00_allocate_items_to_users = async (nettype) => {
     }
   );
 };
-/** let MAX_RO UND_REACH_RELATED_PARAMS = {
-  MAX_RO UND_TO_REACH_DEF: 17,
-  COUNT_KONGS_TO_ASSIGN: 2,
-}; */
+// let MAX_ROUND_REACH_RELATED_PARAMS = {
+//   MAX_ROUND_TO_REACH_DEF: 2,
+//   COUNT_KONGS_TO_ASSIGN: 2,
+// };
 const func_00_04_handle_max_round_reached = async (nettype) => {
   let list_maxroundreached = await findall("maxroundreached", { nettype });
   if (list_maxroundreached && list_maxroundreached.length) {
@@ -361,11 +363,15 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     LOGGER("@max round reached, no items past max");
     return;
   }
+  LOGGER("list_maxroundreached", list_maxroundreached);
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
-    await handle_perish_item_case(itemid, nettype);
-    let listkongs = await pick_kong_items_on_item_max_round_reached(nettype); // MAX_R OUND_REACH_RELATED_PARAMS,
-    listkongs.forEach(async (elemkong) => {
+    LOGGER("여기까지 오면 안됨");
+    await handle_perish_item_case(itemid, nettype, username);
+    LOGGER("여기까지 오면 되");
+    let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
+    LOGGER("listkongs", listkongs); // MAX_R OUND_REACH_RELATED_PARAMS,
+    [listkongs].forEach(async (elemkong) => {
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
       await handle_assign_item_case(item, username, nettype);
     });
@@ -596,7 +602,6 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     raw: true,
     where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
   });
-  LOGGER("list_00", list_00.length, N);
 
   let countdelinquent = list_00.length;
   let list = [];
@@ -631,7 +636,7 @@ const func_00_02_draw_items_this_ver_takes_N_arg = async (N, nettype) => {
     where: { group_: "kong", nettype, roundoffsettoavail: { [Op.gte]: 0 }, ismaxroundreached: 0 },
     limit: N,
   });
-  LOGGER("list", list);
+
   if (list.length >= N) {
   } else {
     createrow("alerts", {

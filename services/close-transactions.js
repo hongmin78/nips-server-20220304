@@ -138,6 +138,7 @@ const handle_pay_case = async (jdata) => {
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
   let jauxdata;
+
   if (strauxdata) {
     jauxdata = PARSER(strauxdata);
     amount = jauxdata.amount;
@@ -149,6 +150,7 @@ const handle_pay_case = async (jdata) => {
     itemid,
     nettype,
   });
+  LOGGER("respitembalance", respitembalance);
   if (respitembalance) {
     await incrementrow({
       table: "ballots",
@@ -159,6 +161,7 @@ const handle_pay_case = async (jdata) => {
     await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {});
   } else {
   }
+
   await updateorcreaterow(
     "itembalances",
     {
@@ -174,12 +177,14 @@ const handle_pay_case = async (jdata) => {
       //		, nettype
     }
   );
+
   await incrementrow({
     table: "ballots",
     jfilter: { username: username, nettype },
     fieldname: "counthelditems",
     incvalue: +1,
   });
+
   await incrementroworcreate({
     table: "ballots",
     jfilter: { username, nettype },
@@ -188,9 +193,11 @@ const handle_pay_case = async (jdata) => {
   });
   await updaterow("ballots", { username, nettype }, { lastroundmadepaymentfor: roundnumber });
   let respcirc = await findone("circulations", { itemid, nettype });
+
   if (respcirc) {
     let { price, roundnumber, countchangehands } = respcirc;
     let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
+    LOGGER("MAX_ROUND_TO_REACH", roundnumber, MAX_ROUND_TO_REACH);
     if (+roundnumber < MAX_ROUND_TO_REACH) {
       // max not reached yet
       await updaterow(
@@ -214,6 +221,7 @@ const handle_pay_case = async (jdata) => {
           countchangehands: 1 + +countchangehands,
         }
       );
+
       await updaterow(
         "users",
         { username, nettype },
@@ -232,6 +240,7 @@ const handle_pay_case = async (jdata) => {
         txhash, // : ''
         globalroundnumber, // : ''
       });
+
       await updaterow("users", { username, nettype }, { ismaxreached: 1 });
       await updaterow("items", { itemid, nettype }, { ismaxreached: 1 });
     }

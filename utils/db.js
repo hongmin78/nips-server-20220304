@@ -111,7 +111,6 @@ const createrow = async (table, jdata) => {
 const countrows_scalar = (table, jfilter) => {
   return new Promise((resolve, reject) => {
     db[table].count({ where: { ...jfilter } }).then((resp) => {
-      LOGGER("countrows_scalarresp", jfilter, table);
       if (resp) {
         resolve(resp);
       } else {
@@ -203,6 +202,17 @@ const moverow = async (fromtable, jfilter, totable, auxdata) => {
     }
   });
 };
+
+const getrandomrow_filter_multiple_rows = async (tablename, jfilter, N) => {
+  LOGGER("getrandomrow_filter_multiple_rows", tablename, jfilter, N);
+  let aresp = await db[tablename].findAll({
+    raw: true,
+    order: db.Sequelize.literal("rand()"),
+    limit: 5,
+    where: { ...jfilter },
+  });
+  return aresp && aresp[0] ? aresp[0] : null;
+};
 module.exports = {
   findone,
   findall,
@@ -212,6 +222,7 @@ module.exports = {
   updaterow,
   getrandomrow_filter,
   getrandomrow,
+  getrandomrow_filter_multiple_rows,
   tableexists,
   fieldexists,
   createrow,

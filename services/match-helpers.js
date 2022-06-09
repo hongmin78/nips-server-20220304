@@ -19,7 +19,15 @@ const {
   PAYMENT_ADDRESS_DEF,
   PRICE_INCREASE_FACTOR_DEF,
 } = require("../configs/receivables");
-const { create_uuid_via_namespace } = require("../utils/common");
+const { create_uuid_via_namespace, uuidv4 } = require("../utils/common");
+const moment = require("moment");
+const LOGGER = console.log;
+const STR_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
+const MAP_SALE_STATUS = {
+  ON_RESERVE: 0,
+  ASSIGNED: 1,
+  USER_OWNED: -1,
+};
 const getroundnumber_global = async (nettype) => {
   let round_number_global;
   let respballotround = await findone("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", subkey_: nettype });
@@ -44,11 +52,10 @@ const pick_kong_items_on_item_max_round_reached = async (
   // MAX_RO UND_REACH_RELATED_PARAMS 	,
   nettype
 ) => {
-  let COUNT_KONGS_TO_ASSIGN_ON_MAX_ROUND_DEF = 2;
-  let counttoassign = COUNT_KONGS_TO_ASSIGN_ON_MAX_ROUND_DEF;
   let respcounttoassign = await findone("settings", { key_: "COUNT_KONGS_TO_ASSIGN_ON_MAX_ROUND", nettype });
   if (respcounttoassign && respcounttoassign.value_) {
     counttoassign = respcounttoassign.value_;
+    LOGGER("counttoassign", counttoassign);
   } else {
   }
   return getrandomrow_filter_multiple_rows(
@@ -57,9 +64,10 @@ const pick_kong_items_on_item_max_round_reached = async (
     counttoassign // MAX_RO UND_REACH_RELATED_PARAMS. COUNT_KONGS_TO_ASSIGN
   );
 };
-const handle_perish_item_case = async (itemid, nettype) => {
+const handle_perish_item_case = async (itemid, nettype, username) => {
   await updaterow("items", { itemid, nettype }, { salestatus: -3, salesstatusstr: "PERISHED" });
-  await moverow("circulations", { id: respcirc.id }, "logcirculations", { txhash });
+  await moverow("circulations", { itemid });
+  //  "logcirculations", { txhash });
   await incrementrow({
     table: "users",
     jfilter: { username, nettype },
@@ -117,12 +125,22 @@ const handle_give_an_item_ownership_case = async (username, nettype) => {
     // , paymeansaddress: currencyaddress, //	, amount
   });
 };
+
+const get_sales_account = async (role, nettype) => {
+  let resp = await findone("addresses", { role, nettype });
+  if (resp && resp) {
+    let { address } = resp;
+    return address;
+  } else {
+    return null;
+  }
+};
 const handle_assign_item_case = async (item, username, nettype) => {
   let duetime = moment().add(12, "hours"); // .unix() // in it with placeholder
   let duetimeunix = duetime.unix(); // in it with placeholder
-  LOGGER("@handle_assign_item_case", duetime, duetimeunix); // , respduetime
+  LOGGER("@handle_assign_item_case", duetime, duetimeunix, item); // , respduetime
   //      let item = itemstogive[i];
-  let { itemid, isdelinquent: itemisdelinquent } = item;
+  let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
   //      let { username } = listreceivers0[i];
   await updaterow(
     "items",
@@ -179,6 +197,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
   }
   let SALES_ACCOUNT_NONE_TICKET = await get_sales_account("SALES_ACCOUNT_NONE_TICKET", nettype);
   await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
+  let roundnumber_global = await getroundnumber_global(nettype); // round_number_global
   let seller; // =  ? '' : ''
   if (+roundnumber > 1) {
     let respitembalance = await findone("itembalances", { itemid, nettype });
@@ -193,7 +212,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
   await createrow("receivables", {
     itemid,
     username,
-    roundnumber: round_number_global,
+    roundnumber: roundnumber_global,
     amount: price01, // ITEM_SALE_START_PRICE
     currency: PAYMENT_MEANS_DEF,
     currencyaddress: PAYMENT_ADDRESS_DEF,
@@ -202,6 +221,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
     duetime: duetime ? duetime.format(STR_TIME_FORMAT) : null,
     seller, // : roundnumber>0?  : SALES_ACCOUNT_NONE_TI CKET
     nettype,
+    group_,
   });
   await createrow("itemhistory", {
     itemid,
@@ -218,9 +238,9 @@ const handle_assign_item_case = async (item, username, nettype) => {
 
 module.exports = {
   getroundnumber_global,
-  get_MAX_ROUND_TO_REACH,
   pick_kong_items_on_item_max_round_reached,
   handle_perish_item_case,
   handle_assign_item_case,
   handle_give_an_item_ownership_case,
+  get_MAX_ROUND_TO_REACH,
 };
