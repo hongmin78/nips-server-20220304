@@ -1,7 +1,13 @@
 const { jweb3 } = require("../configs/configweb3");
 const awaitTransactionMined = require("await-transaction-mined");
 const cliredisa = require("async-redis").createClient();
-const { LOGGER, STRINGER, KEYS, gettimestr, create_uuid_via_namespace } = require("../utils/common");
+const {
+  LOGGER,
+  STRINGER,
+  KEYS,
+  gettimestr,
+  create_uuid_via_namespace,
+} = require("../utils/common");
 const {
   updaterow,
   findone,
@@ -46,7 +52,15 @@ const {
 } */
 const ROUNDOFFSETTOAVAIL_DEF = -3;
 const close_sale = async (jdata) => {
-  let { itemid, contractaddress, tokenid, orderuuid, username, nettype, txhash } = jdata;
+  let {
+    itemid,
+    contractaddress,
+    tokenid,
+    orderuuid,
+    username,
+    nettype,
+    txhash,
+  } = jdata;
   let resporder = await findone("orders", { uuid: orderuuid });
   let seller;
   if (resporder && resporder.seller) {
@@ -131,9 +145,13 @@ const get_pay_related_users = async (uuid, nettype) => {
   return { seller, buyer, refereraddress, referercode };
 };
 const handle_pay_case = async (jdata) => {
-  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata;
+  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
+    jdata;
   let globalroundnumber = roundnumber;
-  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(uuid, nettype);
+  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(
+    uuid,
+    nettype
+  );
   //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
@@ -158,7 +176,12 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
-    await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {});
+    await moverow(
+      "itembalances",
+      { id: respitembalance.id },
+      "logitembalances",
+      {}
+    );
   } else {
   }
 
@@ -191,7 +214,11 @@ const handle_pay_case = async (jdata) => {
     fieldname: "counthelditems",
     incvalue: +1,
   });
-  await updaterow("ballots", { username, nettype }, { lastroundmadepaymentfor: roundnumber });
+  await updaterow(
+    "ballots",
+    { username, nettype },
+    { lastroundmadepaymentfor: roundnumber }
+  );
   let respcirc = await findone("circulations", { itemid, nettype });
 
   if (respcirc) {
@@ -203,7 +230,11 @@ const handle_pay_case = async (jdata) => {
       await updaterow(
         "items",
         { itemid, nettype },
-        { salestatus: 1, salesstatusstr: "ASSIGNED", roundoffsettoavail: ROUNDOFFSETTOAVAIL_DEF }
+        {
+          salestatus: 1,
+          salesstatusstr: "ASSIGNED",
+          roundoffsettoavail: ROUNDOFFSETTOAVAIL_DEF,
+        }
       ).then((resp) => {
         incrementrow({
           table: "items", // orcreate
@@ -225,7 +256,10 @@ const handle_pay_case = async (jdata) => {
       await updaterow(
         "users",
         { username, nettype },
-        { lastroundmadepaymentfor: roundnumber, lasttimemadepaymentat: moment().unix() }
+        {
+          lastroundmadepaymentfor: roundnumber,
+          lasttimemadepaymentat: moment().unix(),
+        }
       );
     } //
     else {
@@ -256,7 +290,10 @@ const handle_pay_case = async (jdata) => {
     await updaterow(
       "users",
       { username, nettype },
-      { lastroundmadepaymentfor: roundnumber, lasttimemadepaymentat: moment().unix() }
+      {
+        lastroundmadepaymentfor: roundnumber,
+        lasttimemadepaymentat: moment().unix(),
+      }
     );
   } else {
     // no circ defined, should not have happened, give a fallback
@@ -342,7 +379,9 @@ const handle_clear_delinquent_case = async (jdata) => {
   let { uuid, username, itemid, strauxdata, txhash, nettype } = jdata; //	await moverow ('delinquencies', { itemid } , 'logdelinquents', {} )
   findall("delinquencies", { username }).then(async (list) => {
     list.forEach(async (elem) => {
-      await moverow("delinquencies", { id: elem.id }, "logdelinquents", { txhash });
+      await moverow("delinquencies", { id: elem.id }, "logdelinquents", {
+        txhash,
+      });
       await updaterow("ballots", { username }, { active: 1, isdelinquent: 0 });
       await updaterow("users", { username }, { active: 1, isdelinquen: 0 });
       //			await updaterow ( 'items' , { itemid,  nettype } , {isdelinquent : 0 } ) // not yet
@@ -377,13 +416,22 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
         }
         let str_txauxdata = resp;
         let jparams = PARSER(str_txauxdata);
-        let { type, tables, address, amount, itemid, strauxdata, roundnumber } = jparams; // itemid
+        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =
+          jparams; // itemid
 
         KEYS(tables).forEach(async (tablename) => {
           amount; //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
         });
         if (type == "PAY") {
-          handle_pay_case({ uuid, username: address, itemid, strauxdata, txhash, nettype, roundnumber });
+          handle_pay_case({
+            uuid,
+            username: address,
+            itemid,
+            strauxdata,
+            txhash,
+            nettype,
+            roundnumber,
+          });
         } else if (type == "STAKE") {
           if (true || +amount >= MIN_STAKE_AMOUNT) {
             await updaterow(
@@ -437,11 +485,22 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
             createorupdaterow(
               "approvals",
               { username: address },
-              { amount: approvedamount, erc20: ADDRESSES.contract_usdt, target: ADDRESSES.contract_stake }
+              {
+                amount: approvedamount,
+                erc20: ADDRESSES.contract_usdt,
+                target: ADDRESSES.contract_stake,
+              }
             );
           });
         } else if (type == "CLEAR_DELINQUENT") {
-          handle_clear_delinquent_case({ uuid, username: address, itemid, strauxdata, txhash, nettype });
+          handle_clear_delinquent_case({
+            uuid,
+            username: address,
+            itemid,
+            strauxdata,
+            txhash,
+            nettype,
+          });
         } else if (type == "BUY_NFT_ITEM") {
           close_sale({
             itemid,
