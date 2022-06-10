@@ -100,7 +100,8 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
     if (
       B_ADJUST_TO_UTC_ON_SERVER_SIDE &&
-      (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS")
+      (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" ||
+        elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS")
     ) {
       //			&& +valuetoupdateto > 3600 * 24) {
       valuetoupdateto = +valuetoupdateto;
@@ -377,47 +378,13 @@ router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:o
         resperr(res, messages.MSG_DATANOTFOUND);
         return;
       }
-      jfilter[filterkey] = filterval;
-    } else {
-    }
-    if (searchkey) {
-      let liker = convliker(searchkey);
-      let jfilter_02 = get_search_table_fields(tablename, liker); //  expand_search(tablename, liker);
-      jfilter = { ...jfilter, ...jfilter_02 };
-    } else {
-    }
-    if (date0) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date0 && date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    console.log(jfilter);
-    db[tablename]
-      .findAll({ raw: true, where: { ...jfilter, nettype: nettype }, offset, limit, order: [[orderkey, orderval]] })
-      .then(async (list_00) => {
-        let count = await countrows_scalar(tablename, jfilter);
-        respok(res, null, null, { list: list_00, payload: { count } });
-        //		if (tablename=='items'){
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
         return;
       });
   });
@@ -466,56 +433,38 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
         resperr(res, messages.MSG_DATANOTFOUND);
         return;
       }
-      jfilter[filterkey] = filterval;
-    } else {
-    }
-    if (searchkey) {
-      let liker = convliker(searchkey);
-      let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
-      jfilter = { ...jfilter, ...jfilter_02 };
-    } else {
-    }
-    if (date0) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date0 && date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (nettype) {
-      jfilter["nettype"] = nettype;
-    }
-    console.log(jfilter);
-    let order = random ? db.Sequelize.literal("rand()") : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
-    db[tablename].findAll({ raw: true, where: { ...jfilter }, offset, limit, order: order }).then(async (list_00) => {
-      let count = await countrows_scalar(tablename, jfilter);
-      //        respok(res, null, null, { list: list_00, payload: { count } });
-      //		if (tablename=='items'){
-      //      return;
-      if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-        let aproms = [];
-        if (username) {
-          list_00.forEach((elem) => {
-            aproms[aproms.length] = queryitemdata_user(elem.itemid, username, nettype);
-          });
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      offset = parseInt(offset);
+      limit = parseInt(limit);
+
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+      let jfilter = {};
+      jfilter[fieldname] = fieldval;
+      if (filterkey && filterval) {
+        let respfieldexists = await fieldexists(tablename, filterkey);
+        if (respfieldexists) {
         } else {
           list_00.forEach((elem) => {
             aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
