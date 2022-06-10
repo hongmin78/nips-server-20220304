@@ -1,13 +1,7 @@
 const { jweb3 } = require("../configs/configweb3");
 const awaitTransactionMined = require("await-transaction-mined");
 const cliredisa = require("async-redis").createClient();
-const {
-  LOGGER,
-  STRINGER,
-  KEYS,
-  gettimestr,
-  create_uuid_via_namespace,
-} = require("../utils/common");
+const { LOGGER, STRINGER, KEYS, gettimestr, create_uuid_via_namespace } = require("../utils/common");
 const {
   updaterow,
   findone,
@@ -52,15 +46,7 @@ const {
 } */
 const ROUNDOFFSETTOAVAIL_DEF = -3;
 const close_sale = async (jdata) => {
-  let {
-    itemid,
-    contractaddress,
-    tokenid,
-    orderuuid,
-    username,
-    nettype,
-    txhash,
-  } = jdata;
+  let { itemid, contractaddress, tokenid, orderuuid, username, nettype, txhash } = jdata;
   let resporder = await findone("orders", { uuid: orderuuid });
   let seller;
   if (resporder && resporder.seller) {
@@ -145,13 +131,9 @@ const get_pay_related_users = async (uuid, nettype) => {
   return { seller, buyer, refereraddress, referercode };
 };
 const handle_pay_case = async (jdata) => {
-  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
-    jdata;
+  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata;
   let globalroundnumber = roundnumber;
-  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(
-    uuid,
-    nettype
-  );
+  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(uuid, nettype);
   //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
@@ -168,7 +150,7 @@ const handle_pay_case = async (jdata) => {
     itemid,
     nettype,
   });
-  LOGGER("respitembalance", respitembalance);
+
   if (respitembalance) {
     await incrementrow({
       table: "ballots",
@@ -176,12 +158,7 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
-    await moverow(
-      "itembalances",
-      { id: respitembalance.id },
-      "logitembalances",
-      {}
-    );
+    await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {});
   } else {
   }
 
@@ -201,24 +178,20 @@ const handle_pay_case = async (jdata) => {
     }
   );
 
-  await incrementrow({
-    table: "ballots",
-    jfilter: { username: username, nettype },
-    fieldname: "counthelditems",
-    incvalue: +1,
-  });
-
   await incrementroworcreate({
     table: "ballots",
     jfilter: { username, nettype },
     fieldname: "counthelditems",
     incvalue: +1,
   });
-  await updaterow(
-    "ballots",
-    { username, nettype },
-    { lastroundmadepaymentfor: roundnumber }
-  );
+  // await incrementroworcreate({
+  //   table: "ballots",
+  //   jfilter: { username, nettype },
+  //   fieldname: "lastroundmadepaymentfor",
+  //   incvalue: +1,
+  // });
+  LOGGER("lastroundmadepaymentfor", roundnumber);
+  await updaterow("ballots", { username, nettype }, { lastroundmadepaymentfor: -3 });
   let respcirc = await findone("circulations", { itemid, nettype });
 
   if (respcirc) {
@@ -416,8 +389,7 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
         }
         let str_txauxdata = resp;
         let jparams = PARSER(str_txauxdata);
-        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =
-          jparams; // itemid
+        let { type, tables, address, amount, itemid, strauxdata, roundnumber } = jparams; // itemid
 
         KEYS(tables).forEach(async (tablename) => {
           amount; //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
