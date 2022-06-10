@@ -227,6 +227,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     //    itemstogive = await func_00_02_draw_items(NReceivers);
     itemstogive = await func_00_02_draw_items(NReceivers, nettype); //  func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
     NItemstogive = itemstogive.length;
+
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
     if (NMin > 0) {
@@ -706,18 +707,11 @@ const func_00_02_draw_items_this_ver_takes_N_arg = async (N, nettype) => {
   // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
   if (N > 0) {
   } else {
-    return [];
+    round_number_global = 1;
   }
-  let list = await db["items"].findAll({
-    raw: true,
-    order: [["salestatus", "DESC"]],
-    where: {
-      group_: "kong",
-      nettype,
-      roundoffsettoavail: { [Op.gte]: 0 },
-      ismaxroundreached: 0,
-    },
-    limit: N,
+  let listreceivers0 = await func_00_01_draw_users({
+    nettype,
+    roundnumber: round_number_global,
   });
 
   if (list.length >= N) {
