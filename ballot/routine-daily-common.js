@@ -24,6 +24,7 @@ const {
   uuidv4,
   PARSER,
   KEYS,
+  getRandomElementsFromArray,
 } = require("../utils/common");
 const { messages } = require("../configs/messages");
 const { isethaddressvalid } = require("../utils/validates");
@@ -191,6 +192,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     nettype,
     roundnumber: round_number_global,
   });
+  LOGGER("listreceivers0-func 00 _ 01 _ drea", listreceivers0);
 
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
@@ -218,6 +220,7 @@ const func00_allocate_items_to_users = async (nettype) => {
 
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
+    LOGGER("NMin", NMin);
     if (NMin > 0) {
     } else {
       LOGGER();
@@ -234,17 +237,17 @@ const func00_allocate_items_to_users = async (nettype) => {
     //	}
     //		else { ; }
     listreceivers0 = await match_with_obj(listreceivers0, itemstogive);
-    LOGGER("listreceivers0", listreceivers0);
-    for (let i = 0; i < NMin; i++) {
+    LOGGER("aftfer_match_with - > listreceivers0", listreceivers0);
+    for (let i = 0; i < listreceivers0.length; i++) {
       let item = itemstogive[i];
       let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
       let { username } = listreceivers0[i];
+      LOGGER("aftfer_match_with - > item", item);
       await updaterow(
         "items",
         { itemid, nettype },
         { salestatus: MAP_SALE_STATUS["ASSIGNED"], salesstatusstr: "assigned" }
       );
-      LOGGER("item", item);
       //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
       let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
       let price01; // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE
@@ -302,6 +305,7 @@ const func00_allocate_items_to_users = async (nettype) => {
       LOGGER("SALES_ACCOUNT_NONE_TICKET", SALES_ACCOUNT_NONE_TICKET);
       await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
       let seller; // =  ? '' : ''
+
       if (+roundnumber > 1) {
         let respitembalance = await findone("itembalances", {
           itemid,
@@ -434,7 +438,7 @@ const func01_inspect_payments = async (nettype) => {
   let respdelinquencydiscountfactor = await findone("settings", {
     key_: "BALLOT_DELINQUENCY_DISCOUNT_FACTOR_BP",
   });
-  LOGGER("respdelinquencydiscountfactor", respdelinquencydiscountfactor);
+
   let { value_: delinq_discount_factor } = respdelinquencydiscountfactor;
   listreceivables.forEach(async (elem, idx) => {
     if (+elem.amount > 0) {
@@ -637,7 +641,6 @@ const J_ALLOCATE_FACTORS = {
 };
 
 const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = async (N, nettype) => {
-  LOGGER("N", N);
   if (N > 0) {
   } else {
     return [];
@@ -647,39 +650,37 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
   });
 
-  LOGGER("list_00", list_00.length, N);
-
   let countdelinquent = list_00.length;
   let list = [];
-  if (list_00.length > 0) {
-    let list_01 = await db["items"].findAll({
-      raw: true,
-      where: {
-        group_: "kong",
-        nettype,
-        roundoffsettoavail: { [Op.gte]: 0 },
-        ismaxroundreached: 0,
-        isdelinquent: 0,
-      },
-      limit: N - countdelinquent,
-    });
-    list = [...list_00, ...list_01];
-    LOGGER("list_01", list_01);
-  } else {
-    let list_03 = await db["items"].findAll({
-      raw: true,
-      where: {
-        group_: "kong",
-        nettype,
-        roundoffsettoavail: { [Op.gte]: 0 },
-        ismaxroundreached: 0,
-        isdelinquent: 0,
-      },
-      limit: N,
-    });
-    list = [...list_03];
-    LOGGER("list_03", list);
-  }
+  // if (list_00.length > 0) {
+  let list_01 = await db["items"].findAll({
+    raw: true,
+    where: {
+      group_: "kong",
+      nettype,
+      roundoffsettoavail: { [Op.gte]: 0 },
+      ismaxroundreached: 0,
+      isdelinquent: 0,
+    },
+    limit: N,
+  });
+  list = [...list_00, ...list_01];
+
+  // } else {
+  //   let list_03 = await db["items"].findAll({
+  //     raw: true,
+  //     where: {
+  //       group_: "kong",
+  //       nettype,
+  //       roundoffsettoavail: { [Op.gte]: 0 },
+  //       ismaxroundreached: 0,
+  //       isdelinquent: 0,
+  //     },
+  //     limit: N,
+  //   });
+  //   list = [...list_03];
+  //   LOGGER("list_03", list);
+  // }
   shufflearray(list);
   shufflearray(list);
   return list;
@@ -730,17 +731,33 @@ const MAP_BALLOT_STATUS = {
   0: false,
   PAUSE: false,
 };
+
+const randomly_pick_from_array_while_ensuring_each_included_atleast_once = (arr0, targetsize) => {
+  let arr = [...arr0];
+
+  return [...getRandomElementsFromArray(arr0, targetsize)];
+};
 const match_with_obj = async (listreceivers0, itemstogive) => {
+  LOGGER("listreceivers0-itemstogive", itemstogive, itemstogive.length);
   let aproms = [];
   listreceivers0.forEach((elem) => {
     let { username } = elem;
     aproms[aproms.length] = findone("circulations", { username, nettype });
   });
-  const n_max_tries = 10;
+  LOGGER("listreceivers0-match_with_obj", listreceivers0, listreceivers0.length);
+  const n_max_tries = 20;
   const max_score_achievable = listreceivers0.length;
   let max_score_achieved = -1000000;
   let aresolves = await Promise.all(aproms);
   let listreceivers_at_maxscore = [];
+  const N_items = itemstogive.length;
+
+  listreceivers0_exp =
+    listreceivers0.length < N_items
+      ? randomly_pick_from_array_while_ensuring_each_included_atleast_once(listreceivers0, N_items)
+      : listreceivers0;
+  listreceivers0 = listreceivers0_exp;
+  LOGGER("listreceivers0_exp", listreceivers0);
   for (let idxtries = 0; idxtries < n_max_tries; idxtries++) {
     shufflearray(listreceivers0);
     let score = 0;
@@ -755,8 +772,10 @@ const match_with_obj = async (listreceivers0, itemstogive) => {
         ++score;
       }
     }
+
     if (score == max_score_achievable) {
       listreceivers_at_maxscore = listreceivers0;
+      LOGGER("listreceivers_at_maxscore", listreceivers_at_maxscore);
       break;
     } else {
       if (score > max_score_achieved) {
