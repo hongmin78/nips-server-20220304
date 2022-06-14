@@ -172,7 +172,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     }
   } else {
   } //	let listreceivers0 = await func_00_01_draw_users( nettype )  //shufflearray(listreceivers0)   //	shufflearray(listreceivers0)
-  //LOGGER( '@lis treceivers0: ' , listreceivers0.length , listreceivers0 )
+
   let NReceivers;
   let itemstogive;
   let NItemstogive;
@@ -192,7 +192,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     nettype,
     roundnumber: round_number_global,
   });
-  LOGGER("listreceivers0-func 00 _ 01 _ drea", listreceivers0);
+  LOGGER("func_00_01_draw_users-func", listreceivers0);
 
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
@@ -220,7 +220,7 @@ const func00_allocate_items_to_users = async (nettype) => {
 
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
-    LOGGER("NMin", NMin);
+
     if (NMin > 0) {
     } else {
       LOGGER();
@@ -306,7 +306,7 @@ const func00_allocate_items_to_users = async (nettype) => {
       await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
       let seller; // =  ? '' : ''
 
-      if (+roundnumber > 1) {
+      if (price01 > 100) {
         let respitembalance = await findone("itembalances", {
           itemid,
           nettype,
@@ -329,7 +329,7 @@ const func00_allocate_items_to_users = async (nettype) => {
         uuid,
         duetimeunix: duetimeunix ? duetimeunix : null, // : duetime.unix()
         duetime: duetime ? duetime.format(STR_TIME_FORMAT) : null,
-        seller, // : roundnumber>0?  : SALES_ACCOUNT_NONE_TI CKET
+        seller,
         nettype,
         group_,
       });
@@ -398,7 +398,7 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     LOGGER("@max round reached, no items past max");
     return;
   }
-  LOGGER("list_maxroundreached", list_maxroundreached);
+
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
 
@@ -421,7 +421,6 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
 };
 
 const func01_inspect_payments = async (nettype) => {
-  // in here done payment cases are assumed to be not present  //	const timenow=moment().startOf('hour').unix()
   const timenow = moment().add(1, "seconds").unix(); // startOf('hour').unix()
   let listreceivables = await db.receivables.findAll({
     raw: true,
@@ -650,37 +649,35 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
   });
 
-  let countdelinquent = list_00.length;
+  let countdelinquent = list_00.length - 1;
   let list = [];
-  // if (list_00.length > 0) {
-  let list_01 = await db["items"].findAll({
-    raw: true,
-    where: {
-      group_: "kong",
-      nettype,
-      roundoffsettoavail: { [Op.gte]: 0 },
-      ismaxroundreached: 0,
-      isdelinquent: 0,
-    },
-    limit: N,
-  });
-  list = [...list_00, ...list_01];
-
-  // } else {
-  //   let list_03 = await db["items"].findAll({
-  //     raw: true,
-  //     where: {
-  //       group_: "kong",
-  //       nettype,
-  //       roundoffsettoavail: { [Op.gte]: 0 },
-  //       ismaxroundreached: 0,
-  //       isdelinquent: 0,
-  //     },
-  //     limit: N,
-  //   });
-  //   list = [...list_03];
-  //   LOGGER("list_03", list);
-  // }
+  if (list_00.length > 0) {
+    let list_01 = await db["items"].findAll({
+      raw: true,
+      where: {
+        group_: "kong",
+        nettype,
+        roundoffsettoavail: { [Op.gte]: 0 },
+        ismaxroundreached: 0,
+        isdelinquent: 0,
+      },
+      limit: N + countdelinquent,
+    });
+    list = [...list_00, ...list_01];
+  } else {
+    let list_03 = await db["items"].findAll({
+      raw: true,
+      where: {
+        group_: "kong",
+        nettype,
+        roundoffsettoavail: { [Op.gte]: 0 },
+        ismaxroundreached: 0,
+        isdelinquent: 0,
+      },
+      limit: N,
+    });
+    list = [...list_03];
+  }
   shufflearray(list);
   shufflearray(list);
   return list;
@@ -733,8 +730,6 @@ const MAP_BALLOT_STATUS = {
 };
 
 const randomly_pick_from_array_while_ensuring_each_included_atleast_once = (arr0, targetsize) => {
-  let arr = [...arr0];
-
   return [...getRandomElementsFromArray(arr0, targetsize)];
 };
 const match_with_obj = async (listreceivers0, itemstogive) => {
@@ -775,7 +770,7 @@ const match_with_obj = async (listreceivers0, itemstogive) => {
 
     if (score == max_score_achievable) {
       listreceivers_at_maxscore = listreceivers0;
-      LOGGER("listreceivers_at_maxscore", listreceivers_at_maxscore);
+
       break;
     } else {
       if (score > max_score_achieved) {

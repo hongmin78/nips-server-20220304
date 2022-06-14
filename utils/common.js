@@ -15,7 +15,6 @@ function shufflearray(array) {
     var temp = array[i];
     array[i] = array[j];
     array[j] = temp;
-    LOGGER("temp", array[i], array[j]);
   }
 }
 
