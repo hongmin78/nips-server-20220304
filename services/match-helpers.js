@@ -79,8 +79,11 @@ const handle_perish_item_case = async (itemid, nettype, username) => {
     { itemid, nettype },
     { salestatus: -3, salesstatusstr: "PERISHED" }
   );
-  await moverow("circulations", { itemid });
-  //  "logcirculations", { txhash });
+    await moverow ( 'circulations' 
+  , { id : respcirc.id }
+  , 'logcirculations'
+  , { txhash }
+)
   await incrementrow({
     table: "users",
     jfilter: { username, nettype },

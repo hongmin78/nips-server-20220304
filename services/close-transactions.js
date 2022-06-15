@@ -158,7 +158,7 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
-    await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {});
+   /*  await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
   } else {
   }
 
