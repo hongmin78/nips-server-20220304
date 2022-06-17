@@ -211,7 +211,7 @@ const getrandomrow_filter_multiple_rows = async (tablename, jfilter, N) => {
     limit: 5,
     where: { ...jfilter },
   });
-  return aresp && aresp[0] ? aresp[0] : null;
+  return aresp && aresp[0] ? aresp[0]: null;
 };
 module.exports = {
   findone,

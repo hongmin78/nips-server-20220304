@@ -10,8 +10,8 @@ const {
   incrementroworcreate,
   incrementrow,
   createifnoneexistent,
-  getrandomrow_filter_multiple_rows,
   getrandomrow_filter,
+  getrandomrow_filter_multiple_rows
 } = require("../utils/db");
 const {
   ITEM_SALE_START_PRICE,
@@ -64,7 +64,6 @@ const pick_kong_items_on_item_max_round_reached = async (
   });
   if (respcounttoassign && respcounttoassign.value_) {
     counttoassign = respcounttoassign.value_;
-    LOGGER("counttoassign", counttoassign);
   } else {
   }
   return getrandomrow_filter_multiple_rows(
@@ -80,9 +79,9 @@ const handle_perish_item_case = async (itemid, nettype, username) => {
     { salestatus: -3, salesstatusstr: "PERISHED" }
   );
     await moverow ( 'circulations' 
-  , { id : respcirc.id }
-  , 'logcirculations'
-  , { txhash }
+  , { itemid }
+ /* , 'logcirculations'
+  , { txhash } dont use for maually */
 )
   await incrementrow({
     table: "users",
@@ -155,6 +154,8 @@ const get_sales_account = async (role, nettype) => {
     return null;
   }
 };
+
+
 const handle_assign_item_case = async (item, username, nettype) => {
   let duetime = moment().add(12, "hours"); // .unix() // in it with placeholder
   let duetimeunix = duetime.unix(); // in it with placeholder
@@ -162,105 +163,144 @@ const handle_assign_item_case = async (item, username, nettype) => {
   //      let item = itemstogive[i];
   let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
   //      let { username } = listreceivers0[i];
-  await updaterow(
-    "items",
-    { itemid, nettype },
-    { salestatus: MAP_SALE_STATUS["ASSIGNED"], salesstatusstr: "assigned" }
-  ); //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
-  let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
-  let price01; // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE
-  let respcirculation = await findone("circulations", { itemid, nettype });
-  //		LOGGER( '@respcirculation ' , itemid , respcirculation )
-  let price;
-  let roundnumber;
-  if (respcirculation) {
-    //
-    let { price: price00, roundnumber } = respcirculation;
-    let resppriceincrease = await findone("settings", {
-      key_: "BALLOT_PRICE_INCREASE_FACTOR",
-      nettype,
-    });
-    if (resppriceincrease) {
-      if (itemisdelinquent) {
-        price01 = +price00;
-      } else {
-        price01 = +price00 * +resppriceincrease.value_;
-      }
-    } else {
-      price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
-    }
-    LOGGER("@respcirculation ", itemid, respcirculation, price00, price01);
-    roundnumber = 1 + +roundnumber;
+  let kingkong_vaildation = await findall("items", { itemid, nettype });
+  if(kingkong_vaildation.group_ === "kingkong"){
+   console.log("imkingkong")
+  }else{
     await updaterow(
-      "circulations",
-      {
-        itemid, // : ''            //					, username // : ''
+      "items",
+      { itemid, nettype },
+      { salestatus: MAP_SALE_STATUS["ASSIGNED"], salesstatusstr: "assigned" }
+    ); //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
+    let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
+    let price01; // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE
+    let respcirculation = await findone("circulations", { itemid, nettype });
+    //		LOGGER( '@respcirculation ' , itemid , respcirculation )
+    let price;
+    let roundnumber;
+    if (respcirculation) {
+      //
+      let { price: price00, roundnumber } = respcirculation;
+      let resppriceincrease = await findone("settings", {
+        key_: "BALLOT_PRICE_INCREASE_FACTOR",
         nettype,
-      },
-      {
-        roundnumber, // : 1 + +roundnumber // : ''
-        price: price01, // ITEM_SALE_START_PRICE
-        priceunit: PAYMENT_MEANS_DEF,
-        username, // : ''
+      });
+      if (resppriceincrease) {
+        if (itemisdelinquent) {
+          price01 = +price00;
+        } else {
+          price01 = +price00 * +resppriceincrease.value_;
+        }
+      } else {
+        price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
       }
-    );
-  } else {
-    // freshly assigned
-    roundnumber = 1;
-    await createrow("circulations", {
-      itemid, // : ''
-      username, // : ''
-      roundnumber, // : 1 // + +roundnumber // : ''
-      price: ITEM_SALE_START_PRICE,
-      priceunit: PAYMENT_MEANS_DEF,
-      nettype,
-      //					, priceunitcurrency : ''
-    });
-    price01 = ITEM_SALE_START_PRICE;
-  }
-  let SALES_ACCOUNT_NONE_TICKET = await get_sales_account(
-    "SALES_ACCOUNT_NONE_TICKET",
-    nettype
-  );
-  await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
-  let roundnumber_global = await getroundnumber_global(nettype); // round_number_global
-  let seller; // =  ? '' : ''
-  if (+roundnumber > 1) {
-    let respitembalance = await findone("itembalances", { itemid, nettype });
-    if (respitembalance && respitembalance.username) {
-      seller = respitembalance.username;
+      LOGGER("@respcirculation ", itemid, respcirculation, price00, price01);
+      roundnumber = 1 + +roundnumber;
+      await updaterow(
+        "circulations",
+        {
+          itemid, // : ''            //					, username // : ''
+          nettype,
+        },
+        {
+          roundnumber, // : 1 + +roundnumber // : ''
+          price: price01, // ITEM_SALE_START_PRICE
+          priceunit: PAYMENT_MEANS_DEF,
+          username, // : ''
+        }
+      );
+    } else {
+      // freshly assigned
+      roundnumber = 1;
+      await createrow("circulations", {
+        itemid, // : ''
+        username, // : ''
+        roundnumber, // : 1 // + +roundnumber // : ''
+        price: ITEM_SALE_START_PRICE,
+        priceunit: PAYMENT_MEANS_DEF,
+        nettype,
+        //					, priceunitcurrency : ''
+      });
+      price01 = ITEM_SALE_START_PRICE;
+    }
+    let SALES_ACCOUNT_NONE_TICKET = await get_sales_account("SALES_ACCOUNT_NONE_TICKET", nettype);
+    await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
+    let roundnumber_global = await getroundnumber_global(nettype); // round_number_global
+    let seller; // =  ? '' : ''
+    if (+roundnumber > 1) {
+      let respitembalance = await findone("itembalances", { itemid, nettype });
+      if (respitembalance && respitembalance.username) {
+        seller = respitembalance.username;
+      } else {
+        seller = SALES_ACCOUNT_NONE_TICKET;
+      }
     } else {
       seller = SALES_ACCOUNT_NONE_TICKET;
     }
-  } else {
-    seller = SALES_ACCOUNT_NONE_TICKET;
+    await createrow("receivables", {
+      itemid,
+      username,
+      roundnumber: roundnumber_global,
+      amount: price01, // ITEM_SALE_START_PRICE
+      currency: PAYMENT_MEANS_DEF,
+      currencyaddress: PAYMENT_ADDRESS_DEF,
+      uuid,
+      duetimeunix: duetimeunix ? duetimeunix : null, // : duetime.unix()
+      duetime: duetime ? duetime.format(STR_TIME_FORMAT) : null,
+      seller, // : roundnumber>0?  : SALES_ACCOUNT_NONE_TI CKET
+      nettype,
+      group_,
+    });
+    await createrow("itemhistory", {
+      itemid,
+      username,
+      roundnumber,
+      price: ITEM_SALE_START_PRICE,
+      priceunit: PAYMENT_MEANS_DEF,
+      status: -1,
+      uuid,
+      typestr: "TENTATIVE_ASSIGN",
+      nettype,
+    });
   }
-  await createrow("receivables", {
-    itemid,
-    username,
-    roundnumber: roundnumber_global,
-    amount: price01, // ITEM_SALE_START_PRICE
-    currency: PAYMENT_MEANS_DEF,
-    currencyaddress: PAYMENT_ADDRESS_DEF,
-    uuid,
-    duetimeunix: duetimeunix ? duetimeunix : null, // : duetime.unix()
-    duetime: duetime ? duetime.format(STR_TIME_FORMAT) : null,
-    seller, // : roundnumber>0?  : SALES_ACCOUNT_NONE_TI CKET
-    nettype,
-    group_,
-  });
-  await createrow("itemhistory", {
-    itemid,
-    username,
-    roundnumber,
-    price: ITEM_SALE_START_PRICE,
-    priceunit: PAYMENT_MEANS_DEF,
-    status: -1,
-    uuid,
-    typestr: "TENTATIVE_ASSIGN",
-    nettype,
-  });
+
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = {
   getroundnumber_global,
