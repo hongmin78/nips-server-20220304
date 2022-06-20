@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('items', {
+  return sequelize.define('ticketitems', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -107,11 +107,14 @@ module.exports = function(sequelize, DataTypes) {
     },
     ismaxroundreached: {
       type: DataTypes.INTEGER(4),
-      allowNull: true,
-      defaultValue: 0
+      allowNull: true
+    },
+    tokenid: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'items'
+    tableName: 'ticketitems'
   });
 };

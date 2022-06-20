@@ -80,7 +80,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     itemid: {
       type: DataTypes.STRING(100),
-      allowNull: true
+      allowNull: true,
+      unique: true
     },
     type: {
       type: DataTypes.INTEGER(4),

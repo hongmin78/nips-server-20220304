@@ -393,7 +393,6 @@ const func00_allocate_items_to_users = async (nettype) => {
 // };
 const func_00_04_handle_max_round_reached = async (nettype) => {
   let list_maxroundreached = await findall("maxroundreached", { nettype });
-   console.log("list_maxroundereached",list_maxroundreached) 
  if (list_maxroundreached && list_maxroundreached.length) {
   } else {
     LOGGER("@max round reached, no items past max");
@@ -406,14 +405,19 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     await handle_perish_item_case(itemid, nettype, username);
     console.log("1")
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
-    console.log("listkongs",listkongs)
-   listkongs.forEach(async (elemkong) => {
-   console.log("here")
+    console.log("tpye",listkongs)
+  /*  listkongsArray.forEach(async (elemkong) => {
+  
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
       await handle_assign_item_case(item, username, nettype);
     console.log("1.5item",item)
-    }); 
-  });
+    }); */
+   let item = await findone("items", { itemid: listkongs.itemid, nettype });
+      await handle_assign_item_case(item, username, nettype);
+    console.log("1.5item",item)
+    await handle_give_an_item_ownership_case(username, nettype); 
+  
+ });
  
 
   list_maxroundreached.forEach(async (elemmatch, idx) => {

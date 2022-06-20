@@ -49,6 +49,26 @@ module.exports = function(sequelize, DataTypes) {
     nettype: {
       type: DataTypes.STRING(40),
       allowNull: true
+    },
+    group_: {
+      type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    contractaddress: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    isonchain: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true
+    },
+    locked: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    avail: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

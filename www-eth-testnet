@@ -1,0 +1,91 @@
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21
+Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 1, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at Function.createFromInputFallback (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:319:25)
+    at configFromString (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2536:19)
+    at configFromInput (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2977:13)
+    at prepareConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2960:13)
+    at createFromConfig (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:2927:44)
+    at createLocalOrUTC (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3021:16)
+    at createLocal (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:3025:16)
+    at hooks (/home/ubuntu/nips-server-testnet/node_modules/moment/moment.js:16:29)
+    at /home/ubuntu/nips-server-testnet/routes/queries.js:518:21

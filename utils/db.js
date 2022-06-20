@@ -208,10 +208,10 @@ const getrandomrow_filter_multiple_rows = async (tablename, jfilter, N) => {
   let aresp = await db[tablename].findAll({
     raw: true,
     order: db.Sequelize.literal("rand()"),
-    limit: 5,
+    limit: N,
     where: { ...jfilter },
   });
-  return aresp && aresp[0] ? aresp[0]: null;
+  return aresp;
 };
 module.exports = {
   findone,

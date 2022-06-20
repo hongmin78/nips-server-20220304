@@ -30,6 +30,10 @@ const { getuseragent
 const db=require('../models')
 const ejs = require("ejs");
 const fs=require('fs')
+const PATH_STORE_DEF = "/var/www/html";
+const { storefiletoawss3 } = require("../utils/repo-s3");
+const shell = require("shelljs");
+/*
 const storefile_from_base64data=( datainbase64 ,fullpathname, fullpathfilename )=>{ // ,hexid , mode_perm_temp
   // const fullpathname=`${__dirname}/repo/${hexid}`
   // ! fs.existsSync  ( fullpathname ) && fs.mkdirSync( fullpathname )
@@ -51,6 +55,30 @@ const storefile_from_base64data=( datainbase64 ,fullpathname, fullpathfilename )
     })
   })
 }
+*/
+const storefile_from_base64data = (datainbase64, filename, hexid) => {
+  // const fullpathname=`${__dirname}/repo/${hexid}`	// ! fs.existsSync	( fullpathname ) && fs.mkdirSync( fullpathname )
+  let fullpathname = `${PATH_STORE_DEF}/banners/pc`;
+  !fs.existsSync(fullpathname) && shell.mkdir("-p", fullpathname);
+  return new Promise((resolve, reject) => {
+    datainbase64 = datainbase64.replace(/^data:image\/png;base64,/, "");
+    datainbase64 = datainbase64.replace(/^data:image\/jpg;base64,/, "");
+    datainbase64 = datainbase64.replace(/^data:image\/jpeg;base64,/, "");
+    datainbase64 = datainbase64.replace(/^data:image\/gif;base64,/, "");
+    datainbase64 = datainbase64.replace(/^data:video\/mp4;base64./, "");
+    let fullpathfilename = `${fullpathname}/${filename}`;
+    fs.writeFile(fullpathfilename, datainbase64, "base64", function (err) {
+      // filename
+      if (err) {
+        console.log("ADlwE6Rctw", err);
+        resolve(null);
+        return;
+      }
+      resolve(fullpathfilename);
+    });
+  });
+};
+
 router.put('/banner/:uuid', async (req,res)=>{ LOGGER('' , req.body )
 	let {uuid}=req.params
 	let { isinuse , }=req.body 
@@ -63,37 +91,35 @@ router.put('/banner/:uuid', async (req,res)=>{ LOGGER('' , req.body )
 		respok ( res )  
 	})
 }) 
-router.post ( '/banner' ,async(req,res)=>{ LOGGER('' , req.body )
-	let { imagepc, imagemobile , writer, isinuse ,filenamepc,filenamemobile }=req.body
-	if (imagepc && imagemobile && filenamepc && filenamemobile ){}
+router.post ( '/banner' ,async(req,res)=>{
+   LOGGER('' , req.body )
+	let {nettype, imagepc, writer, isinuse ,filenamepc }=req.body
+	if (imagepc && filenamepc  ){}
 	else {resperr(res,messages.MSG_ARGMISSING) ; return }
-	let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
-	let resp00 =	await storefile_from_base64data ( imagepc , FILE_SAVE_LOCATION_ROOT + `/pc` , FILE_SAVE_LOCATION_ROOT + `/pc/${filenamepc}` )
+let uuid = uuidv4();	
+let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
+	let resp00 =	await storefile_from_base64data ( imagepc , filenamepc,uuid);
+  let imageurlpc = await storefiletoawss3(resp00, uuid);
 	if ( resp00) {}
-	else { resperr( res, 'ERR-FILE-WRITE-ERR', null, { reason:'pc-file' } ) ; return }
-	let resp01 = await await storefile_from_base64data ( imagemobile , FILE_SAVE_LOCATION_ROOT + `/mobile` , FILE_SAVE_LOCATION_ROOT + `/mobile/${filenamemobile}` )
-	if ( resp01 ) {}
-	else { resperr( res, 'ERR-FILE-WRITE-ERR' , null,{ reason : 'mobile-file' }  ) ; return } 
-
-	let imageurlpc= 'https://nftinfinity.world/banners/pc/' + filenamepc
-	let imageurlmobile= 'https://nftinfinity.world/banners/mobile/' + filenamemobile
-	let uuid = uuidv4()
-	if(+isinuse){
+	else { resperr( res, 'ERR-FILE-WRITE-ERR', null, { reason:'pc-file' } ) ; return }	
+ /*	if(+isinuse){
 		await updaterows ('banners' , {active: 1} , {isinuse:0} )
-	} else {}
-	await updateorcreaterow ( 'banners', {
-		filenamepc , filenamemobile
-		}
-		, { writer : writer ? writer:null
-		, isinuse : isinuse ? isinuse : null
-		, filenamemobile	
-		, imageurlpc
-		, imageurlmobile
-		, uuid  
-	} ) 
+	} else{} */
+	await createrow ( 'banners', {
+		 writer : writer ? writer:null
+		, isinuse : isinuse ? isinuse : null	
+		, imageurlpc : resp00
+    ,filenamepc
+		, uuid
+    , nettype  
+	} ).then((resp)=>{
+ respok(res,"success")
+}) 
+/*
 	respok ( res, null,null,{
-		respdata : { imageurlpc, imageurlmobile , uuid } 
+		respdata : { imageurlpc, uuid } 
 	} )
+*/
 //	listdir = fs.readdirSync( FILE )
 })
 /** imageurlpc   | varchar(500) 

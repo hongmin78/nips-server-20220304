@@ -6,6 +6,8 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+ "aws-sdk": "^2.954.0",
+  "shelljs": "^0.8.4",
     "amqplib": "^0.8.0",
     "async-redis": "^2.0.0",
     "await-transaction-mined": "^1.0.12",

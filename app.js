@@ -23,6 +23,15 @@ const LOGGER = console.log;
 const cors = require("cors");
 var app = express();
 
+const bodyParser = require("body-parser");
+var jsonParser = bodyParser.json({ limit: 1024 * 1024 * 10, type: "application/json" });
+var urlencodedParser = bodyParser.urlencoded({
+  extended: true,
+  limit: 1024 * 1024 * 10,
+  type: "application/x-www-form-urlencoded",
+});
+
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
@@ -31,9 +40,11 @@ app.use((req, res, next) => {
   LOGGER(getipaddress(req));
   next();
 });
+app.use(jsonParser);
+app.use(urlencodedParser);
 app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+/*app.use(express.json({limit:'10mb'}));
+app.use(express.urlencoded({ extended: true, limit:'10mb' })); */
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());

@@ -163,10 +163,6 @@ const handle_assign_item_case = async (item, username, nettype) => {
   //      let item = itemstogive[i];
   let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
   //      let { username } = listreceivers0[i];
-  let kingkong_vaildation = await findall("items", { itemid, nettype });
-  if(kingkong_vaildation.group_ === "kingkong"){
-   console.log("imkingkong")
-  }else{
     await updaterow(
       "items",
       { itemid, nettype },
@@ -262,7 +258,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
       typestr: "TENTATIVE_ASSIGN",
       nettype,
     });
-  }
+  
 
 };
 
