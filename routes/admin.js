@@ -92,7 +92,7 @@ router.put('/banner/:uuid', async (req,res)=>{ LOGGER('' , req.body )
 	})
 }) 
 router.post ( '/banner' ,async(req,res)=>{
-   LOGGER('' , req.body )
+  
 	let {nettype, imagepc, writer, isinuse ,filenamepc }=req.body
 	if (imagepc && filenamepc  ){}
 	else {resperr(res,messages.MSG_ARGMISSING) ; return }
@@ -100,6 +100,7 @@ let uuid = uuidv4();
 let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
 	let resp00 =	await storefile_from_base64data ( imagepc , filenamepc,uuid);
   let imageurlpc = await storefiletoawss3(resp00, uuid);
+  console.log("LOGGER",imageurlpc);
 	if ( resp00) {}
 	else { resperr( res, 'ERR-FILE-WRITE-ERR', null, { reason:'pc-file' } ) ; return }	
  /*	if(+isinuse){
@@ -108,7 +109,7 @@ let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
 	await createrow ( 'banners', {
 		 writer : writer ? writer:null
 		, isinuse : isinuse ? isinuse : null	
-		, imageurlpc : resp00
+		, imageurlpc 
     ,filenamepc
 		, uuid
     , nettype  

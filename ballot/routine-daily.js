@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-let nettype = "ETH_TESTNET";
+let nettype = "BSC_MAINNET";
 const { REFERERCODELEN } = require("../configs/configs");
 const {
   findone,
@@ -284,7 +284,7 @@ const match_with_obj = async (listreceivers0, itemstogive) => {
   }
   return listreceivers0;
 };
-let FORCE_RUN_REGARDLESS_OF_SETTINGS = true;
+let FORCE_RUN_REGARDLESS_OF_SETTINGS = false;
 const func00_allocate_items_to_users = async (nettype) => {
   /************* */ //	let listr eceivers0 =await findall( 'ballots' , {			counthelditems : 0		} )
   let respfindactive = await findone("settings", {
@@ -486,14 +486,14 @@ module.exports = {
   func01_inspect_payments,
 };
 // const cron = require('node-cron')
-false &&
+false  &&
   cron.schedule("* */9 * * *", () => {
     LOGGER("");
     console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips");
     //	let nettype='BSC _MAINNET'
     func00_allocate_items_to_users(nettype);
   });
-false &&
+false  &&
   cron.schedule("* */21 * * *", (_) => {
     LOGGER("@moving unpaids to deliquents");
     //	let nettype='BSC _MAINNET'

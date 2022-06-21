@@ -796,7 +796,7 @@ module.exports = {
   func_00_04_handle_max_round_reached,
 };
 // const cron = require('node-cron')
-false &&
+false  &&
   cron.schedule("* */9 * * *", () => {
     LOGGER("");
     console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips");
