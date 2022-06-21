@@ -156,7 +156,7 @@ const func_00_01_draw_users = async (jdata) => {
 	return listballots_01_from_entire // .slice ( 0 , count_users_receivers ) */
 };
 
-let FORCE_RUN_REGARDLESS_OF_SETTINGS = true;
+let FORCE_RUN_REGARDLESS_OF_SETTINGS = false;
 const func00_allocate_items_to_users = async (nettype) => {
   /************* */ //	let listr eceivers0 =await fin dall( 'ballots' , {			counthelditems : 0		} )
   LOGGER(`executing func00_allocate_items_to_users ${nettype} `);
@@ -403,7 +403,7 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     let { itemid, username, nettype } = elemmatch;
 
     await handle_perish_item_case(itemid, nettype, username);
-    console.log("1")
+    
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
     console.log("tpye",listkongs)
   /*  listkongsArray.forEach(async (elemkong) => {
@@ -505,12 +505,14 @@ const func01_inspect_payments = async (nettype) => {
   });
 };
 const parse_q_msg = async (str) => {
-  if (str && str.length) {
+console.log("str",str); 
+ if (str && str.length) {
   } else {
     LOGGER(`falsey call`);
     return;
   }
   let jdata = PARSER(str); //
+  LOGGER("jdataparser",jdata)
   if (jdata && jdata?.nettype == nettype) {
   } else {
     LOGGER("@cli called mainnet");
@@ -525,7 +527,7 @@ const parse_q_msg = async (str) => {
       hourofday = normalize_hour_from_kst_to_utc(hourofday);
     }
     let minute = moment.unix(timeofday).minute();
-    LOGGER("timeofday@draw,mq", hourofday, minute);
+    LOGGER("timeofday@draw,mq", hourofday, minute, jdata,nettype);
     jschedules["BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS"] = cron.schedule(
       `0 ${minute} ${hourofday} * * *`,
       async (_) => {
@@ -543,7 +545,7 @@ const parse_q_msg = async (str) => {
       hourofday = normalize_hour_from_kst_to_utc(hourofday);
     }
     let minute = moment.unix(timeofday).minute();
-    LOGGER("timeofday@inspect,mq", hourofday, minute);
+    LOGGER("timeofday@inspect,mq", hourofday, minute,nettype);
     jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] = cron.schedule(
       `0 ${minute} ${hourofday} * * *`,
       (_) => {
