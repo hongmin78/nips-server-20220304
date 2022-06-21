@@ -81,12 +81,11 @@ const storefile_from_base64data = (datainbase64, filename, hexid) => {
 
 router.put('/banner/:uuid', async (req,res)=>{ LOGGER('' , req.body )
 	let {uuid}=req.params
-	let { isinuse , }=req.body 
+	let { isinuse }=req.body
+   
 	findone('banners', {uuid} ).then(async resp=>{
 		if ( resp){}
 		else { resperr(res, messages.MSG_DATANOTFOUND ) ; return }
-		if( Number.isFinite( + isinuse ) ){}
-		else {resperr( res,messages.MSG_ARGINVALID); return }
 		await updaterow( 'banners' , { uuid } , {... req.body } )
 		respok ( res )  
 	})

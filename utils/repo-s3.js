@@ -5,8 +5,8 @@ const credentials = new AWS.SharedIniFileCredentials({profile: 'default'})
 AWS.config.credentials = credentials;
 const s3 = new AWS.S3({
  
-    accessKeyId: "AKIAVX3HJMEDOIT3DBV6",
-    secretAccessKey: "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",
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
     region: "ap-northeast-2"
 
 })
