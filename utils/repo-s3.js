@@ -3,7 +3,13 @@ const AWS = require('aws-sdk')
 AWS.config.update({region: 'ap-northeast-2'})
 const credentials = new AWS.SharedIniFileCredentials({profile: 'default'})
 AWS.config.credentials = credentials;
-const s3 = new AWS.S3({})
+const s3 = new AWS.S3({
+
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
+    region: "ap-northeast-2"
+
+})
 const LOGGER=console.log
 0 && s3.listBuckets(function(err, data) {
 	if (err) {	console.log("Error", err);  } 
@@ -12,9 +18,9 @@ const LOGGER=console.log
 // => Success [ { Name: 'nft-20210725', CreationDate: 2021-07-25T03:02:56.000Z } ]
 // Load the AWS SDK for Node.js
 // call S3 to retrieve upload file to specified bucket
-const bucketname='ipfs.casa' // nft-20210725'
+const bucketname='nips0621' // nft-20210725'
 let uploadParams = {Bucket: bucketname 
-	, Key: 'AKIAZ7JSQ2HPJHGPMYQ3'
+	, Key: 'AKIAVX3HJMEDOIT3DBV6'
 	, Body: ''
 	, ContentType:''
 	, ContentDisposition:''

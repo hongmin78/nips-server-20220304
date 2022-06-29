@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
-let { nettype } = require("../configs/net"); //  "ETH_TESTNET";
-//	let nettype = "ETH_TESTNET";
+//let { nettype } = require("../configs/net"); //  "ETH_TESTNET";
+let nettype = "ETH_TESTNET";
 const { REFERERCODELEN, B_ASSIGN_DELINQUENT_ITEMS } = require("../configs/configs");
 const {
   findone,
@@ -68,7 +68,7 @@ const func_00_03_advance_round = async (nettype) => {
     } else {
     }
   });
-
+    await updaterow("settings",{nettype},{BALLOT_PERIODIC_ROUND_STATE: 1})   ;
   let list01 = await findall("ballots", { nettype });
   list01.forEach(async (elem) => {
     let { lastroundmadepaymentfor } = elem;
@@ -97,7 +97,7 @@ const func_00_01_draw_users = async (jdata) => {
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
   // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
   let count_users = await countrows_scalar("ballots", { active: 1, nettype });
-  let count_users_plus_delinquent =  await countrows_scalar("items", {  group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1});
+  let count_users_plus_delinquent =  await countrows_scalar("delinquencies", {  nettype,active : 1});
   let all_users_with_delinquent = count_users + count_users_plus_delinquent
   if (count_users > 0) {
   } else {
@@ -119,7 +119,7 @@ const func_00_01_draw_users = async (jdata) => {
   } else {
   }
 
- let count_users_receivers = count_users_plus_delinquent > 0 ?  Math.round((count_users * allocatefactor_bp) / 10000)  : Math.round((count_users * allocatefactor_bp) / 10000);
+ let count_users_receivers = count_users_plus_delinquent > 0 ?  Math.ceil((count_users* allocatefactor_bp) / 10000) + count_users_plus_delinquent : Math.round((count_users * allocatefactor_bp) / 10000);
   let roundnumber_01 = roundnumber - 3;
 
   let listballots_00_from_entire = await db["ballots"].findAll({
@@ -138,9 +138,10 @@ const func_00_01_draw_users = async (jdata) => {
   }
   shufflearray(listballots_00_from_entire);
   shufflearray(listballots_00_from_entire);
- 
+   
   listballots_00_from_entire = listballots_00_from_entire.slice(0,
  count_users_receivers)
+ console.log("list_entire_length",listballots_00_from_entire);
   let listballots_01_from_entire = listballots_00_from_entire.sort((a, b) => {
     //	let listballots_01_from_entire = listballots_00_from_entire.sort ( (a,b)=>{
     //		a.counthelditems - b.counthelditems >0 ? +1 : -1
@@ -194,7 +195,8 @@ const func00_allocate_items_to_users = async (nettype) => {
   let listreceivers0 = await func_00_01_draw_users({
     nettype,
     roundnumber: round_number_global,
-  });
+  })
+  console.log("list_receiver",listreceivers0.length);
 
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
@@ -218,8 +220,9 @@ const func00_allocate_items_to_users = async (nettype) => {
 
     //    itemstogive = await func_00_02_draw_items(NReceivers);
     itemstogive = await func_00_02_draw_items(NReceivers, nettype); //  func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
-    NItemstogive = itemstogive.length;
-
+    NItemstogive = itemstogive.length
+    console.log("NItemstogive",NItemstogive);
+     let count_users_plus_delinquent =  await countrows_scalar("delinquencies", {  nettype,active : 1});
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
 
@@ -238,8 +241,9 @@ const func00_allocate_items_to_users = async (nettype) => {
     //			LOGGER( 'inner' , respduetime , duetime , duetimeunix )
    //	}
     //		else { ; }
-    listreceivers0 = await match_with_obj(listreceivers0, itemstogive);
-    for (let i = 0; i < listreceivers0.length; i++) {
+    listreceivers0 = await match_with_obj(listreceivers0, itemstogive)
+    console.log("match_with_obj",listreceivers0);
+    for (let i = 0; i < NMin; i++) {
       let item = itemstogive[i];
       let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
       let { username } = listreceivers0[i];
@@ -462,8 +466,9 @@ const func01_inspect_payments = async (nettype) => {
     await updaterow("items", { itemid, nettype }, { isdelinquent: 1 });
     await updaterow("ballots", { username, nettype }, { active: 0, isdelinquent: 1 });
     await updaterow("users", { username, nettype }, { active: 0, isdelinquent: 1 });
-
-    await incrementrow({
+    await updaterow("settings",{nettype},{ BALLOT_PERIODIC_ROUND_STATE: 0});
+    
+await incrementrow({
       table: "logrounds",
       jfilter: { roundnumber, nettype },
       fieldname: "countdelinquencies", // value_'
@@ -658,8 +663,8 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     raw: true,
     where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
   });
-
-  let countdelinquent = list_00.length - 1;
+  let count_users_plus_delinquent =  await countrows_scalar("delinquencies", {  nettype,active : 1});
+  let countdelinquent = list_00.length;
   let list = [];
   if (list_00.length > 0) {
     let list_01 = await db["items"].findAll({
@@ -671,8 +676,11 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
         ismaxroundreached: 0,
         isdelinquent: 0,
       },
-      limit: N,
+     // limit: N > count_users_plus_delinquent ? N - count_users_plus_delinquent : count_users_plus_delinquent,
     });
+    shufflearray(list_01);
+    shufflearray(list_01);
+    list_01 = list_01.slice(0, N - count_users_plus_delinquent);
     list = [...list_00, ...list_01];
   } else {
     let list_03 = await db["items"].findAll({
@@ -684,12 +692,16 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
         ismaxroundreached: 0,
         isdelinquent: 0,
       },
-      limit: N,
+     // limit: N,
     });
+    shufflearray(list_03);
+    shufflearray(list_03);
+    list_03 = list_03.slice(0, N)
     list = [...list_03];
   }
-  shufflearray(list);
-  shufflearray(list);
+ // shufflearray(list);
+ // shufflearray(list);
+ 
   return list;
 };
 const func_00_02_draw_items_this_ver_takes_N_arg = async (N, nettype) => {
@@ -752,18 +764,21 @@ const match_with_obj = async (listreceivers0, itemstogive) => {
   const max_score_achievable = listreceivers0.length;
   let max_score_achieved = -1000000;
   let aresolves = await Promise.all(aproms);
-  let listreceivers_at_maxscore = [];
-  const N_items = itemstogive.length;
+  let listreceivers_at_maxscore = []
+  let NMin = Math.min(listreceivers0.length, itemstogive.length); 
+ listreceivers_min= listreceivers0.slice(0, NMin);
+const N_items = itemstogive.length;
 
   listreceivers0_exp =
-    listreceivers0.length < N_items
-      ? randomly_pick_from_array_while_ensuring_each_included_atleast_once(listreceivers0, N_items)
+    listreceivers0.length !==  N_items
+      ? randomly_pick_from_array_while_ensuring_each_included_atleast_once(listreceivers_min, N_items)
       : listreceivers0;
-  listreceivers0 = listreceivers0_exp;
+  listreceivers0 = listreceivers0_exp
+  console.log("after function",listreceivers0);
  for (let idxtries = 0; idxtries < n_max_tries; idxtries++) {
     shufflearray(listreceivers0);
     let score = 0;
-    for (let idxcirc = 0; idxcirc < max_score_achievable; idxcirc++) {
+    for (let idxcirc = 0; idxcirc < NMin; idxcirc++) {
       if (aresolves[idxcirc]) {
         if (aresolves[idxcirc].itemid == itemstogive[idxcirc].itemid) {
         } else {

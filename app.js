@@ -6,7 +6,7 @@ var logger = require("morgan");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 const { getipaddress } = require("./utils/session");
-
+require("dotenv").config();
 const queriesrouter = require("./routes/queries");
 const tickersrouter = require("./routes/tickers");
 const itemsrouter = require("./routes/items");

@@ -108,7 +108,7 @@ let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
 	await createrow ( 'banners', {
 		 writer : writer ? writer:null
 		, isinuse : isinuse ? isinuse : null	
-		, imageurlpc : resp00
+		, imageurlpc
     ,filenamepc
 		, uuid
     , nettype  

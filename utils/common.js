@@ -52,7 +52,7 @@ const getRandomElementsFromArray = (arr, n) => {
   var result = new Array(n);
       len = arr.length,
       taken = new Array(len);
-  if (n > arr.length) {
+  if (n  >= arr.length) {
     while (n--) {
       var x = Math.floor(Math.random() * arr.length);
       LOGGER("x", x);
