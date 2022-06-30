@@ -5,7 +5,19 @@ const findone = async (table, jfilter) => {
 };
 const findall = async (table, jfilter) => {
   return await db[table].findAll({ raw: true, where: jfilter });
-};
+}
+
+const countrows_scalar_distinct = (table, jfilter) => {
+  return new Promise((resolve, reject) => {
+    db[table].count({distinct: table.itemid, where: { ...jfilter }}).then((resp) => {
+      if (resp) {
+        resolve(resp);
+      } else {
+        resolve(0);
+      }
+    });
+  });
+};;
 
 const getrandomrow_filter = async (tablename, jfilter) => {
   let aresp = await db[tablename].findAll({
@@ -237,6 +249,7 @@ module.exports = {
   moverow,
   logical_op,
   update_min_or_max,
+countrows_scalar_distinct
 };
 
 const test = (_) => {

@@ -48,32 +48,31 @@ const convaj = (arr, keyname, valuename) => {
   return jdata;
 };
 const getRandomElementsFromArray = (arr, n) => {
-  LOGGER("arr,n", arr, n);
-  var result = new Array(n);
-      len = arr.length,
-      taken = new Array(len);
-  if (n  >= arr.length) {
-    while (n--) {
-      var x = Math.floor(Math.random() * arr.length);
-      LOGGER("x", x);
-      LOGGER("n", n);
-      result[n] = arr[x];
-      LOGGER("result", result);
+ let  maxNum = Math.max(arr.length, n) 
+ let result = new Array(maxNum);
+      len = maxNum
+      taken = new Array(maxNum);
+  console.log("getRandom",len, n);
+ while (maxNum--) {
+      let x = Math.floor(Math.random() * maxNum);
+      result[maxNum] = arr[x];
     }
+ 
 
-    return result;
-  }
+//    return result;
+  
 
 /*  while (n--) {
     var x = Math.floor(Math.random() * len);
     result[n] = arr[x in taken ? taken[x] : x];
     taken[x] = --len in taken ? taken[len] : len;
   }
+*/
   LOGGER("result", result);
   return result;
-*/
-};
 
+
+}
 
 const getrandomwords = (N) => {
   return getRandomElementsFromArray(mnemonicwords, N);
