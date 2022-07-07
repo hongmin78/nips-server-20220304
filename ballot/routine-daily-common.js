@@ -128,7 +128,7 @@ const func_00_01_draw_users = async (jdata) => {
 
   let count_users_receivers =
     count_users_plus_delinquent > 0
-      ? Math.ceil((count_users * allocatefactor_bp) / 10000 + count_users_plus_delinquent + count_kong_delinquent)
+      ? Math.ceil((count_users * allocatefactor_bp) / 10000  + count_kong_delinquent)
       : Math.round((count_users * allocatefactor_bp) / 10000);
 
   let roundnumber_01 = roundnumber - 3;
@@ -671,6 +671,7 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     raw: true,
     where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
   });
+  let count_users_plus_delinquent_n = await countrows_scalar_distinct("delinquencies", { nettype, active: 1 });
   let count_users_plus_delinquent = await countrows_scalar("delinquencies", { nettype, active: 1 });
   console.log("func_00_02", count_users_plus_delinquent, N);
   let countdelinquent = list_00.length;
@@ -689,14 +690,15 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
       limit:
         N > count_users_plus_delinquent
           ? N - count_users_plus_delinquent
-          : N == count_users_plus_delinquent
-          ? N
-          : count_users_plus_delinquent - N,
-    });
+          : count_users_plus_delinquent -N
+    })
+    console.log(" count_users_plus_delinquent_nasd",  count_users_plus_delinquent_n)
     // shufflearray(list_01);
     // shufflearray(list_01);
     // list_01 = list_01.slice(0, N - count_users_plus_delinquent);
-    list = [...list_00, ...list_01];
+
+      N < count_users_plus_delinquent_n ?  list = [...list_00] : list = [...list_00, ...list_01];
+
   } else {
     let list_03 = await db["items"].findAll({
       raw: true,
