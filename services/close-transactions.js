@@ -158,7 +158,7 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
-   /*  await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
+    /*  await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
   } else {
   }
 
@@ -190,15 +190,14 @@ const handle_pay_case = async (jdata) => {
   //   fieldname: "lastroundmadepaymentfor",
   //   incvalue: +1,
   // });
-  await updaterow("ballots", { username, nettype }, { lastroundmadepaymentfor: -3 })
-console.log("itemidcrr",itemid);
+  await updaterow("ballots", { username, nettype }, { lastroundmadepaymentfor: -3 });
+  console.log("itemidcrr", itemid);
   let respcirc = await findone("circulations", { itemid, nettype });
-  console.log("respcirc1234",respcirc)
+
   if (respcirc) {
-    console.log("respcirc",respcirc)
     let { price, roundnumber, countchangehands } = respcirc;
     let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
-   LOGGER("MAX_ROUND_TO_REACH", roundnumber, MAX_ROUND_TO_REACH);
+    LOGGER("MAX_ROUND_TO_REACH", roundnumber, MAX_ROUND_TO_REACH);
     if (+roundnumber < MAX_ROUND_TO_REACH) {
       // max not reached yet
       await updaterow(
@@ -209,14 +208,16 @@ console.log("itemidcrr",itemid);
           salesstatusstr: "ASSIGNED",
           roundoffsettoavail: ROUNDOFFSETTOAVAIL_DEF,
         }
-      ).then((resp)=>{console.log("resp",resp), incrementrow({
-          table: "items", // orcreate
-          jfilter: { itemid, nettype },
-          fieldname: "roundnumber",
-          incvalue: +1,
-        });})
-      
-     
+      ).then((resp) => {
+        console.log("resp", resp),
+          incrementrow({
+            table: "items", // orcreate
+            jfilter: { itemid, nettype },
+            fieldname: "roundnumber",
+            incvalue: +1,
+          });
+      });
+
       await updaterow(
         "circulations",
         { id: respcirc.id },

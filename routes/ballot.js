@@ -154,9 +154,17 @@ router.post("/init/rounds", async (req, res) => {
   await deleterow("circulations", { nettype });
   await deleterow("delinquencies", { nettype });
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
-  await updaterow("ballots", { nettype }, { counthelditems: 0, lastroundmadepaymentfor: 0, isdelinquent: 0 }); // update ballots set active=1 where nettype ='ETH_TESTNET';
+  await updaterow(
+    "ballots",
+    { nettype },
+    { counthelditems: 0, lastroundmadepaymentfor: 0, isdelinquent: 0, active: 1 }
+  ); // update ballots set active=1 where nettype ='ETH_TESTNET';
   await deleterow("itembalances", { nettype });
-  await updaterow("users", { nettype }, { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0 });
+  await updaterow(
+    "users",
+    { nettype },
+    { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0, active: 1 }
+  );
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
