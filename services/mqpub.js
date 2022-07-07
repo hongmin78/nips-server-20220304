@@ -1,7 +1,7 @@
 const rmqq = 'tasks'
 const rmqopen = require('amqplib').connect('amqp://localhost')
 const STRINGER=JSON.stringify
-
+const { respok, resperr } = require("../utils/rest");
 const mqpub=jdata=>{
 	let mstr= STRINGER( jdata )
 	rmqopen.then(function(conn) {
