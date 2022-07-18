@@ -118,6 +118,7 @@ const fieldexists = async (tablename, fieldname) => {
   return resp[0][0];
 };
 const createrow = async (table, jdata) => {
+  console.log(`${table}`, jdata);
   return await db[table].create(jdata);
 };
 const countrows_scalar = (table, jfilter) => {

@@ -145,6 +145,32 @@ router.post("/:txhash", async (req, res) => {
         });
       /*****/
       break;
+    case "BUY_NFT_ITEM_TICKET":
+      cliredisa
+        .hset(
+          "TX-TABLES",
+          txhash,
+          STRINGER({
+            type: typestr,
+            //    , tables:{
+            //     logactions:1
+            // , transactions:1
+            //  }
+            address: username, // itemid
+            //       , amount : auxdata?.amount
+            itemid,
+            contractaddress,
+            tokenid,
+            uuid,
+            strauxdata,
+            orderuuid: req.body.auxdata.uuid,
+          })
+        )
+        .then((resp) => {
+          enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
+        });
+      /*****/
+      break;
   }
   createifnoneexistent(
     "transactionstotrack",

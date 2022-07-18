@@ -12,7 +12,7 @@ const mqpub=jdata=>{
     	return ch.sendToQueue(rmqq, Buffer.from( mstr ));
 	  });
 	}).catch(err=> { console.warn(err) 
-		resperr(res, 'INTERNAL-ERR' ) 
+		// resperr(res, 'INTERNAL-ERR' ) 
 	})
 }
 module.exports={

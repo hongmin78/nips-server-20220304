@@ -22,7 +22,7 @@ const {
   ISFINITE,
   separatebycommas,
   convaj,
-shufflearray
+  shufflearray,
 } = require("../utils/common");
 const { respok, respreqinvalid, resperr, resperrwithstatus } = require("../utils/rest");
 const { messages } = require("../configs/messages");
@@ -351,8 +351,6 @@ router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", as
 
 //
 
-
-
 router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
   let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
   let { itemdetail, userdetail, filterkey, filterval, nettype, random } = req.query;
@@ -480,7 +478,7 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
             aproms[aproms.length] = queryuserdata(elem.username);
           });
           Promise.all(aproms).then((list) => {
-          list_shufflearray = shufflearray(list)
+            list_shufflearray = shufflearray(list);
             list_shufflearray = list_shufflearray.map((elem, idx) => {
               return { ...elem, ...list_00[idx] };
             });
@@ -568,9 +566,9 @@ router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:o
           Promise.all(aproms).then((list) => {
             //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
             //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
-          let sufflearray_list = shufflearray(list_00)            
-         LOGGER("shiuffle",sufflearray_list)
-sufflearray_list = sufflearray_list.map((elem, idx) => {
+            let sufflearray_list = shufflearray(list_00);
+            LOGGER("shiuffle", sufflearray_list);
+            sufflearray_list = sufflearray_list.map((elem, idx) => {
               return { ...list_00[idx], ...elem };
             });
             respok(res, null, null, { list: sufflearray_list });
@@ -581,7 +579,6 @@ sufflearray_list = sufflearray_list.map((elem, idx) => {
       });
   });
 });
-
 
 // query orders table
 router.get("/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {

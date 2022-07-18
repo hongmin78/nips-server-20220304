@@ -1,19 +1,7 @@
 var express = require("express");
 var router = express.Router();
-let {
-  create_uuid_via_namespace,
-  generaterandomstr,
-  ISFINITE,
-  uuidv4,
-} = require("../utils/common");
-let {
-  findone,
-  findall,
-  createrow,
-  updateorcreaterow,
-  updaterow,
-  moverow,
-} = require("../utils/db");
+let { create_uuid_via_namespace, generaterandomstr, ISFINITE, uuidv4 } = require("../utils/common");
+let { findone, findall, createrow, updateorcreaterow, updaterow, moverow, create, deleterow } = require("../utils/db");
 let { respok, resperr } = require("../utils/rest");
 const { messages } = require("../configs/messages");
 const LOGGER = console.log;
@@ -59,49 +47,112 @@ router.delete("/:fieldname/:fieldval", async (req, res) => {
       typestr: "CANCEL_SALE",
       uuid, // : generaterandomstr(40)
     });
-    await updateorcreaterow(
-      "items",
-      { itemid: resp.itemid },
-      { salestatus: 0 }
-    );
+    await updateorcreaterow("items", { itemid: resp.itemid }, { salestatus: 0 });
   });
 });
 //		moverow(fromtable, jfilter, totable , auxdata)
-router.put("/:fieldname/:fieldval", async (req, res) => {
+router.put("/update_orders", async (req, res) => {
   LOGGER("", req.body);
-  let { fieldname, fieldval } = req.params;
-  let jdata = {};
-  jdata[fieldname] = fieldval;
-  let { username } = req.body;
+  let {
+    matcher_contract,
+    typestr,
+    amount,
+    uuid,
+    username,
+    buyer,
+    seller,
+    saletype,
+    price,
+    nettype,
+    auxdata,
+    type,
+    txhash,
+    paymeansaddress,
+    paymeansname,
+    tokenid,
+    oldseller,
+  } = req.body;
   if (username) {
   } else {
     resperr(res, messages.MSG_ARGMISSING, null, { reason: "username" });
     return;
   }
-  let uuid = uuidv4();
-  findone("orders", { ...jdata }).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    let { expiry } = req.body;
-    if (expiry) {
-      if (validate_expiry(expiry)) {
+  if (type === "ticket") {
+    findone("orders", { uuid }).then(async (resp) => {
+      if (resp) {
       } else {
-        resperr(res, messages.MSG_ARGINVALID);
+        resperr(res, messages.MSG_DATANOTFOUND);
         return;
       }
-    }
-    await updaterow("orders", { id: resp.id }, { ...req.body });
-    respok(res, null, null, { uuid });
-    createrow("logactions", {
-      username,
-      itemid: resp.itemid,
-      typestr: "EDIT_SALE",
-      uuid, // : generaterandomstr(40)
+      await updaterow(
+        "orders",
+        { uuid },
+        {
+          ...req.body,
+          isprivate: 1,
+          salestatus: 0,
+          status: 0,
+        }
+      );
+
+      createrow("logorders", {
+        matcher_contract,
+        username,
+        uuid,
+        txhash,
+        type,
+        typestr,
+        price,
+        tokenid,
+        buyer,
+        seller,
+        amount,
+        paymeansaddress,
+        paymeansname,
+        nettype,
+        auxdata,
+        oldseller,
+      });
+      createrow("logstakes", {
+        username,
+        txhash,
+        type: 1,
+        typestr,
+        amount: 1,
+        price,
+        currency: paymeansname,
+        currencyaddress: paymeansaddress,
+        nettype,
+        address: username,
+      });
     });
-  });
+    respok(res, null, null, null);
+  }
+  if (type === "kingkong") {
+    findone("orders", { ...jdata }).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      let { expiry } = req.body;
+      if (expiry) {
+        if (validate_expiry(expiry)) {
+        } else {
+          resperr(res, messages.MSG_ARGINVALID);
+          return;
+        }
+      }
+      await updaterow("orders", { uuid }, { ...req.body });
+      respok(res, null, null, null);
+      createrow("logorders", {
+        username,
+        itemid: resp.itemid,
+        typestr: "EDIT_SALE",
+        uuid, // : generaterandomstr(40)
+      });
+    });
+  }
 });
 router.post("/", async (req, res) => {
   LOGGER("", req.body);
@@ -119,9 +170,11 @@ router.post("/", async (req, res) => {
     salestatus,
     salestatusstr,
     jsignature,
-    nettype,
     typestr,
     expirystr,
+    nettype,
+    seller,
+    type,
   } = req.body;
   console.log(req.body);
   if (username && price && paymeansaddress) {
@@ -129,72 +182,80 @@ router.post("/", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
-
-  if (itemid) {
-  } else if (contractaddress && tokenid) {
-  } else {
-    resperr(res, messages.MSG_ARGINVALID, null, {
-      reason: "item not specified",
-    });
-    return;
-  }
-  // let {signature , msg }=jsignature
-  // if (jsignature && jsignature?.signature) {
-  // } else {
-  // }
-  let uuid;
-  if (contractaddress && tokenid) {
-    let respitem = await findone("items", { itemid });
-    if (respitem) {
-      itemid = respitem.itemid;
+  if (type === "kingkong") {
+    if (itemid) {
+    } else if (contractaddress && tokenid) {
     } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
+      resperr(res, messages.MSG_ARGINVALID, null, {
+        reason: "item not specified",
+      });
       return;
     }
-  } else {
-  }
-  // if (expiry && ISFINITE(+expiry)) {
-  // } else {
-  //   resperr(res, messages.MSG_ARGMISSING);
-  //   return;
-  // }
-
-  // if (validate_expiry(expiry)) {
-  // } else {
-  //   resperr(res, messages.MSG_ARGINVALID);
-  //   return;
-  // }
-  uuid = create_uuid_via_namespace(
-    `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
-  ); // `${contractaddress}_${tokenid}`
-
-  let resporder = await findone("orders", { uuid });
-  if (resporder) {
-  } // resperr( res, messages.MSG_DATADUPLICATE); return }
-  else {
-  }
-  // await updateorcreaterow("orders", { uuid }, { ...req.body , signature , msg:msg?msg:null });
-  // await updateorcreaterow(
-  //   "orders",
-  //   { uuid },
-  //   { ...req.body, msg: msg ? msg : null }
-  // );
-  await updateorcreaterow("orders", { uuid }, { ...req.body });
-  respok(res, null, null, { uuid });
-  updateorcreaterow(
-    "items",
-    { itemid },
-    {
-      salestatus: 1,
-      salestatus: salestatus,
-      saletype: saletype,
-      saletypestr: saletypestr,
-      salestatusstr: salestatusstr,
-      expirystr: expirystr,
+    // let {signature , msg }=jsignature
+    // if (jsignature && jsignature?.signature) {
+    // } else {
+    // }
+    let uuid;
+    if (contractaddress && tokenid) {
+      let respitem = await findone("items", { itemid });
+      if (respitem) {
+        itemid = respitem.itemid;
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+    } else {
     }
-  );
-  createrow("itemhistory", { itemid, ...req.body });
-  createrow("logactions", { ...req.body });
+
+    uuid = create_uuid_via_namespace(
+      `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
+    );
+
+    await createrow("orders", { ...req.body, uuid });
+    respok(res, null, null, { uuid });
+    updateorcreaterow(
+      "items",
+      { itemid, group_: "kingkong" },
+      {
+        saletype: saletype,
+        saletypestr: saletypestr,
+        expirystr: expirystr,
+        isminted: 1,
+      }
+    );
+
+    createrow("logorders", { ...req.body, uuid });
+  }
+  if (type === "ticket") {
+    if (tokenid) {
+    } else {
+      resperr(res, messages.MSG_ARGINVALID, null, {
+        reason: "item not specified",
+      });
+      return;
+    }
+    // let {signature , msg }=jsignature
+    // if (jsignature && jsignature?.signature) {
+    // } else {
+    // }
+    let uuid;
+
+    uuid = create_uuid_via_namespace(
+      `${username.toLowerCase()}_${tokenid}_${contractaddress.toLowerCase()}_${moment().unix()}`
+    );
+
+    let resporder = await findone("orders", { uuid });
+    if (resporder) {
+    } else {
+    }
+
+    await createrow("orders", { ...req.body, uuid });
+    respok(res, null, null, { uuid });
+    createrow("logorders", { ...req.body, uuid });
+    await updaterow("ballots", { username }, { active: 0, isstaked: 0 });
+    await updaterow("users", { username }, { isstaked: 0, active: 0 });
+    await deleterow("logstakes", { username });
+  }
 });
 module.exports = router;
 /**  delete( "/:fieldname/:fieldval" 
