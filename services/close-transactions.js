@@ -413,16 +413,17 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
               { username: address },
               {
                 stakeamount: amount, // stakeamount
-                isstaked: status ? 1 : 0,
+                isstaked: 1,
+                active: 1,
               }
             );
             await updateorcreaterow(
               "ballots",
-              { username: address, nettype: nettype ? nettype : "BSC_MAINNET" }, // "ETH_TES TNET"
-              { isstaked: 1 }
+              { username: address, nettype: nettype ? nettype : nettype }, // "ETH_TES TNET"
+              { isstaked: 1, active: 1 }
             );
             let { currency, currencyaddress } = PARSER(strauxdata); // ,nettype
-            await createifnoneexistent(
+            await updateorcreaterow(
               "logstakes",
               { txhash },
               {
@@ -437,6 +438,7 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
                 currencyaddress,
                 nettype,
                 address,
+                price: 100,
               }
             );
           } else {
@@ -485,9 +487,17 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
             nettype,
             txhash,
           });
+        } else if (type == "BUY_NFT_ITEM") {
+          close_sale({
+            itemid,
+            contractaddress,
+            tokenid,
+            orderuuid,
+            username: address,
+            nettype,
+            txhash,
+          });
         }
-        updaterow("transactionstotrack", { txhash }, { active: 0 });
-        //				deleterow( 'transactionstotrack' , {					txhash				} )
       });
     })
     .catch((err) => {

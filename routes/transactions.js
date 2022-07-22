@@ -16,7 +16,7 @@ router.post("/:txhash", async (req, res) => {
   let { txhash } = req.params;
   let uuid = create_uuid_via_namespace(txhash);
   LOGGER(txhash, req.body);
-  let { username, auxdata, typestr, nettype, itemid } = req.body;
+  let { username, auxdata, typestr, nettype, itemid, amount, contractaddress, tokenid } = req.body;
   /**	if (nettype){}
 	else if ( nettype=auxdata.nettype ) {}
 	else {} */
@@ -159,15 +159,16 @@ router.post("/:txhash", async (req, res) => {
             address: username, // itemid
             //       , amount : auxdata?.amount
             itemid,
-            contractaddress,
             tokenid,
+            contractaddress,
             uuid,
             strauxdata,
             orderuuid: req.body.auxdata.uuid,
           })
         )
         .then((resp) => {
-          enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
+          // enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
+          console.log("success");
         });
       /*****/
       break;
@@ -183,12 +184,12 @@ router.post("/:txhash", async (req, res) => {
       status: -1,
       auxdata: strauxdata,
       amount: auxdata?.amount,
-      currency: auxdata?.currency,
-      currencyaddress: auxdata?.currencyaddress,
+      currency: auxdata?.currency ? auxdata?.currency : null,
+      currencyaddress: auxdata?.currencyaddress ? auxdata?.currencyaddress : null,
       nettype,
       address: username,
       itemid: itemid ? itemid : null,
-      uuid,
+      uuid: uuid ? uuid : null,
     }
   );
 });

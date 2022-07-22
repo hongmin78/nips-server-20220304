@@ -71,6 +71,7 @@ router.put("/update_orders", async (req, res) => {
     paymeansname,
     tokenid,
     oldseller,
+    itemid,
   } = req.body;
   if (username) {
   } else {
@@ -89,11 +90,61 @@ router.put("/update_orders", async (req, res) => {
         { uuid },
         {
           ...req.body,
+          tokenid: itemid,
           isprivate: 1,
           salestatus: 0,
           status: 0,
         }
       );
+
+      createrow("logorders", {
+        matcher_contract,
+        username,
+        uuid,
+        txhash,
+        type,
+        typestr,
+        price,
+        itemid,
+        tokenid,
+        buyer,
+        seller,
+        amount,
+        paymeansaddress,
+        paymeansname,
+        nettype,
+        auxdata,
+        oldseller,
+      });
+      createrow("logstakes", {
+        username,
+        txhash,
+        type: 1,
+        typestr,
+        amount: 1,
+        price,
+        itemid: tokenid,
+        currency: paymeansname,
+        currencyaddress: paymeansaddress,
+        nettype,
+        address: username,
+      });
+      await updaterow("ballots", { username }, { active: 1, isstaked: 1 });
+      await updaterow("users", { username }, { isstaked: 1, active: 1 });
+    });
+    respok(res, null, null, null);
+  }
+  if (type === "kingkong") {
+    findone("orders", { itemid }).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      let { expiry } = req.body;
+
+      await updateorcreaterow("orders", { itemid }, { ...req.body, isprivate: 1, salestatus: 0, status: 0 });
+      respok(res, null, null, null);
 
       createrow("logorders", {
         matcher_contract,
@@ -112,44 +163,7 @@ router.put("/update_orders", async (req, res) => {
         nettype,
         auxdata,
         oldseller,
-      });
-      createrow("logstakes", {
-        username,
-        txhash,
-        type: 1,
-        typestr,
-        amount: 1,
-        price,
-        currency: paymeansname,
-        currencyaddress: paymeansaddress,
-        nettype,
-        address: username,
-      });
-    });
-    respok(res, null, null, null);
-  }
-  if (type === "kingkong") {
-    findone("orders", { ...jdata }).then(async (resp) => {
-      if (resp) {
-      } else {
-        resperr(res, messages.MSG_DATANOTFOUND);
-        return;
-      }
-      let { expiry } = req.body;
-      if (expiry) {
-        if (validate_expiry(expiry)) {
-        } else {
-          resperr(res, messages.MSG_ARGINVALID);
-          return;
-        }
-      }
-      await updaterow("orders", { uuid }, { ...req.body });
-      respok(res, null, null, null);
-      createrow("logorders", {
-        username,
-        itemid: resp.itemid,
-        typestr: "EDIT_SALE",
-        uuid, // : generaterandomstr(40)
+        itemid,
       });
     });
   }
@@ -191,10 +205,7 @@ router.post("/", async (req, res) => {
       });
       return;
     }
-    // let {signature , msg }=jsignature
-    // if (jsignature && jsignature?.signature) {
-    // } else {
-    // }
+
     let uuid;
     if (contractaddress && tokenid) {
       let respitem = await findone("items", { itemid });
@@ -211,7 +222,7 @@ router.post("/", async (req, res) => {
       `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
     );
 
-    await createrow("orders", { ...req.body, uuid });
+    await updateorcreaterow("orders", { itemid }, { ...req.body, uuid, status: 1, isprivate: 0 });
     respok(res, null, null, { uuid });
     updateorcreaterow(
       "items",
@@ -219,12 +230,13 @@ router.post("/", async (req, res) => {
       {
         saletype: saletype,
         saletypestr: saletypestr,
-        expirystr: expirystr,
+
         isminted: 1,
       }
     );
 
     createrow("logorders", { ...req.body, uuid });
+    await deleterow("itembalances", { itemid });
   }
   if (type === "ticket") {
     if (tokenid) {
@@ -248,7 +260,7 @@ router.post("/", async (req, res) => {
     if (resporder) {
     } else {
     }
-
+    await deleterow("orders", { itemid });
     await createrow("orders", { ...req.body, uuid });
     respok(res, null, null, { uuid });
     createrow("logorders", { ...req.body, uuid });
