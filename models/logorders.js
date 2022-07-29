@@ -40,7 +40,6 @@ module.exports = function (sequelize, DataTypes) {
       itemid: {
         type: DataTypes.STRING(100),
         allowNull: true,
-        unique: true,
       },
       type: {
         type: DataTypes.STRING(10),

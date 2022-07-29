@@ -487,7 +487,7 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
             nettype,
             txhash,
           });
-        } else if (type == "BUY_NFT_ITEM") {
+        } else if (type == "BUY_NFT_ITEM_TICKET") {
           close_sale({
             itemid,
             contractaddress,

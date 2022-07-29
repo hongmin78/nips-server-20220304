@@ -123,7 +123,7 @@ router.put("/update_orders", async (req, res) => {
         typestr,
         amount: 1,
         price,
-        itemid: tokenid,
+        itemid,
         currency: paymeansname,
         currencyaddress: paymeansaddress,
         nettype,
@@ -143,7 +143,8 @@ router.put("/update_orders", async (req, res) => {
       }
       let { expiry } = req.body;
 
-      await updateorcreaterow("orders", { itemid }, { ...req.body, isprivate: 1, salestatus: 0, status: 0 });
+      await updaterow("orders", { uuid }, { ...req.body, isprivate: 1, salestatus: 0, status: 0 });
+      await updaterow("items", { itemid }, { username, isminted: 1, active: 1, price });
       respok(res, null, null, null);
 
       createrow("logorders", {
@@ -168,6 +169,7 @@ router.put("/update_orders", async (req, res) => {
     });
   }
 });
+
 router.post("/", async (req, res) => {
   LOGGER("", req.body);
   let {
@@ -226,17 +228,13 @@ router.post("/", async (req, res) => {
     respok(res, null, null, { uuid });
     updateorcreaterow(
       "items",
-      { itemid, group_: "kingkong" },
+      { itemid, group_: "kingkong", nettype },
       {
         saletype: saletype,
         saletypestr: saletypestr,
-
-        isminted: 1,
+        isminted: 0,
       }
     );
-
-    createrow("logorders", { ...req.body, uuid });
-    await deleterow("itembalances", { itemid });
   }
   if (type === "ticket") {
     if (tokenid) {
@@ -263,11 +261,33 @@ router.post("/", async (req, res) => {
     await deleterow("orders", { itemid });
     await createrow("orders", { ...req.body, uuid });
     respok(res, null, null, { uuid });
-    createrow("logorders", { ...req.body, uuid });
+
     await updaterow("ballots", { username }, { active: 0, isstaked: 0 });
     await updaterow("users", { username }, { isstaked: 0, active: 0 });
     await deleterow("logstakes", { username });
   }
+});
+
+//stake
+router.put("/update_kingkong_stake", async (req, res) => {
+  LOGGER("", req.body);
+  let { nettype, itemid, isstaked } = req.body;
+  if (itemid) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING, null, { reason: "username" });
+    return;
+  }
+
+  findone("items", { itemid, nettype }).then(async (resp) => {
+    if (resp) {
+    } else {
+      resperr(res, messages.MSG_DATANOTFOUND);
+      return;
+    }
+
+    await updaterow("items", { itemid, nettype }, { isstaked });
+  });
+  respok(res, null, null, null);
 });
 module.exports = router;
 /**  delete( "/:fieldname/:fieldval" 

@@ -122,6 +122,15 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true,
         defaultValue: 0,
       },
+      price: {
+        type: DataTypes.INTEGER(40),
+        allowNull: true,
+      },
+      isstaked: {
+        type: DataTypes.INTEGER(4),
+        allowNull: true,
+        defaultValue: 0,
+      },
     },
     {
       sequelize,
