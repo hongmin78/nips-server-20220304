@@ -348,9 +348,48 @@ router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", as
       });
   });
 });
-
 //
 
+const reflect_ticket_sellable_state_past_set_days=async jargs=>{
+	let { username , nettype } = jargs
+	if ( username && nettype ) {}
+	else { return null } 
+
+	let respbal = await findone ( 'itembalances' , { username , nettype } )
+	if ( respbal ) { return null }
+	else {}
+	let respballot = await findone ( 'ballots' , { username , nettype } )
+	if ( respballot && respballot?.createdat) { }
+	else { return null }
+	let timethen = moment( respballot?.createdat )
+	
+	let { createdat } =respballot 
+	let buytimeunix = moment( createdat )
+	let timenow=moment()
+	let timediff_in_sec = ( timenow - timethen ) /1000
+	let { value_ : DAYS_TO_PASS_TO_SELL_TICKET } = await findone ( 'settings' , { key_:'DAYS_TO_PASS_TO_SELL_TICKET' , nettype } )
+	if ( DAYS_TO_PASS_TO_SELL_TICKET ) {}
+	else {LOGGER(`!!! DAYS_TO_PASS_TO_SELL_TICKET not defined`); return null }
+	let period = +DAYS_TO_PASS_TO_SELL_TICKET * 3600 
+	if ( timediff >= period ) { 
+		await createrow ( 'itembalances' , {
+		  username        
+//			, itemid
+	//		, status          
+	//		, buyprice
+//			, paymeans
+//			, paymeansaddress 
+			, amount : 1
+			, nettype
+//			, group_
+//			, contractaddress 
+//			, isonchain
+	//		, locked
+		//	, avail
+	 } )
+	} 
+	else { return null }	
+}
 router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
   let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
   let { itemdetail, userdetail, filterkey, filterval, nettype, random } = req.query;
@@ -358,7 +397,7 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
   let { date0, date1 } = req.query;
   console.log(date0);
   console.log(date1);
-  const username = getusernamefromsession(req);
+  let username = getusernamefromsession(req);
   fieldexists(tablename, fieldname).then(async (resp) => {
     if (resp) {
     } else {
@@ -450,6 +489,10 @@ router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orde
       })
       .then(async (list_00) => {
         let count = await countrows_scalar(tablename, jfilter);
+if ( tablename == 'delinquencies' && fieldname=='username' ) { 
+	let username = fieldval
+	reflect_ticket_sellable_state_past_set_days ({ username , nettype } ) 
+}
         //        respok(res, null, null, { list: list_00, payload: { count } });
         //		if (tablename=='items'){
         //      return;
