@@ -91,7 +91,51 @@ const handle_perish_item_case = async (itemid, nettype, username) => {
   });
   return true;
 }; //
-const handle_give_an_item_ownership_case = async (username, nettype) => {
+const get_price_of_kingkong_upon_birth=async nettype=>{ const PRICE_OF_KINGKONG_UPON_BIRTH_DEF = '372'
+	let { value_ } = await findone ( 'settings' , { key_ : '' ,  nettype } )
+	if ( value_) {}
+	else { return PRICE_OF_KINGKONG_UPON_BIRTH_DEF }	
+	return value_
+}
+const handle_give_an_item_ownership_case_this_ver_charges_for_payment = async ( username , nettype ) =>{
+	let respitem = await getrandomrow_filter ( 'items' , {
+		nettype
+		, group_ : 'kingkong'
+		, salestatus : 0
+	} )
+	if ( respitem ) {}
+	else{ LOGGER(`@give kingkong, return on empty reserve`) ;  return null }
+	let { itemid } = respitem
+	await updaterow ( 'items' , { itemid , nettype } , { salestatus : 1 } )
+	let uuid = create_uuid_via_namespace ( `${itemid}_${nettype}_${username}` )
+	let roundnumber_global = await getroundnumber_global ( nettype )
+	await createrow ( 'itemhistory' , {
+		itemid
+		, username
+		, uuid
+		, typestr : 'RECEIVE'
+		, nettype
+		, roundnumber : roundnumber_global
+	} )
+	let price = await get_price_of_kong_upon_birth ( nettype )
+	await createrow ( 'logactions' , {
+		username
+		, typestr : 'RECEIVE'
+		, uuid
+		, price
+		, itemid
+		, roundnumber : roundnumber_global
+	})
+	await createrow ( 'receivables', {
+
+	})
+	// pick item
+	// receivables 
+	// itemhistory
+	// logactions
+	// XX itembalances
+}
+const handle_give_an_item_ownership_case_this_ver_gives_for_free = async (username, nettype) => {
   let respitem = await getrandomrow_filter("items", {
     nettype,
     group_: "kingkong",
@@ -144,6 +188,7 @@ const handle_give_an_item_ownership_case = async (username, nettype) => {
     // , paymeansaddress: currencyaddress, //	, amount
   });
 };
+const handle_give_an_item_ownership_case = handle_give_an_item_ownership_case_this_ver_charges_for_payment
 
 const get_sales_account = async (role, nettype) => {
   let resp = await findone("addresses", { role, nettype });
