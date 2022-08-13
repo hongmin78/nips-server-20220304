@@ -94,7 +94,6 @@ const get_sales_account = async (role, nettype) => {
 
 const func_00_01_draw_users = async (jdata) => {
   let { roundnumber, nettype } = jdata;
-
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
   // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
 
@@ -140,8 +139,9 @@ const func_00_01_draw_users = async (jdata) => {
       isdelinquent: 0,
       nettype,
       lastroundmadepaymentfor: { [Op.gte]: 0 },
+			ismaxroundreached : 0
     },
-    ismaxroundreached: 0,
+//    ismax roundreached: 0,
   });
   if (listballots_00_from_entire && listballots_00_from_entire.length) {
   } else {
@@ -412,23 +412,18 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     LOGGER("@max round reached, no items past max");
     return;
   }
-
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
-
     await handle_perish_item_case(itemid, nettype, username);
-
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
     console.log("tpye", listkongs);
     /*  listkongsArray.forEach(async (elemkong) => {
-  
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
       await handle_assign_item_case(item, username, nettype);
     console.log("1.5item",item)
     }); */
     let item = await findone("items", { itemid: listkongs.itemid, nettype });
-    await handle_assign_item_case(item, username, nettype);
-    console.log("1.5item", item);
+    await handle_assign_item_case(item, username, nettype);    console.log("1.5item", item);
     await handle_give_an_item_ownership_case(username, nettype);
   });
 

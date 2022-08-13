@@ -154,15 +154,80 @@ const get_sales_account = async (role, nettype) => {
     return null;
   }
 };
-
-
+const get_price_of_kong_upon_birth=async nettype=>{ const PRICE_OF_KONG_UPON_BIRTH_DEF = '157.35'
+	let { value_ } =await findone ( 'settings' , { key_ : 'PRICE_OF_KONG_UPON_BIRTH' , nettype } )
+	if ( value_ ) {}
+	else { return PRICE_OF_KONG_UPON_BIRTH_DEF }
+	return value_
+}
+const get_roundnumber_of_kong_on_birth=async nettype=>{ const ROUNDNUMBER_OF_KONG_ON_BIRTH_DEF = 3 
+	let { value_} = await findone ( 'settings' , { key_ : 'ROUNDNUMBER_OF_KONG_ON_BIRTH' , nettype } )
+	if ( value_ ) {}
+	else { return ROUNDNUMBER_OF_KONG_ON_BIRTH_DEF } 
+	return value_
+}
+const handle_assign_item_case_birth_kong = async ( item , username , nettype ) =>{
+	let duetime = moment().add(12,'hours' )
+  let duetimeunix = duetime.unix(); // 
+	LOGGER(`@handle kong birth`)
+	let { itemid , isdelinquent : itemisdelinquent , group_ } = item
+	await updaterow ( 
+		'items' ,
+		{ itemid , nettype } ,
+		{ salestatus : MAP_SALE_STATUS ['ASSIGNED'] , salesstatusstr : 'assigned' } 
+	)
+	let uuid = uuidv4()
+	let price = await get_price_of_kong_upon_birth ( nettype )
+	let roundnumber = await get_roundnumber_of_kong_on_birth ( nettype )
+	await createrow ( 'circulations' , {
+		itemid
+		, username
+		, roundnumber
+		, price
+		, priceunit : PAYMENT_MEANS_DEF
+		, nettype 
+	} )
+	let SALES_ACCOUNT_NONE_TICKET = await get_sales_account ( 'SALES_ACCOUNT_NONE_TICKET' , nettype )
+	await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
+	let roundnumber_global = await getroundnumber_global ( nettype )
+	let seller = SALES_ACCOUNT_NONE_TICKET 
+	await createrow ( 'receivables' , { 
+		itemid
+		, username
+		, roundnumber : roundnumber_global
+		, amount : price
+		, currency : PAYMENT_MEANS_DEF
+		, currencyaddress : PAYMENT_ADDRESS_DEF
+		, uuid
+		, duetimeunix : duetimeunix ? duetimeunix : null 
+		, duetime : duetime? duetime.format( STR_TIME_FORMAT ) : null
+		, seller
+		, nettype
+		, group_ 
+	})
+	await createrow ( 'itemhistory' , {
+		itemid 
+		, username
+		, roundnumber
+		, price
+		, priceunit : PAYMENT_MEANS_DEF
+		, status : -1
+		, uuid
+		, typestr : 'TENTATIVE_ASSIGN'
+		, nettype 
+	})
+	// set item state 
+	// round number
+	// create row => circulations
+	// seller 
+	// receivables
+	// itemhistory
+}
 const handle_assign_item_case = async (item, username, nettype) => {
   let duetime = moment().add(12, "hours"); // .unix() // in it with placeholder
   let duetimeunix = duetime.unix(); // in it with placeholder
-  LOGGER("@handle_assign_item_case", duetime, duetimeunix, item); // , respduetime
-  //      let item = itemstogive[i];
-  let { itemid, isdelinquent: itemisdelinquent, group_ } = item;
-  //      let { username } = listreceivers0[i];
+  LOGGER("@handle_assign_item_case", duetime, duetimeunix, item); // , respduetime  //      let item = itemstogive[i];
+  let { itemid, isdelinquent: itemisdelinquent, group_ } = item;  //      let { username } = listreceivers0[i];
     await updaterow(
       "items",
       { itemid, nettype },
@@ -170,12 +235,10 @@ const handle_assign_item_case = async (item, username, nettype) => {
     ); //		await updaterow ( 'items' , { itemid , nettype } , { isdelinquent : 0 } )
     let uuid = uuidv4(); //			let duetime=moment().endOf('day').subtract(1,'hour')
     let price01; // = decideprice ( itemid , nettype ) // ITEM_SALE_START_PRICE
-    let respcirculation = await findone("circulations", { itemid, nettype });
-    //		LOGGER( '@respcirculation ' , itemid , respcirculation )
+    let respcirculation = await findone("circulations", { itemid, nettype });    //		LOGGER( '@respcirculation ' , itemid , respcirculation )
     let price;
     let roundnumber;
-    if (respcirculation) {
-      //
+    if (respcirculation) {      //
       let { price: price00, roundnumber } = respcirculation;
       let resppriceincrease = await findone("settings", {
         key_: "BALLOT_PRICE_INCREASE_FACTOR",
@@ -194,19 +257,16 @@ const handle_assign_item_case = async (item, username, nettype) => {
       roundnumber = 1 + +roundnumber;
       await updaterow(
         "circulations",
-        {
-          itemid, // : ''            //					, username // : ''
+        {          itemid, // : ''            //					, username // : ''
           nettype,
         },
-        {
-          roundnumber, // : 1 + +roundnumber // : ''
+        {          roundnumber, // : 1 + +roundnumber // : ''
           price: price01, // ITEM_SALE_START_PRICE
           priceunit: PAYMENT_MEANS_DEF,
           username, // : ''
         }
       );
-    } else {
-      // freshly assigned
+    } else {      // freshly assigned
       roundnumber = 1;
       await createrow("circulations", {
         itemid, // : ''
@@ -258,50 +318,13 @@ const handle_assign_item_case = async (item, username, nettype) => {
       typestr: "TENTATIVE_ASSIGN",
       nettype,
     });
-  
-
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   getroundnumber_global,
   pick_kong_items_on_item_max_round_reached,
   handle_perish_item_case,
+	handle_assign_item_case_birth_kong , 
   handle_assign_item_case,
   handle_give_an_item_ownership_case,
   get_MAX_ROUND_TO_REACH,

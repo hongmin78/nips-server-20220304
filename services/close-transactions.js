@@ -198,8 +198,7 @@ const handle_pay_case = async (jdata) => {
     let { price, roundnumber, countchangehands } = respcirc;
     let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
     LOGGER("MAX_ROUND_TO_REACH", roundnumber, MAX_ROUND_TO_REACH);
-    if (+roundnumber < MAX_ROUND_TO_REACH) {
-      // max not reached yet
+    if (+roundnumber < MAX_ROUND_TO_REACH) {      // max not reached yet
       await updaterow(
         "items",
         { itemid, nettype },
@@ -237,8 +236,7 @@ const handle_pay_case = async (jdata) => {
         }
       );
     } //
-    else {
-      // max reached
+    else {      // max reached
       await createrow("maxroundreached", {
         username, // : ''
         itemid, // : ''
