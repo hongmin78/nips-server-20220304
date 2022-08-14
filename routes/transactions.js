@@ -5,6 +5,7 @@ const LOGGER = console.log;
 const { createrow, createifnoneexistent, findone } = require("../utils/db");
 const { getobjtype } = require("../utils/common");
 const { enqueue_tx_toclose } = require("../services/close-transactions");
+const { enqueue_tx_toclose_02 } = require( '../services/close-transactions-02' )
 const STRINGER = JSON.stringify;
 const { create_uuid_via_namespace } = require("../utils/common");
 const { respok, resperr } = require("../utils/rest");
@@ -48,7 +49,9 @@ router.post("/:txhash", async (req, res) => {
       break;
   }
   if (nettype) {
-  } else if (auxdata.nettype) {
+  } else if ( req.query.nettype ) {
+		nettype = req.query.nettype
+	} else if (auxdata.nettype) {
     nettype = auxdata.nettype;
   } else {
     nettype = NETTYPE;
@@ -108,11 +111,14 @@ router.post("/:txhash", async (req, res) => {
 		case 'KINGKONG_INITIAL_PAYMENT' :
 			istxtotrack = false 
 			enqueue_tx_toclose_02 (
-				{ txhash
+				{ 	txhash
 					, uuid
 					, nettype
 					, username
-					, itemid 		
+					, itemid
+					, roundnumber
+					, price
+					, contractaddress
 				}
 			)
 		break
