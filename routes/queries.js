@@ -370,7 +370,7 @@ const reflect_ticket_sellable_state_past_set_days=async jargs=>{
 	let { value_ : DAYS_TO_PASS_TO_SELL_TICKET } = await findone ( 'settings' , { key_:'DAYS_TO_PASS_TO_SELL_TICKET' , nettype } )
 	if ( DAYS_TO_PASS_TO_SELL_TICKET ) {}
 	else {LOGGER(`!!! DAYS_TO_PASS_TO_SELL_TICKET not defined`); return null }
-	let period = +DAYS_TO_PASS_TO_SELL_TICKET * 3600 
+	let period = +DAYS_TO_PASS_TO_SELL_TICKET * 3600 * 24 
 	if ( timediff >= period ) { 
 		await createrow ( 'itembalances' , {
 		  username        
@@ -381,7 +381,7 @@ const reflect_ticket_sellable_state_past_set_days=async jargs=>{
 //			, paymeansaddress 
 			, amount : 1
 			, nettype
-//			, group_
+			, group_ : 'ticket'
 //			, contractaddress 
 //			, isonchain
 	//		, locked

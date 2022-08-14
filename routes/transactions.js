@@ -16,12 +16,22 @@ router.post("/:txhash", async (req, res) => {
   let { txhash } = req.params;
   let uuid = create_uuid_via_namespace(txhash);
   LOGGER(txhash, req.body);
-  let { username, auxdata, typestr, nettype, itemid, amount, contractaddress, tokenid } = req.body;
+  let { username
+		, auxdata
+		, typestr
+		, nettype
+		, itemid
+		, amount
+		, contractaddress
+		, tokenid
+		, roundnumber
+	 } = req.body;
   /**	if (nettype){}
 	else if ( nettype=auxdata.nettype ) {}
 	else {} */
   let objtype = getobjtype(auxdata);
   let strauxdata;
+	let istxtotrack = true
   switch (objtype) {
     case "null":
       break;
@@ -95,6 +105,17 @@ router.post("/:txhash", async (req, res) => {
   //	 } )
   respok(res, null, null, { payload: { uuid } });
   switch (typestr) {
+		case 'KINGKONG_INITIAL_PAYMENT' :
+			istxtotrack = false 
+			enqueue_tx_toclose_02 (
+				{ txhash
+					, uuid
+					, nettype
+					, username
+					, itemid 		
+				}
+			)
+		break
     case "STAKE":
     case "APPROVE":
     case "PAY":
@@ -173,7 +194,7 @@ router.post("/:txhash", async (req, res) => {
       /*****/
       break;
   }
-  createifnoneexistent(
+  istxtotrack && createifnoneexistent(
     "transactionstotrack",
     { txhash },
     {

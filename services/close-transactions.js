@@ -150,7 +150,6 @@ const handle_pay_case = async (jdata) => {
     itemid,
     nettype,
   });
-
   if (respitembalance) {
     await incrementrow({
       table: "ballots",
@@ -161,7 +160,6 @@ const handle_pay_case = async (jdata) => {
     /*  await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
   } else {
   }
-
   await updateorcreaterow(
     "itembalances",
     {
@@ -177,7 +175,6 @@ const handle_pay_case = async (jdata) => {
       //		, nettype
     }
   );
-
   await incrementroworcreate({
     table: "ballots",
     jfilter: { username, nettype },

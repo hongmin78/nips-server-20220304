@@ -98,9 +98,12 @@ const get_price_of_kingkong_upon_birth=async nettype=>{ const PRICE_OF_KINGKONG_
 	return value_
 }
 const handle_give_an_item_ownership_case_this_ver_charges_for_payment = async ( username , nettype ) =>{
+	let duetime = moment().add(12,'hours' )
+  let duetimeunix = duetime.unix(); //
+	let group_ = 'kingkong' 
 	let respitem = await getrandomrow_filter ( 'items' , {
 		nettype
-		, group_ : 'kingkong'
+		, group_ // : 'ki ngkong'
 		, salestatus : 0
 	} )
 	if ( respitem ) {}
@@ -126,8 +129,20 @@ const handle_give_an_item_ownership_case_this_ver_charges_for_payment = async ( 
 		, itemid
 		, roundnumber : roundnumber_global
 	})
+	let SALES_ACCOUNT_NONE_TICKET = await get_sales_account ( 'SALES_ACCOUNT_NONE_TICKET' , nettype )
 	await createrow ( 'receivables', {
-
+		itemid
+		, username
+		, roundnumber : roundnumber_global
+		, amount : price
+		, currency :PAYMENT_MEANS_DEF 			
+		, currencyaddress : PAYMENT_ADDRESS_DEF
+		, uuid
+		, duetimeunix : duetimeunix ? duetimeunix : null
+		, duetime : duetime? duetime.format( STR_TIME_FORMAT ) : null
+		, seller : SALES_ACCOUNT_NONE_TICKET
+		, nettype
+		, group_	
 	})
 	// pick item
 	// receivables 
