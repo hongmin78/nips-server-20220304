@@ -84,25 +84,21 @@ const close_sale = async (jdata) => {
   );
   await updateorcreaterow(
     "itembalances",
-    {
-      itemid,
+    {      itemid,
       nettype,
     },
-    {
-      username,
+    {      username,
     }
   );
   await updaterow(
     "items",
-    {
-      itemid,
+    {      itemid,
       nettype,
     },
-    {
-      contractaddress,
+    {      contractaddress,
     }
   );
-};
+} // END close_sale
 const enqueue_tx_toclose = async (txhash, uuid, nettype) => {
   switch (nettype) {
     case "ETH_TESTNET":

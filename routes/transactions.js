@@ -26,6 +26,7 @@ router.post("/:txhash", async (req, res) => {
 		, contractaddress
 		, tokenid
 		, roundnumber
+		, rewardtokenaddress
 	 } = req.body;
   /**	if (nettype){}
 	else if ( nettype=auxdata.nettype ) {}
@@ -108,6 +109,40 @@ router.post("/:txhash", async (req, res) => {
   //	 } )
   respok(res, null, null, { payload: { uuid } });
   switch (typestr) {
+		case 'CLAIM_KINGKONG_WAGE' : 
+			istxtotrack = false
+			enqueue_tx_toclose_02 ( 
+				{ txhash	
+					, nettype
+					, username
+					, itemid
+					, contractaddress
+					, rewardtokenaddress
+					, amount
+				}
+			)
+		break
+		case 'UNEMPLOY_KINGKONG' : 
+			istxtotrack = false
+			enqueue_tx_toclose_02 ( 
+				{				txhash
+				, nettype
+				, username
+				, itemid
+				, contractaddress
+			})
+		break
+		case 'EMPLOY_KINGKONG' :
+			istxtotrack = false
+			enqueue_tx_toclose_02 ( //					, uuid
+				{	txhash 
+					, nettype
+					, username
+					, itemid
+					, contractaddress	
+				}
+			)
+		break
 		case 'KINGKONG_INITIAL_PAYMENT' :
 			istxtotrack = false 
 			enqueue_tx_toclose_02 (

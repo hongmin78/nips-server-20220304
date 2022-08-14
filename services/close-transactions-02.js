@@ -65,7 +65,7 @@ const handle_kingkong_initial_payment_case = async jargs =>{
 			, amount : 1
 			, nettype //
 			, group_ : 'kingkong'
-			, contractaddress : 
+			, contractaddress 
 			, isonchain : 0
 //			, locked
 //			, avail
