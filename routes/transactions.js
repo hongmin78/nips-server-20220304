@@ -203,19 +203,13 @@ router.post("/:txhash", async (req, res) => {
           })
         )
         .then((resp) => {
-          enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
-          updateorcreaterow(
-            "itembalances",
-            { username, itemid, group_: "kingkong", nettype },
-            {
-              username,
-              typestr,
-              status: 1,
-              paymeans,
-              paymeansaddress,
-              amount,
-              contractaddress,
-            }
+          enqueue_tx_toclose(
+            txhash,
+            req.body.auxdata.uuid,
+            nettype,
+            "kingkong",
+            contractaddress,
+            tokenid
           );
         });
       /*****/
@@ -244,20 +238,6 @@ router.post("/:txhash", async (req, res) => {
         .then((resp) => {
           // enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
           console.log("success");
-          let { paymeansname: paymeans, paymeansaddress } = auxdata;
-          updateorcreaterow(
-            "itembalances",
-            { username, itemid, group_: "ticket", nettype },
-            {
-              username,
-              typestr,
-              status: 1,
-              paymeans,
-              paymeansaddress,
-              amount,
-              contractaddress,
-            }
-          );
         });
       /*****/
       break;

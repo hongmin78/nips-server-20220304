@@ -1,7 +1,13 @@
 const { jweb3 } = require("../configs/configweb3");
 const awaitTransactionMined = require("await-transaction-mined");
 const cliredisa = require("async-redis").createClient();
-const { LOGGER, STRINGER, KEYS, gettimestr, create_uuid_via_namespace } = require("../utils/common");
+const {
+  LOGGER,
+  STRINGER,
+  KEYS,
+  gettimestr,
+  create_uuid_via_namespace,
+} = require("../utils/common");
 const {
   updaterow,
   findone,
@@ -46,7 +52,16 @@ const {
 } */
 const ROUNDOFFSETTOAVAIL_DEF = -3;
 const close_sale = async (jdata) => {
-  let { itemid, contractaddress, tokenid, orderuuid, username, nettype, txhash } = jdata;
+  let {
+    itemid,
+    contractaddress,
+    tokenid,
+    orderuuid,
+    username,
+    nettype,
+    txhash,
+    group_,
+  } = jdata;
   let resporder = await findone("orders", { uuid: orderuuid });
   let seller;
   if (resporder && resporder.seller) {
@@ -84,28 +99,25 @@ const close_sale = async (jdata) => {
   );
   await updateorcreaterow(
     "itembalances",
-    {      itemid,
-      nettype,
-    },
-    {      username,
-    }
+    { itemid, nettype },
+    { username, group_ }
   );
-  await updaterow(
-    "items",
-    {      itemid,
-      nettype,
-    },
-    {      contractaddress,
-    }
-  );
-} // END close_sale
-const enqueue_tx_toclose = async (txhash, uuid, nettype) => {
+  await updaterow("items", { itemid, nettype }, { contractaddress });
+}; // END close_sale
+const enqueue_tx_toclose = async (
+  txhash,
+  uuid,
+  nettype,
+  group_,
+  contractaddress,
+  tokenid
+) => {
   switch (nettype) {
     case "ETH_TESTNET":
     case "ETH-TESTNET": //			enqu eue_tx_eth (txhash , uuid , nettype ) //		break
     case "BSC_MAINNET":
     case "BSC-MAINNET":
-      enqueue_tx_eth(txhash, uuid, nettype); //			enqu eue_tx_bsc (txhash , uuid , nettype )
+      enqueue_tx_eth(txhash, uuid, nettype, group_, contractaddress, tokenid); //			enqu eue_tx_bsc (txhash , uuid , nettype )
       break;
   }
 };
@@ -127,9 +139,13 @@ const get_pay_related_users = async (uuid, nettype) => {
   return { seller, buyer, refereraddress, referercode };
 };
 const handle_pay_case = async (jdata) => {
-  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata;
+  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
+    jdata;
   let globalroundnumber = roundnumber;
-  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(uuid, nettype);
+  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(
+    uuid,
+    nettype
+  );
   //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
@@ -183,7 +199,11 @@ const handle_pay_case = async (jdata) => {
   //   fieldname: "lastroundmadepaymentfor",
   //   incvalue: +1,
   // });
-  await updaterow("ballots", { username, nettype }, { lastroundmadepaymentfor: -3 });
+  await updaterow(
+    "ballots",
+    { username, nettype },
+    { lastroundmadepaymentfor: -3 }
+  );
   console.log("itemidcrr", itemid);
   let respcirc = await findone("circulations", { itemid, nettype });
 
@@ -191,7 +211,8 @@ const handle_pay_case = async (jdata) => {
     let { price, roundnumber, countchangehands } = respcirc;
     let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
     LOGGER("MAX_ROUND_TO_REACH", roundnumber, MAX_ROUND_TO_REACH);
-    if (+roundnumber < MAX_ROUND_TO_REACH) {      // max not reached yet
+    if (+roundnumber < MAX_ROUND_TO_REACH) {
+      // max not reached yet
       await updaterow(
         "items",
         { itemid, nettype },
@@ -229,7 +250,8 @@ const handle_pay_case = async (jdata) => {
         }
       );
     } //
-    else {      // max reached
+    else {
+      // max reached
       await createrow("maxroundreached", {
         username, // : ''
         itemid, // : ''
@@ -360,7 +382,14 @@ const handle_clear_delinquent_case = async (jdata) => {
     });
   });
 };
-const enqueue_tx_eth = async (txhash, uuid, nettype) => {
+const enqueue_tx_eth = async (
+  txhash,
+  uuid,
+  nettype,
+  group_,
+  contractaddress,
+  tokenid
+) => {
   let web3 = jweb3[nettype];
   awaitTransactionMined
     .awaitTx(web3, txhash, TX_POLL_OPTIONS)
@@ -382,11 +411,14 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
         }
         let str_txauxdata = resp;
         let jparams = PARSER(str_txauxdata);
-        let { type, tables, address, amount, itemid, strauxdata, roundnumber } = jparams; // itemid
+        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =
+          jparams; // itemid
 
-        KEYS(tables).forEach(async (tablename) => {
-          amount; //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
-        });
+        if (tables) {
+          KEYS(tables).forEach(async (tablename) => {
+            amount; //         await updaterow( tablename , { txhash } , {status : status_code_toupdate })
+          });
+        }
         if (type == "PAY") {
           handle_pay_case({
             uuid,
@@ -473,20 +505,22 @@ const enqueue_tx_eth = async (txhash, uuid, nettype) => {
             itemid,
             contractaddress,
             tokenid,
-            orderuuid,
+            orderuuid: uuid,
             username: address,
             nettype,
             txhash,
+            group_,
           });
         } else if (type == "BUY_NFT_ITEM_TICKET") {
           close_sale({
             itemid,
             contractaddress,
             tokenid,
-            orderuuid,
+            orderuuid: uuid,
             username: address,
             nettype,
             txhash,
+            group_,
           });
         }
       });
