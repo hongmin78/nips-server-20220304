@@ -15,7 +15,7 @@ const {
 const { updaterow: updaterow_mon } = require("../utils/dbmon");
 const KEYS = Object.keys;
 const {
-  LOGGER,
+//  LOGGER,
   generaterandomstr,
   generaterandomstr_charset,
   gettimestr,
@@ -24,6 +24,7 @@ const {
   convaj,
   shufflearray,
 } = require("../utils/common");
+const LOGGER = console.log
 const { respok, respreqinvalid, resperr, resperrwithstatus } = require("../utils/rest");
 const { messages } = require("../configs/messages");
 const { getuseragent, getipaddress } = require("../utils/session"); // const {sendemail, sendemail_customcontents_withtimecheck}=require('../services/mailer')
@@ -807,6 +808,7 @@ router.get("/:tablename/:fieldname/:fieldval", (req, res) => {
         return;
       }
       if (resp[0] && resp[0].itemid) {
+LOGGER ( '@list query' , resp ) 
         let aproms = [];
         resp.forEach((elem) => {
           aproms[aproms.length] = findone("items", { itemid: elem.itemid });

@@ -2,10 +2,15 @@ var express = require("express");
 var router = express.Router();
 /* GET home page. */
 const LOGGER = console.log;
-const { createrow, createifnoneexistent, findone } = require("../utils/db");
+const {
+  createrow,
+  createifnoneexistent,
+  findone,
+  updateorcreaterow,
+} = require("../utils/db");
 const { getobjtype } = require("../utils/common");
 const { enqueue_tx_toclose } = require("../services/close-transactions");
-const { enqueue_tx_toclose_02 } = require( '../services/close-transactions-02' )
+const { enqueue_tx_toclose_02 } = require("../services/close-transactions-02");
 const STRINGER = JSON.stringify;
 const { create_uuid_via_namespace } = require("../utils/common");
 const { respok, resperr } = require("../utils/rest");
@@ -17,23 +22,24 @@ router.post("/:txhash", async (req, res) => {
   let { txhash } = req.params;
   let uuid = create_uuid_via_namespace(txhash);
   LOGGER(txhash, req.body);
-  let { username
-		, auxdata
-		, typestr
-		, nettype
-		, itemid
-		, amount
-		, contractaddress
-		, tokenid
-		, roundnumber
-		, rewardtokenaddress
-	 } = req.body;
+  let {
+    username,
+    auxdata,
+    typestr,
+    nettype,
+    itemid,
+    amount,
+    contractaddress,
+    tokenid,
+    roundnumber,
+    rewardtokenaddress,
+  } = req.body;
   /**	if (nettype){}
 	else if ( nettype=auxdata.nettype ) {}
 	else {} */
   let objtype = getobjtype(auxdata);
   let strauxdata;
-	let istxtotrack = true
+  let istxtotrack = true;
   switch (objtype) {
     case "null":
       break;
@@ -50,9 +56,9 @@ router.post("/:txhash", async (req, res) => {
       break;
   }
   if (nettype) {
-  } else if ( req.query.nettype ) {
-		nettype = req.query.nettype
-	} else if (auxdata.nettype) {
+  } else if (req.query.nettype) {
+    nettype = req.query.nettype;
+  } else if (auxdata.nettype) {
     nettype = auxdata.nettype;
   } else {
     nettype = NETTYPE;
@@ -109,54 +115,48 @@ router.post("/:txhash", async (req, res) => {
   //	 } )
   respok(res, null, null, { payload: { uuid } });
   switch (typestr) {
-		case 'CLAIM_KINGKONG_WAGE' : 
-			istxtotrack = false
-			enqueue_tx_toclose_02 ( 
-				{ txhash	
-					, nettype
-					, username
-					, itemid
-					, contractaddress
-					, rewardtokenaddress
-					, amount
-				}
-			)
-		break
-		case 'UNEMPLOY_KINGKONG' : 
-			istxtotrack = false
-			enqueue_tx_toclose_02 ( 
-				{				txhash
-				, nettype
-				, username
-				, itemid
-				, contractaddress
-			})
-		break
-		case 'EMPLOY_KINGKONG' :
-			istxtotrack = false
-			enqueue_tx_toclose_02 ( //					, uuid
-				{	txhash 
-					, nettype
-					, username
-					, itemid
-					, contractaddress	
-				}
-			)
-		break
-		case 'KINGKONG_INITIAL_PAYMENT' :
-			istxtotrack = false 
-			enqueue_tx_toclose_02 (
-				{ 	txhash
-					, uuid
-					, nettype
-					, username
-					, itemid
-					, roundnumber
-					, price
-					, contractaddress
-				}
-			)
-		break
+    case "CLAIM_KINGKONG_WAGE":
+      istxtotrack = false;
+      enqueue_tx_toclose_02({
+        txhash,
+        nettype,
+        username,
+        itemid,
+        contractaddress,
+        rewardtokenaddress,
+        amount,
+      });
+      break;
+    case "UNEMPLOY_KINGKONG":
+      istxtotrack = false;
+      enqueue_tx_toclose_02({
+        txhash,
+        nettype,
+        username,
+        itemid,
+        contractaddress,
+      });
+      break;
+    case "EMPLOY_KINGKONG":
+      istxtotrack = false;
+      enqueue_tx_toclose_02(
+        //					, uuid
+        { txhash, nettype, username, itemid, contractaddress }
+      );
+      break;
+    case "KINGKONG_INITIAL_PAYMENT":
+      istxtotrack = false;
+      enqueue_tx_toclose_02({
+        txhash,
+        uuid,
+        nettype,
+        username,
+        itemid,
+        roundnumber,
+        price,
+        contractaddress,
+      });
+      break;
     case "STAKE":
     case "APPROVE":
     case "PAY":
@@ -204,6 +204,19 @@ router.post("/:txhash", async (req, res) => {
         )
         .then((resp) => {
           enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
+          updateorcreaterow(
+            "itembalances",
+            { username, itemid, group_: "kingkong", nettype },
+            {
+              username,
+              typestr,
+              status: 1,
+              paymeans,
+              paymeansaddress,
+              amount,
+              contractaddress,
+            }
+          );
         });
       /*****/
       break;
@@ -231,29 +244,46 @@ router.post("/:txhash", async (req, res) => {
         .then((resp) => {
           // enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
           console.log("success");
+          let { paymeansname: paymeans, paymeansaddress } = auxdata;
+          updateorcreaterow(
+            "itembalances",
+            { username, itemid, group_: "ticket", nettype },
+            {
+              username,
+              typestr,
+              status: 1,
+              paymeans,
+              paymeansaddress,
+              amount,
+              contractaddress,
+            }
+          );
         });
       /*****/
       break;
   }
-  istxtotrack && createifnoneexistent(
-    "transactionstotrack",
-    { txhash },
-    {
-      username,
-      //	  , type
-      typestr,
-      active: 1,
-      status: -1,
-      auxdata: strauxdata,
-      amount: auxdata?.amount,
-      currency: auxdata?.currency ? auxdata?.currency : null,
-      currencyaddress: auxdata?.currencyaddress ? auxdata?.currencyaddress : null,
-      nettype,
-      address: username,
-      itemid: itemid ? itemid : null,
-      uuid: uuid ? uuid : null,
-    }
-  );
+  istxtotrack &&
+    createifnoneexistent(
+      "transactionstotrack",
+      { txhash },
+      {
+        username,
+        //	  , type
+        typestr,
+        active: 1,
+        status: -1,
+        auxdata: strauxdata,
+        amount: auxdata?.amount,
+        currency: auxdata?.currency ? auxdata?.currency : null,
+        currencyaddress: auxdata?.currencyaddress
+          ? auxdata?.currencyaddress
+          : null,
+        nettype,
+        address: username,
+        itemid: itemid ? itemid : null,
+        uuid: uuid ? uuid : null,
+      }
+    );
 });
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });

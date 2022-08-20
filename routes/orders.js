@@ -1,7 +1,21 @@
 var express = require("express");
 var router = express.Router();
-let { create_uuid_via_namespace, generaterandomstr, ISFINITE, uuidv4 } = require("../utils/common");
-let { findone, findall, createrow, updateorcreaterow, updaterow, moverow, create, deleterow } = require("../utils/db");
+let {
+  create_uuid_via_namespace,
+  generaterandomstr,
+  ISFINITE,
+  uuidv4,
+} = require("../utils/common");
+let {
+  findone,
+  findall,
+  createrow,
+  updateorcreaterow,
+  updaterow,
+  moverow,
+  create,
+  deleterow,
+} = require("../utils/db");
 let { respok, resperr } = require("../utils/rest");
 const { messages } = require("../configs/messages");
 const LOGGER = console.log;
@@ -47,7 +61,11 @@ router.delete("/:fieldname/:fieldval", async (req, res) => {
       typestr: "CANCEL_SALE",
       uuid, // : generaterandomstr(40)
     });
-    await updateorcreaterow("items", { itemid: resp.itemid }, { salestatus: 0 });
+    await updateorcreaterow(
+      "items",
+      { itemid: resp.itemid },
+      { salestatus: 0 }
+    );
   });
 });
 //		moverow(fromtable, jfilter, totable , auxdata)
@@ -143,8 +161,16 @@ router.put("/update_orders", async (req, res) => {
       }
       let { expiry } = req.body;
 
-      await updaterow("orders", { uuid }, { ...req.body, isprivate: 1, salestatus: 0, status: 0 });
-      await updaterow("items", { itemid }, { username, isminted: 1, active: 1, price });
+      await updaterow(
+        "orders",
+        { uuid },
+        { ...req.body, isprivate: 1, salestatus: 0, status: 0 }
+      );
+      await updaterow(
+        "items",
+        { itemid },
+        { username, isminted: 1, active: 1, price }
+      );
       respok(res, null, null, null);
 
       createrow("logorders", {
@@ -224,7 +250,11 @@ router.post("/", async (req, res) => {
       `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
     );
 
-    await updateorcreaterow("orders", { itemid }, { ...req.body, uuid, status: 1, isprivate: 0 });
+    await updateorcreaterow(
+      "orders",
+      { itemid },
+      { ...req.body, uuid, status: 1, isprivate: 0 }
+    );
     respok(res, null, null, { uuid });
     updateorcreaterow(
       "items",

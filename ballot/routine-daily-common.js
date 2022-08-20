@@ -96,7 +96,6 @@ const func_00_01_draw_users = async (jdata) => {
   let { roundnumber, nettype } = jdata;
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
   // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
-
   let count_users = await countrows_scalar("ballots", { active: 1, nettype });
   let count_users_plus_delinquent = await countrows_scalar("delinquencies", { nettype, active: 1 });
   let count_kong_delinquent = await countrows_scalar("items", {
@@ -129,9 +128,7 @@ const func_00_01_draw_users = async (jdata) => {
     count_users_plus_delinquent > 0
       ? Math.ceil((count_users * allocatefactor_bp) / 10000  + count_kong_delinquent)
       : Math.round((count_users * allocatefactor_bp) / 10000);
-
   let roundnumber_01 = roundnumber - 3;
-
   let listballots_00_from_entire = await db["ballots"].findAll({
     raw: true,
     where: {
@@ -143,7 +140,8 @@ const func_00_01_draw_users = async (jdata) => {
     },
 //    ismax roundreached: 0,
   });
-  if (listballots_00_from_entire && listballots_00_from_entire.length) {
+	LOGGER( `` , listballots_00_from_entire ) 
+  if ( listballots_00_from_entire && listballots_00_from_entire.length ) {
   } else {
     return [];
   }
@@ -176,7 +174,6 @@ const func00_allocate_items_to_users = async (nettype) => {
     key_: "BALLOT_PERIODIC_ACTIVE",
     subkey_: nettype,
   });
-
   if (FORCE_RUN_REGARDLESS_OF_SETTINGS) {
   } else if (respfindactive) {
     let { value_: ballotstatus } = respfindactive;
@@ -187,7 +184,6 @@ const func00_allocate_items_to_users = async (nettype) => {
     }
   } else {
   } //	let listreceivers0 = await func_00_01_draw_users( nettype )  //shufflearray(listreceivers0)   //	shufflearray(listreceivers0)
-
   let NReceivers;
   let itemstogive;
   let NItemstogive;
@@ -207,7 +203,7 @@ const func00_allocate_items_to_users = async (nettype) => {
     nettype,
     roundnumber: round_number_global,
   });
-
+LOGGER( `@listreceivers0 `,listreceivers0 ) 
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
 
