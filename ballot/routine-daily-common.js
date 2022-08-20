@@ -93,7 +93,6 @@ const get_sales_account = async (role, nettype) => {
 
 const func_00_01_draw_users = async (jdata) => {
   let { roundnumber, nettype } = jdata;
-
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
   // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
   let count_users = await countrows_scalar("ballots", { active: 1, nettype });
@@ -394,6 +393,7 @@ const func00_allocate_items_to_users = async (nettype) => {
 const func_00_04_handle_max_round_reached = async (nettype) => {
   let list_maxroundreached = await findall("maxroundreached", { nettype });
  if (list_maxroundreached && list_maxroundreached.length) {
+		LOGGER( `@max round reached` , list_maxroundreached)
   } else {
     LOGGER("@max round reached, no items past max");
     return;
@@ -406,15 +406,14 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     console.log("1")
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
     console.log("tpye",listkongs)
-  /*  listkongsArray.forEach(async (elemkong) => {
-  
+    listkongs.forEach(async (elemkong) => {
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
       await handle_assign_item_case(item, username, nettype);
-    console.log("1.5item",item)
-    }); */
-   let item = await findone("items", { itemid: listkongs.itemid, nettype });
+	    console.log("1.5item",item)
+    })
+ /**  let item = await findone("items", { itemid: listkongs.itemid, nettype });
       await handle_assign_item_case(item, username, nettype);
-    console.log("1.5item",item)
+    console.log("1.5item",item) */
     await handle_give_an_item_ownership_case(username, nettype); 
   
  });
@@ -422,8 +421,9 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
 
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
-    await updaterow("users", { username, nettype }, { ismaxreached: 0 });
-    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 });
+    await updaterow("users", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0 });
+    await updaterow("ballots", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
+    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
     await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
   });
 };
@@ -643,7 +643,8 @@ const draw_items = (N) => {
 };
 const J_ALLOCATE_FACTORS = {
   DEF: 1500,
-  MAX: 5000,
+//  MAX: 5000,
+  MAX: 10000,
   MIN: 0,
 };
 

@@ -84,22 +84,18 @@ const close_sale = async (jdata) => {
   );
   await updateorcreaterow(
     "itembalances",
-    {
-      itemid,
+    {      itemid,
       nettype,
     },
-    {
-      username,
+    {      username,
     }
   );
   await updaterow(
     "items",
-    {
-      itemid,
+    {      itemid,
       nettype,
     },
-    {
-      contractaddress,
+    {      contractaddress,
     }
   );
 };
@@ -131,10 +127,10 @@ const get_pay_related_users = async (uuid, nettype) => {
   return { seller, buyer, refereraddress, referercode };
 };
 const handle_pay_case = async (jdata) => {
-  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata;
+  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata; LOGGER( `@handle_pay_case` , jdata )
   let globalroundnumber = roundnumber;
   let { buyer, seller, referercode, refereraddress } = get_pay_related_users(uuid, nettype);
-  //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
+  //	await mov erow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
   let jauxdata;
@@ -158,7 +154,7 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
-   /*  await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
+   /*  await movei row("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
   } else {
   }
 
@@ -248,9 +244,12 @@ console.log("itemidcrr",itemid);
         txhash, // : ''
         globalroundnumber, // : ''
       });
-
-      await updaterow("users", { username, nettype }, { ismaxreached: 1 });
-      await updaterow("items", { itemid, nettype }, { ismaxreached: 1 });
+			await updaterow ('ballots' , { username, nettype } , {ismaxreached: 1 				,ismaxroundreached : 1
+			}) 
+      await updaterow("users", { username, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
+			});
+      await updaterow("items", { itemid, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
+			});
     }
     await updaterow(
       "circulations",
@@ -512,7 +511,7 @@ const init = async (_) => {
   }
   //	})
 };
-init();
+false && init();
 module.exports = {
   enqueue_tx_toclose,
   handle_pay_case, // ( { uuid , username : address , itemid , strauxdata , txhash , nettype })

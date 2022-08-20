@@ -208,7 +208,7 @@ const getrandomrow_filter_multiple_rows = async (tablename, jfilter, N) => {
   let aresp = await db[tablename].findAll({
     raw: true,
     order: db.Sequelize.literal("rand()"),
-    limit: N,
+    limit: +N,
     where: { ...jfilter },
   });
   return aresp;

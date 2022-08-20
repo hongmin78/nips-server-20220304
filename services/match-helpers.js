@@ -19,7 +19,9 @@ const {
   PAYMENT_ADDRESS_DEF,
   PRICE_INCREASE_FACTOR_DEF,
 } = require("../configs/receivables");
-const { create_uuid_via_namespace, uuidv4 } = require("../utils/common");
+const { create_uuid_via_namespace, uuidv4 
+	, generaterandomhex
+} = require("../utils/common");
 const moment = require("moment");
 const LOGGER = console.log;
 const STR_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
@@ -78,10 +80,11 @@ const handle_perish_item_case = async (itemid, nettype, username) => {
     { itemid, nettype },
     { salestatus: -3, salesstatusstr: "PERISHED" }
   );
+let txhash = 'dev___' + generaterandomhex(64);
     await moverow ( 'circulations' 
-  , { itemid }
- /* , 'logcirculations'
-  , { txhash } dont use for maually */
+  , { itemid , nettype }
+  , 'logcirculations'
+  , { txhash } /* dont use for maually */
 )
   await incrementrow({
     table: "users",
@@ -154,8 +157,6 @@ const get_sales_account = async (role, nettype) => {
     return null;
   }
 };
-
-
 const handle_assign_item_case = async (item, username, nettype) => {
   let duetime = moment().add(12, "hours"); // .unix() // in it with placeholder
   let duetimeunix = duetime.unix(); // in it with placeholder
@@ -261,42 +262,6 @@ const handle_assign_item_case = async (item, username, nettype) => {
   
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   getroundnumber_global,

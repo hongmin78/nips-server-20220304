@@ -66,6 +66,11 @@ module.exports = function(sequelize, DataTypes) {
     itemid: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    price: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: "100"
     }
   }, {
     sequelize,

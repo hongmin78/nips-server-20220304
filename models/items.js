@@ -107,6 +107,27 @@ module.exports = function(sequelize, DataTypes) {
     },
     ismaxroundreached: {
       type: DataTypes.INTEGER(4),
+      allowNull: true
+    },
+    tokenid: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    saletypestr: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    expirystr: {
+      type: DataTypes.INTEGER(40),
+      allowNull: true
+    },
+    price: {
+      type: DataTypes.INTEGER(40),
+      allowNull: true,
+      defaultValue: 372
+    },
+    isstaked: {
+      type: DataTypes.INTEGER(10),
       allowNull: true,
       defaultValue: 0
     }

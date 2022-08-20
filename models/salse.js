@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('circulations', {
+  return sequelize.define('salse', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -17,45 +17,32 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true
     },
-    itemid: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
     username: {
-      type: DataTypes.STRING(80),
+      type: DataTypes.STRING(200),
       allowNull: true
     },
-    roundnumber: {
-      type: DataTypes.INTEGER(11),
+    titlename: {
+      type: DataTypes.STRING(200),
       allowNull: true
     },
-    price: {
+    itemid: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    url: {
+      type: DataTypes.STRING(300),
+      allowNull: true
+    },
+    statusstr: {
       type: DataTypes.STRING(40),
       allowNull: true
-    },
-    priceunit: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
-    priceunitcurrency: {
-      type: DataTypes.STRING(80),
-      allowNull: true
-    },
-    countchangehands: {
-      type: DataTypes.BIGINT,
-      allowNull: true,
-      defaultValue: 0
     },
     nettype: {
-      type: DataTypes.STRING(40),
-      allowNull: true
-    },
-    isdelinquent: {
-      type: DataTypes.INTEGER(3).UNSIGNED,
+      type: DataTypes.STRING(200),
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'circulations'
+    tableName: 'salse'
   });
 };

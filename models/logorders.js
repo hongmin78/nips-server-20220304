@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('orders', {
+  return sequelize.define('logorders', {
     id: {
       autoIncrement: true,
       type: DataTypes.BIGINT,
@@ -30,6 +30,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(80),
       allowNull: true
     },
+    txhash: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
     itemid: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -40,14 +44,9 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     typestr: {
-      type: DataTypes.STRING(40),
+      type: DataTypes.STRING(100),
       allowNull: true,
       comment: '0:MINT,1:COMMON,2:AUCTION'
-    },
-    isprivate: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true,
-      defaultValue: 0
     },
     price: {
       type: DataTypes.STRING(20),
@@ -72,11 +71,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     amount: {
       type: DataTypes.BIGINT,
-      allowNull: true
-    },
-    saletype: {
-      type: DataTypes.INTEGER(4),
-      allowNull: true
+      allowNull: true,
+      defaultValue: 1
     },
     active: {
       type: DataTypes.INTEGER(4),
@@ -99,15 +95,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(40),
       allowNull: true
     },
-    expirystr: {
-      type: DataTypes.STRING(40),
-      allowNull: true
-    },
-    bidcount: {
-      type: DataTypes.INTEGER(10).UNSIGNED,
-      allowNull: true,
-      defaultValue: 0
-    },
     auxdata: {
       type: 'LONGTEXT',
       allowNull: true
@@ -118,6 +105,6 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'orders'
+    tableName: 'logorders'
   });
 };
