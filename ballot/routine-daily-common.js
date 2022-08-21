@@ -403,7 +403,8 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
 // };
 const func_00_04_handle_max_round_reached = async (nettype) => {
   let list_maxroundreached = await findall("maxroundreached", { nettype });
-  if (list_maxroundreached && list_maxroundreached.length) {
+ if (list_maxroundreached && list_maxroundreached.length) {
+		LOGGER( `@max round reached` , list_maxroundreached)
   } else {
     LOGGER("@max round reached, no items past max");
     return;
@@ -412,21 +413,25 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     let { itemid, username, nettype } = elemmatch;
     await handle_perish_item_case(itemid, nettype, username);
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
-    console.log("tpye", listkongs);
-    /*  listkongsArray.forEach(async (elemkong) => {
+    console.log("tpye",listkongs)
+    listkongs.forEach(async (elemkong) => {
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
       await handle_assign_item_case(item, username, nettype);
-    console.log("1.5item",item)
-    }); */
-    let item = await findone("items", { itemid: listkongs.itemid, nettype });
-    await handle_assign_item_case(item, username, nettype);    console.log("1.5item", item);
-    await handle_give_an_item_ownership_case(username, nettype);
-  });
+	    console.log("1.5item",item)
+    })
+ /**  let item = await findone("items", { itemid: listkongs.itemid, nettype });
+      await handle_assign_item_case(item, username, nettype);
+    console.log("1.5item",item) */
+    await handle_give_an_item_ownership_case(username, nettype); 
+  
+ });
+ 
 
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
-    await updaterow("users", { username, nettype }, { ismaxreached: 0 });
-    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 });
+    await updaterow("users", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0 });
+    await updaterow("ballots", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
+    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
     await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
   });
 };
@@ -649,7 +654,8 @@ const draw_items = (N) => {
 };
 const J_ALLOCATE_FACTORS = {
   DEF: 1500,
-  MAX: 5000,
+//  MAX: 5000,
+  MAX: 10000,
   MIN: 0,
 };
 
@@ -822,7 +828,7 @@ module.exports = {
   func_00_04_handle_max_round_reached,
 };
 // const cron = require('node-cron')
-false &&
+false  &&
   cron.schedule("* */9 * * *", () => {
     LOGGER("");
     console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips");

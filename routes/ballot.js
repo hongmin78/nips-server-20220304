@@ -146,25 +146,33 @@ router.post("/init/rounds", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
-  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0, isdelinquent: 0, roundnumber: 0 });
+  await updaterow("items", { nettype }, { salestatus: 0
+		, roundoffsettoavail: 0
+		, isdelinquent: 0
+		, roundnumber: 0 
+		, ismaxroundreached : 0
+		, ismaxreached : 0
+	});
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", nettype }, { value_: 0 });
   //	await deleterow ( 'logrounds' , { nettype } )
   await deleterow("receivables", { nettype });
   await deleterow("itemhistory", { nettype });
   await deleterow("circulations", { nettype });
   await deleterow("delinquencies", { nettype });
+  await deleterow("maxroundreached", { nettype });
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
-  await updaterow(
-    "ballots",
-    { nettype },
-    { counthelditems: 0, lastroundmadepaymentfor: 0, isdelinquent: 0, active: 1 }
-  ); // update ballots set active=1 where nettype ='ETH_TESTNET';
+  await updaterow("ballots", { nettype }, { counthelditems: 0
+		, lastroundmadepaymentfor: 0
+		, isdelinquent: 0 
+		, ismaxroundreached : 0
+		, ismaxreached : 0
+	}); // update ballots set active=1 where nettype ='ETH_TESTNET';
   await deleterow("itembalances", { nettype });
-  await updaterow(
-    "users",
-    { nettype },
-    { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0, active: 1 }
-  );
+  await updaterow("users", { nettype }, { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0 
+		, ismaxroundreached : 0
+		, ismaxreached : 0
+	});
+//	await updaterow ( 'settings' , { key_ : '' , nettype } , { value_ : 0 } )
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
@@ -185,7 +193,7 @@ router.post("/advance/roundstate", async (req, res) => {
     roundstate = +roundstate;
 
     LOGGER("BALLOT_PERIODIC_ROUND_STATE", roundstate);
-    switch (roundstate) {
+    switch ( roundstate ) {
       case 0:
         await func_00_03_advance_round(nettype);
         await func00_allocate_items_to_users(nettype);

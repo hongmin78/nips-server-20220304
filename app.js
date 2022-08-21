@@ -81,7 +81,7 @@ app.use(function (err, req, res, next) {
 const cron = require("node-cron"),
   moment = require("moment");
 cron.schedule("*/1 * * * *", () => {
-  console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips");
+  console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips testnet 02");
 });
 
 module.exports = app;

@@ -99,6 +99,7 @@ const close_sale = async (jdata) => {
   );
   await updateorcreaterow(
     "itembalances",
+<<<<<<< HEAD
     { itemid, nettype },
     { username, group_ }
   );
@@ -112,6 +113,24 @@ const enqueue_tx_toclose = async (
   contractaddress,
   tokenid
 ) => {
+=======
+    {      itemid,
+      nettype,
+    },
+    {      username,
+    }
+  );
+  await updaterow(
+    "items",
+    {      itemid,
+      nettype,
+    },
+    {      contractaddress,
+    }
+  );
+};
+const enqueue_tx_toclose = async (txhash, uuid, nettype) => {
+>>>>>>> master
   switch (nettype) {
     case "ETH_TESTNET":
     case "ETH-TESTNET": //			enqu eue_tx_eth (txhash , uuid , nettype ) //		break
@@ -139,6 +158,7 @@ const get_pay_related_users = async (uuid, nettype) => {
   return { seller, buyer, refereraddress, referercode };
 };
 const handle_pay_case = async (jdata) => {
+<<<<<<< HEAD
   let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
     jdata;
   let globalroundnumber = roundnumber;
@@ -147,6 +167,12 @@ const handle_pay_case = async (jdata) => {
     nettype
   );
   //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
+=======
+  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } = jdata; LOGGER( `@handle_pay_case` , jdata )
+  let globalroundnumber = roundnumber;
+  let { buyer, seller, referercode, refereraddress } = get_pay_related_users(uuid, nettype);
+  //	await mov erow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
+>>>>>>> master
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
   let jauxdata;
@@ -169,7 +195,11 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
+<<<<<<< HEAD
     /*  await moverow("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
+=======
+   /*  await movei row("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
+>>>>>>> master
   } else {
   }
   await updateorcreaterow(
@@ -262,9 +292,12 @@ const handle_pay_case = async (jdata) => {
         txhash, // : ''
         globalroundnumber, // : ''
       });
-
-      await updaterow("users", { username, nettype }, { ismaxreached: 1 });
-      await updaterow("items", { itemid, nettype }, { ismaxreached: 1 });
+			await updaterow ('ballots' , { username, nettype } , {ismaxreached: 1 				,ismaxroundreached : 1
+			}) 
+      await updaterow("users", { username, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
+			});
+      await updaterow("items", { itemid, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
+			});
     }
     await updaterow(
       "circulations",
@@ -548,7 +581,7 @@ const init = async (_) => {
   }
   //	})
 };
-init();
+false && init();
 module.exports = {
   enqueue_tx_toclose,
   handle_pay_case, // ( { uuid , username : address , itemid , strauxdata , txhash , nettype })
