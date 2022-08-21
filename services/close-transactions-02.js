@@ -123,5 +123,6 @@ const enqueue_tx_toclose_02 = async jargs => {
 
 module.exports = {
   enqueue_tx_toclose_02,
+	handle_kingkong_initial_payment_case  ,
 };
 

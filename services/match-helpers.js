@@ -70,7 +70,7 @@ const pick_kong_items_on_item_max_round_reached = async (
   }
   return getrandomrow_filter_multiple_rows(
     "items",
-    { salestatus: 0, nettype },
+    { salestatus: 0, group_: 'kong' , nettype },
     counttoassign // MAX_RO UND_REACH_RELATED_PARAMS. COUNT_KONGS_TO_ASSIGN
   );
 };
@@ -95,7 +95,7 @@ let txhash = 'dev___' + generaterandomhex(64);
   return true;
 }; //
 const get_price_of_kingkong_upon_birth=async nettype=>{ const PRICE_OF_KINGKONG_UPON_BIRTH_DEF = '372'
-	let { value_ } = await findone ( 'settings' , { key_ : '' ,  nettype } )
+	let { value_ } = await findone ( 'settings' , { key_ : 'PRICE_OF_KINGKONG_UPON_BIRTH' ,  nettype } )
 	if ( value_) {}
 	else { return PRICE_OF_KINGKONG_UPON_BIRTH_DEF }	
 	return value_
@@ -123,7 +123,8 @@ const handle_give_an_item_ownership_case_this_ver_charges_for_payment = async ( 
 		, nettype
 		, roundnumber : roundnumber_global
 	} )
-	let price = await get_price_of_kong_upon_birth ( nettype )
+//	let price = await get_price_of_kong_upon_birth ( nettype )
+	let price = await get_price_of_kingkong_upon_birth ( nettype )
 	await createrow ( 'logactions' , {
 		username
 		, typestr : 'RECEIVE'
@@ -301,7 +302,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
     let respcirculation = await findone("circulations", { itemid, nettype });    //		LOGGER( '@respcirculation ' , itemid , respcirculation )
     let price;
     let roundnumber;
-    if (respcirculation) {      //
+    if (respcirculation) { //
       let { price: price00, roundnumber } = respcirculation;
       let resppriceincrease = await findone("settings", {
         key_: "BALLOT_PRICE_INCREASE_FACTOR",

@@ -37,6 +37,9 @@ const {
   pick_kong_items_on_item_max_round_reached,
   handle_perish_item_case,
   handle_assign_item_case,
+
+	handle_assign_item_case_birth_kong , 
+
   handle_give_an_item_ownership_case,
   getroundnumber_global,
 } = require("../services/match-helpers");
@@ -416,11 +419,12 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     console.log("tpye",listkongs)
     listkongs.forEach(async (elemkong) => {
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
-      await handle_assign_item_case(item, username, nettype);
+//      await handle_a ssign_item_case(item, username, nettype);
+			await handle_assign_item_case_birth_kong (item, username, nettype);
 	    console.log("1.5item",item)
     })
  /**  let item = await findone("items", { itemid: listkongs.itemid, nettype });
-      await handle_assign_item_case(item, username, nettype);
+      await handle_assi gn_item_case(item, username, nettype);
     console.log("1.5item",item) */
     await handle_give_an_item_ownership_case(username, nettype); 
   

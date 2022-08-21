@@ -42,7 +42,7 @@ let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;
 const { mqpub } = require("../services/mqpub");
 const { handle_pay_case, handle_clear_delinquent_case } = require("../services/close-transactions");
-
+const { handle_kingkong_initial_payment_case } = require( '../services/close-transactions-02' ) 
 router.post("/manual/paydelinquency/:uuid", (req, res) => {
   let { nettype } = req.query;
   if (nettype) {
@@ -84,23 +84,36 @@ router.post("/manual/payitem/:uuid", async (req, res) => {
       resperr(res, messages.MSG_DATANOTFOUND);
       return;
     }
-    let { username, itemid, nettype, roundnumber } = resp; // , strauxdata , txhash ,
+    let { username, itemid, nettype, roundnumber , group_ , amount } = resp; // , strauxdata , txhash ,
     let strauxdata = STRINGER({
-      amount: resp.amount,
+      amount , // : resp.amount,
       currency: resp.currency,
       currencyaddress: resp.currencyaddress,
     });
     let txhash = generaterandomhex(64);
     txhash = "dev___" + txhash;
-    await handle_pay_case({
-      uuid, //
-      username, //
-      itemid, //
-      txhash,
-      nettype,
-      strauxdata,
-      roundnumber, // : resp
-    });
+		switch ( group_ ) 		{ 
+			case 'kingkong' :  
+				await handle_kingkong_initial_payment_case  ({
+        	txhash, //
+            uuid, //
+            nettype, //
+            username , // : address,
+            itemid, //           strauxdata,
+            roundnumber,
+						price	: amount	
+				})
+			break
+			case 'kong' :  await handle_pay_case({
+	      uuid, //
+  	    username, //
+    	  itemid, //
+      	txhash,
+	      nettype,
+  	    strauxdata,
+    	  roundnumber, // : resp
+	    });
+		}
     respok(res);
   });
 });

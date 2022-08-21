@@ -116,5 +116,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(80),
       allowNull: true
     }
-  );
+  }, {
+    sequelize,
+    tableName: 'orders'
+  });
 };

@@ -131,5 +131,8 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: 0
     }
-  );
+  }, {
+    sequelize,
+    tableName: 'items'
+  });
 };
