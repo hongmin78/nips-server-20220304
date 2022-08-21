@@ -15,7 +15,7 @@ const {
 const { updaterow: updaterow_mon } = require("../utils/dbmon");
 const KEYS = Object.keys;
 const {
-//  LOGGER,
+  //  LOGGER,
   generaterandomstr,
   generaterandomstr_charset,
   gettimestr,
@@ -24,8 +24,13 @@ const {
   convaj,
   shufflearray,
 } = require("../utils/common");
-const LOGGER = console.log
-const { respok, respreqinvalid, resperr, resperrwithstatus } = require("../utils/rest");
+const LOGGER = console.log;
+const {
+  respok,
+  respreqinvalid,
+  resperr,
+  resperrwithstatus,
+} = require("../utils/rest");
 const { messages } = require("../configs/messages");
 const { getuseragent, getipaddress } = require("../utils/session"); // const {sendemail, sendemail_customcontents_withtimecheck}=require('../services/mailer')
 const { validateemail } = require("../utils/validates");
@@ -79,7 +84,11 @@ router.post("/update-or-create-rows/:tablename", async (req, res) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
     //		if ( talename=='settings' ) {
     //	} else {
-    await updateorcreaterow(tablename, { key_: elem, ...req.query }, { value_: valuetoupdateto });
+    await updateorcreaterow(
+      tablename,
+      { key_: elem, ...req.query },
+      { value_: valuetoupdateto }
+    );
     // }
   });
   respok(res);
@@ -102,7 +111,8 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
     let valuetoupdateto = jpostdata[elem]; //		let jdata={}
     if (
       B_ADJUST_TO_UTC_ON_SERVER_SIDE &&
-      (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" || elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS")
+      (elem == "BALLOT_PERIODIC_DRAW_TIMEOFDAY_INSECONDS" ||
+        elem == "BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS")
     ) {
       //			&& +valuetoupdateto > 3600 * 24) {
       valuetoupdateto = +valuetoupdateto;
@@ -111,7 +121,11 @@ router.put("/update-or-create-rows/:tablename", async (req, res) => {
       }
       valuetoupdateto = valuetoupdateto % (3600 * 24);
     }
-    await updateorcreaterow(tablename, { key_: elem, subkey_: nettype }, { value_: valuetoupdateto });
+    await updateorcreaterow(
+      tablename,
+      { key_: elem, subkey_: nettype },
+      { value_: valuetoupdateto }
+    );
   });
   respok(res);
   mqpub(jpostdata);
@@ -160,26 +174,26 @@ router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
   });
 });
 
-false &&
-  router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
-    let { tablename, fieldname, fieldval } = req.params;
-    if (tablename && fieldname && fieldval) {
-    } else {
-      resperr(res, messaegs.MSG_ARGMISSING);
-      return;
-    }
-    fieldexists(tablename, fieldname).then(async (resp) => {
-      if (resp) {
-      } else {
-        resperr(res, messages.MSG_DATANOTFOUND);
-        return;
-      }
-      let jfilter = {};
-      jfilter[fieldname] = fieldval;
-      let respfindone = await findone(tablename, { ...jfilter });
-      respok(res, null, null, { respdata: respfindone });
-    });
-  });
+// false &&
+//   router.get("/singlerow/:tablename/:fieldname/:fieldval", async (req, res) => {
+//     let { tablename, fieldname, fieldval } = req.params;
+//     if (tablename && fieldname && fieldval) {
+//     } else {
+//       resperr(res, messaegs.MSG_ARGMISSING);
+//       return;
+//     }
+//     fieldexists(tablename, fieldname).then(async (resp) => {
+//       if (resp) {
+//       } else {
+//         resperr(res, messages.MSG_DATANOTFOUND);
+//         return;
+//       }
+//       let jfilter = {};
+//       jfilter[fieldname] = fieldval;
+//       let respfindone = await findone(tablename, { ...jfilter });
+//       respok(res, null, null, { respdata: respfindone });
+//     });
+//   });
 router.get("/max/:tablename/:fieldname", async (req, res) => {
   let { tablename, fieldname } = req.params;
   tableexists(tablename).then(async (resp) => {
@@ -263,252 +277,538 @@ router.get("/rows_v1/jsonobject/:tablename/:keyname/:valuename", (req, res) => {
   });
 });
 
-router.get("/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  // :fieldname/:fieldval/
-  let { tablename, offset, limit, orderkey, orderval } = req.params;
-  let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
-  const username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "offset-or-limit-invalid" },
-      });
-      return;
-    }
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderby-value-invalid" },
-      });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderkey-invalid" },
-      });
-      return;
-    }
-
-    let jfilter = {};
-    let { fieldname, fieldvalues } = req.query;
-    if (fieldname && fieldvalues) {
-      if (fieldvalues.length) {
-        if (fieldvalues.match(/\,/) && fieldvalues.match(/(?<big>[a-zA-Z0-9]+)/)) {
-          let arrfieldvalues = separatebycommas(fieldvalues);
-          LOGGER("pPPlj4EEMG", arrfieldvalues);
-          jfilter = expand_fieldval_matches(fieldname, arrfieldvalues);
-        } else {
-          jfilter[fieldname] = fieldvalues;
-        }
-      } else {
-      }
-    } else {
-    } //		jfilter[ fieldname ]	=fieldval
-    db[tablename]
-      .findAll({
-        raw: true,
-        where: { ...jfilter },
-        offset,
-        limit,
-        order: [[orderkey, orderval]],
-      })
-      .then((list_00) => {
-        //		if (tablename=='items'){
-        if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-          let aproms = [];
-          if (username) {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata_user(elem.itemid, username);
-            });
-          } else {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata(elem.itemid);
-            });
-          }
-          Promise.all(aproms).then((list) => {
-            //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
-            //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
-            list = list.map((elem, idx) => {
-              return { ...list_00[idx], ...elem };
-            });
-            respok(res, null, null, { list });
-          });
-        } else {
-          respok(res, null, null, { list: list_00 });
-        }
-      });
-  });
-});
-//
-
-const reflect_ticket_sellable_state_past_set_days=async jargs=>{
-	let { username , nettype } = jargs
-	if ( username && nettype ) {}
-	else { return null } 
-
-	let respbal = await findone ( 'itembalances' , { username , nettype } )
-	if ( respbal ) { return null }
-	else {}
-	let respballot = await findone ( 'ballots' , { username , nettype } )
-	if ( respballot && respballot?.createdat) { }
-	else { return null }
-	let timethen = moment( respballot?.createdat )
-	
-	let { createdat } =respballot 
-	let buytimeunix = moment( createdat )
-	let timenow=moment()
-	let timediff_in_sec = ( timenow - timethen ) /1000
-	let { value_ : DAYS_TO_PASS_TO_SELL_TICKET } = await findone ( 'settings' , { key_:'DAYS_TO_PASS_TO_SELL_TICKET' , nettype } )
-	if ( DAYS_TO_PASS_TO_SELL_TICKET ) {}
-	else {LOGGER(`!!! DAYS_TO_PASS_TO_SELL_TICKET not defined`); return null }
-	let period = +DAYS_TO_PASS_TO_SELL_TICKET * 3600 * 24 
-	if ( timediff >= period ) { 
-		await createrow ( 'itembalances' , {
-		  username        
-//			, itemid
-	//		, status          
-	//		, buyprice
-//			, paymeans
-//			, paymeansaddress 
-			, amount : 1
-			, nettype
-			, group_ : 'ticket'
-//			, contractaddress 
-//			, isonchain
-	//		, locked
-		//	, avail
-	 } )
-	} 
-	else { return null }	
-}
-router.get("/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
-  let { itemdetail, userdetail, filterkey, filterval, nettype, random } = req.query;
-  let { searchkey } = req.query;
-  let { date0, date1 } = req.query;
-  console.log(date0);
-  console.log(date1);
-  let username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "offset-or-limit-invalid" },
-      });
-      return;
-    }
-    offset = parseInt(offset);
-    limit = parseInt(limit);
-
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderby-value-invalid" },
-      });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderkey-invalid" },
-      });
-      return;
-    }
-    let jfilter = {};
-    jfilter[fieldname] = fieldval;
-    if (filterkey && filterval) {
-      let respfieldexists = await fieldexists(tablename, filterkey);
-      if (respfieldexists) {
+router.get(
+  "/rows/fieldvalues/:tablename/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    // :fieldname/:fieldval/
+    let { tablename, offset, limit, orderkey, orderval } = req.params;
+    let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
+    const username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
       } else {
         resperr(res, messages.MSG_DATANOTFOUND);
         return;
       }
-      jfilter[filterkey] = filterval;
-    } else {
-    }
-    if (searchkey) {
-      let liker = convliker(searchkey);
-      let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
-      jfilter = { ...jfilter, ...jfilter_02 };
-    } else {
-    }
-    if (date0) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date0 && date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (nettype) {
-      jfilter["nettype"] = nettype;
-    }
-    console.log(jfilter);
-    let order = random ? db.Sequelize.literal("rand()") : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
-    db[tablename]
-      .findAll({
-        raw: true,
-        where: { ...jfilter },
-        offset,
-        limit,
-        order: order,
-      })
-      .then(async (list_00) => {
-        let count = await countrows_scalar(tablename, jfilter);
-if ( tablename == 'delinquencies' && fieldname=='username' ) { 
-	let username = fieldval
-	reflect_ticket_sellable_state_past_set_days ({ username , nettype } ) 
-}
-        //        respok(res, null, null, { list: list_00, payload: { count } });
-        //		if (tablename=='items'){
-        //      return;
-        if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-          let aproms = [];
-          if (username) {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata_user(elem.itemid, username, nettype);
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+
+      let jfilter = {};
+      let { fieldname, fieldvalues } = req.query;
+      if (fieldname && fieldvalues) {
+        if (fieldvalues.length) {
+          if (
+            fieldvalues.match(/\,/) &&
+            fieldvalues.match(/(?<big>[a-zA-Z0-9]+)/)
+          ) {
+            let arrfieldvalues = separatebycommas(fieldvalues);
+            LOGGER("pPPlj4EEMG", arrfieldvalues);
+            jfilter = expand_fieldval_matches(fieldname, arrfieldvalues);
+          } else {
+            jfilter[fieldname] = fieldvalues;
+          }
+        } else {
+        }
+      } else {
+      } //		jfilter[ fieldname ]	=fieldval
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter },
+          offset,
+          limit,
+          order: [[orderkey, orderval]],
+        })
+        .then((list_00) => {
+          //		if (tablename=='items'){
+          if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+            let aproms = [];
+            if (username) {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata_user(
+                  elem.itemid,
+                  username
+                );
+              });
+            } else {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata(elem.itemid);
+              });
+            }
+            Promise.all(aproms).then((list) => {
+              //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
+              //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
+              list = list.map((elem, idx) => {
+                return { ...list_00[idx], ...elem };
+              });
+              respok(res, null, null, { list });
             });
           } else {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
-            });
+            respok(res, null, null, { list: list_00 });
           }
+        });
+    });
+  }
+);
+//
+
+const reflect_ticket_sellable_state_past_set_days = async (jargs) => {
+  let { username, nettype } = jargs;
+  if (username && nettype) {
+  } else {
+    return null;
+  }
+
+  let respbal = await findone("itembalances", { username, nettype });
+  if (respbal) {
+    return null;
+  } else {
+  }
+  let respballot = await findone("ballots", { username, nettype });
+  if (respballot && respballot?.createdat) {
+  } else {
+    return null;
+  }
+  let timethen = moment(respballot?.createdat);
+
+  let { createdat } = respballot;
+  let buytimeunix = moment(createdat);
+  let timenow = moment();
+  let timediff_in_sec = (timenow - timethen) / 1000;
+  let { value_: DAYS_TO_PASS_TO_SELL_TICKET } = await findone("settings", {
+    key_: "DAYS_TO_PASS_TO_SELL_TICKET",
+    nettype,
+  });
+  if (DAYS_TO_PASS_TO_SELL_TICKET) {
+  } else {
+    LOGGER(`!!! DAYS_TO_PASS_TO_SELL_TICKET not defined`);
+    return null;
+  }
+  let period = +DAYS_TO_PASS_TO_SELL_TICKET * 3600 * 24;
+  if (timediff >= period) {
+    await createrow("itembalances", {
+      username,
+      //			, itemid
+      //		, status
+      //		, buyprice
+      //			, paymeans
+      //			, paymeansaddress
+      amount: 1,
+      nettype,
+      group_: "ticket",
+      //			, contractaddress
+      //			, isonchain
+      //		, locked
+      //	, avail
+    });
+  } else {
+    return null;
+  }
+};
+router.get(
+  "/rows/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } =
+      req.params;
+    let { itemdetail, userdetail, filterkey, filterval, nettype, random } =
+      req.query;
+    let { searchkey } = req.query;
+    let { date0, date1 } = req.query;
+    console.log(date0);
+    console.log(date1);
+    let username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      offset = parseInt(offset);
+      limit = parseInt(limit);
+
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+      let jfilter = {};
+      jfilter[fieldname] = fieldval;
+      if (filterkey && filterval) {
+        let respfieldexists = await fieldexists(tablename, filterkey);
+        if (respfieldexists) {
+        } else {
+          resperr(res, messages.MSG_DATANOTFOUND);
+          return;
+        }
+        jfilter[filterkey] = filterval;
+      } else {
+      }
+      if (searchkey) {
+        let liker = convliker(searchkey);
+        let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
+        jfilter = { ...jfilter, ...jfilter_02 };
+      } else {
+      }
+      if (date0) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date0 && date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (nettype) {
+        jfilter["nettype"] = nettype;
+      }
+      console.log(jfilter);
+      let order = random
+        ? db.Sequelize.literal("rand()")
+        : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter },
+          offset,
+          limit,
+          order: order,
+        })
+        .then(async (list_00) => {
+          let count = await countrows_scalar(tablename, jfilter);
+          if (tablename == "delinquencies" && fieldname == "username") {
+            let username = fieldval;
+            reflect_ticket_sellable_state_past_set_days({ username, nettype });
+          }
+          //        respok(res, null, null, { list: list_00, payload: { count } });
+          //		if (tablename=='items'){
+          //      return;
+          if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+            let aproms = [];
+            if (username) {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata_user(
+                  elem.itemid,
+                  username,
+                  nettype
+                );
+              });
+            } else {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
+              });
+            }
+            Promise.all(aproms).then((list) => {
+              //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
+              //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
+              list = list.map((elem, idx) => {
+                return { ...list_00[idx], ...elem };
+              });
+              respok(res, null, null, { list, payload: { count } });
+            });
+          } else if (userdetail) {
+            let aproms = [];
+            list_00.forEach((elem) => {
+              aproms[aproms.length] = queryuserdata(elem.username);
+            });
+            Promise.all(aproms).then((list) => {
+              list_shufflearray = shufflearray(list);
+              list_shufflearray = list_shufflearray.map((elem, idx) => {
+                return { ...elem, ...list_00[idx] };
+              });
+              respok(res, null, null, {
+                list_shufflearray,
+                payload: { count },
+              });
+            });
+          } else {
+            respok(res, null, null, { list: list_00, payload: { count } });
+          }
+        });
+    });
+  }
+);
+
+router.get(
+  "/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    // :fieldname/:fieldval/
+    let { tablename, offset, limit, orderkey, orderval } = req.params;
+    let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
+    const username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+
+      let jfilter = {};
+      let { fieldname, fieldvalues } = req.query;
+      if (fieldname && fieldvalues) {
+        if (fieldvalues.length) {
+          if (
+            fieldvalues.match(/\,/) &&
+            fieldvalues.match(/(?<big>[a-zA-Z0-9]+)/)
+          ) {
+            let arrfieldvalues = separatebycommas(fieldvalues);
+            LOGGER("pPPlj4EEMG", arrfieldvalues);
+            jfilter = expand_fieldval_matches(fieldname, arrfieldvalues);
+          } else {
+            jfilter[fieldname] = fieldvalues;
+          }
+        } else {
+        }
+      } else {
+      } //		jfilter[ fieldname ]	=fieldval
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter },
+          offset,
+          limit,
+          order: [[orderkey, orderval]],
+        })
+        .then((list_00) => {
+          //		if (tablename=='items'){
+          if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+            let aproms = [];
+            if (username) {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata_user(
+                  elem.itemid,
+                  username
+                );
+              });
+            } else {
+              list_00.forEach((elem) => {
+                aproms[aproms.length] = queryitemdata(elem.itemid);
+              });
+            }
+            Promise.all(aproms).then((list) => {
+              //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
+              //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
+              let sufflearray_list = shufflearray(list_00);
+              LOGGER("shiuffle", sufflearray_list);
+              sufflearray_list = sufflearray_list.map((elem, idx) => {
+                return { ...list_00[idx], ...elem };
+              });
+              respok(res, null, null, { list: sufflearray_list });
+            });
+          } else {
+            respok(res, null, null, { list: list_00 });
+          }
+        });
+    });
+  }
+);
+
+// query orders table
+router.get(
+  "/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval",
+  async (req, res) => {
+    let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } =
+      req.params;
+    let { itemdetail, userdetail, filterkey, filterval, nettype, random } =
+      req.query;
+    let { searchkey } = req.query;
+    let { date0, date1 } = req.query;
+    console.log(date0);
+    console.log(date1);
+    const username = getusernamefromsession(req);
+    fieldexists(tablename, fieldname).then(async (resp) => {
+      if (resp) {
+      } else {
+        resperr(res, messages.MSG_DATANOTFOUND);
+        return;
+      }
+      offset = +offset;
+      limit = +limit;
+      if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "offset-or-limit-invalid" },
+        });
+        return;
+      }
+      offset = parseInt(offset);
+      limit = parseInt(limit);
+
+      if (MAP_ORDER_BY_VALUES[orderval]) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderby-value-invalid" },
+        });
+        return;
+      }
+      let respfield_orderkey = await fieldexists(tablename, orderkey);
+      if (respfield_orderkey) {
+      } else {
+        resperr(res, messages.MSG_ARGINVALID, null, {
+          payload: { reason: "orderkey-invalid" },
+        });
+        return;
+      }
+      let jfilter = {};
+      jfilter[fieldname] = fieldval;
+      if (filterkey && filterval) {
+        let respfieldexists = await fieldexists(tablename, filterkey);
+        if (respfieldexists) {
+        } else {
+          resperr(res, messages.MSG_DATANOTFOUND);
+          return;
+        }
+        jfilter[filterkey] = filterval;
+      } else {
+      }
+      if (searchkey) {
+        let liker = convliker(searchkey);
+        let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
+        jfilter = { ...jfilter, ...jfilter_02 };
+      } else {
+      }
+      if (date0) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (date0 && date1) {
+        jfilter = {
+          ...jfilter,
+          createdat: {
+            [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
+            [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        };
+      }
+      if (nettype) {
+        jfilter["nettype"] = nettype;
+      }
+      console.log(jfilter);
+      let order = random
+        ? db.Sequelize.literal("rand()")
+        : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
+      db[tablename]
+        .findAll({
+          raw: true,
+          where: { ...jfilter },
+          offset,
+          limit,
+          order: order,
+        })
+        .then(async (list_00) => {
+          let count = await countrows_scalar(tablename, jfilter);
+          //        respok(res, null, null, { list: list_00, payload: { count } });
+          //		if (tablename=='items'){
+          //      return;
+          // if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
+          let aproms = [];
+          // if (username) {
+          //   list_00.forEach((elem) => {
+          //     aproms[aproms.length] = queryitemdata_user(
+          //       elem.itemid,
+          //       username,
+          //       nettype
+          //     );
+          //   });
+          // } else {
+          list_00.forEach((elem) => {
+            aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
+          });
+          // }
           Promise.all(aproms).then((list) => {
+            console.log("LIST", list);
             //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
             //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
             list = list.map((elem, idx) => {
@@ -516,258 +816,24 @@ if ( tablename == 'delinquencies' && fieldname=='username' ) {
             });
             respok(res, null, null, { list, payload: { count } });
           });
-        } else if (userdetail) {
-          let aproms = [];
-          list_00.forEach((elem) => {
-            aproms[aproms.length] = queryuserdata(elem.username);
-          });
-          Promise.all(aproms).then((list) => {
-            list_shufflearray = shufflearray(list);
-            list_shufflearray = list_shufflearray.map((elem, idx) => {
-              return { ...elem, ...list_00[idx] };
-            });
-            respok(res, null, null, { list_shufflearray, payload: { count } });
-          });
-        } else {
-          respok(res, null, null, { list: list_00, payload: { count } });
-        }
-      });
-  });
-});
-
-router.get("/rows_v1/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  // :fieldname/:fieldval/
-  let { tablename, offset, limit, orderkey, orderval } = req.params;
-  let { fieldname, fieldvalues, itemdetail, nettype } = req.query;
-  const username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "offset-or-limit-invalid" },
-      });
-      return;
-    }
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderby-value-invalid" },
-      });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderkey-invalid" },
-      });
-      return;
-    }
-
-    let jfilter = {};
-    let { fieldname, fieldvalues } = req.query;
-    if (fieldname && fieldvalues) {
-      if (fieldvalues.length) {
-        if (fieldvalues.match(/\,/) && fieldvalues.match(/(?<big>[a-zA-Z0-9]+)/)) {
-          let arrfieldvalues = separatebycommas(fieldvalues);
-          LOGGER("pPPlj4EEMG", arrfieldvalues);
-          jfilter = expand_fieldval_matches(fieldname, arrfieldvalues);
-        } else {
-          jfilter[fieldname] = fieldvalues;
-        }
-      } else {
-      }
-    } else {
-    } //		jfilter[ fieldname ]	=fieldval
-    db[tablename]
-      .findAll({
-        raw: true,
-        where: { ...jfilter },
-        offset,
-        limit,
-        order: [[orderkey, orderval]],
-      })
-      .then((list_00) => {
-        //		if (tablename=='items'){
-        if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-          let aproms = [];
-          if (username) {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata_user(elem.itemid, username);
-            });
-          } else {
-            list_00.forEach((elem) => {
-              aproms[aproms.length] = queryitemdata(elem.itemid);
-            });
-          }
-          Promise.all(aproms).then((list) => {
-            //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
-            //				list= list.map ( (elem,idx ) => {return {... list_00[idx] , payload : list_00[idx] , ... elem , }} )
-            let sufflearray_list = shufflearray(list_00);
-            LOGGER("shiuffle", sufflearray_list);
-            sufflearray_list = sufflearray_list.map((elem, idx) => {
-              return { ...list_00[idx], ...elem };
-            });
-            respok(res, null, null, { list: sufflearray_list });
-          });
-        } else {
-          respok(res, null, null, { list: list_00 });
-        }
-      });
-  });
-});
-
-// query orders table
-router.get("/:tablename/:fieldname/:fieldval/:offset/:limit/:orderkey/:orderval", async (req, res) => {
-  let { tablename, fieldname, fieldval, offset, limit, orderkey, orderval } = req.params;
-  let { itemdetail, userdetail, filterkey, filterval, nettype, random } = req.query;
-  let { searchkey } = req.query;
-  let { date0, date1 } = req.query;
-  console.log(date0);
-  console.log(date1);
-  const username = getusernamefromsession(req);
-  fieldexists(tablename, fieldname).then(async (resp) => {
-    if (resp) {
-    } else {
-      resperr(res, messages.MSG_DATANOTFOUND);
-      return;
-    }
-    offset = +offset;
-    limit = +limit;
-    if (ISFINITE(offset) && offset >= 0 && ISFINITE(limit) && limit >= 1) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "offset-or-limit-invalid" },
-      });
-      return;
-    }
-    offset = parseInt(offset);
-    limit = parseInt(limit);
-
-    if (MAP_ORDER_BY_VALUES[orderval]) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderby-value-invalid" },
-      });
-      return;
-    }
-    let respfield_orderkey = await fieldexists(tablename, orderkey);
-    if (respfield_orderkey) {
-    } else {
-      resperr(res, messages.MSG_ARGINVALID, null, {
-        payload: { reason: "orderkey-invalid" },
-      });
-      return;
-    }
-    let jfilter = {};
-    jfilter[fieldname] = fieldval;
-    if (filterkey && filterval) {
-      let respfieldexists = await fieldexists(tablename, filterkey);
-      if (respfieldexists) {
-      } else {
-        resperr(res, messages.MSG_DATANOTFOUND);
-        return;
-      }
-      jfilter[filterkey] = filterval;
-    } else {
-    }
-    if (searchkey) {
-      let liker = convliker(searchkey);
-      let jfilter_02 = get_search_table_fields(tablename, liker); // expand_search(tablename, liker);
-      jfilter = { ...jfilter, ...jfilter_02 };
-    } else {
-    }
-    if (date0) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (date0 && date1) {
-      jfilter = {
-        ...jfilter,
-        createdat: {
-          [Op.gte]: moment(date0).format("YYYY-MM-DD HH:mm:ss"),
-          [Op.lte]: moment(date1).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      };
-    }
-    if (nettype) {
-      jfilter["nettype"] = nettype;
-    }
-    console.log(jfilter);
-    let order = random ? db.Sequelize.literal("rand()") : [[orderkey, orderval]]; //		LOGGER('@order' , order, random )
-    db[tablename]
-      .findAll({
-        raw: true,
-        where: { ...jfilter },
-        offset,
-        limit,
-        order: order,
-      })
-      .then(async (list_00) => {
-        let count = await countrows_scalar(tablename, jfilter);
-        //        respok(res, null, null, { list: list_00, payload: { count } });
-        //		if (tablename=='items'){
-        //      return;
-        // if (MAP_TABLE_INVOKE_ITEMQUERY[tablename] || itemdetail) {
-        let aproms = [];
-        // if (username) {
-        //   list_00.forEach((elem) => {
-        //     aproms[aproms.length] = queryitemdata_user(
-        //       elem.itemid,
-        //       username,
-        //       nettype
-        //     );
-        //   });
-        // } else {
-        list_00.forEach((elem) => {
-          aproms[aproms.length] = queryitemdata(elem.itemid, nettype);
+          // } else if (userdetail) {
+          //   let aproms = [];
+          //   list_00.forEach((elem) => {
+          //     aproms[aproms.length] = queryuserdata(elem.username);
+          //   });
+          //   Promise.all(aproms).then((list) => {
+          //     list = list.map((elem, idx) => {
+          //       return { ...elem, ...list_00[idx] };
+          //     });
+          //     respok(res, null, null, { list, payload: { count } });
+          //   });
+          // } else {
+          // respok(res, null, null, { list: list_00, payload: { count } });
+          // }
         });
-        // }
-        Promise.all(aproms).then((list) => {
-          console.log("LIST", list);
-          //				list= list.map ( (elem,idx ) => {return {... elem, ... list_00[idx] }} )
-          //				list= list.map ( (elem,idx ) => {return {... elem , payload : elem, ... list_00[idx] }} )
-          list = list.map((elem, idx) => {
-            return { ...list_00[idx], ...elem };
-          });
-          respok(res, null, null, { list, payload: { count } });
-        });
-        // } else if (userdetail) {
-        //   let aproms = [];
-        //   list_00.forEach((elem) => {
-        //     aproms[aproms.length] = queryuserdata(elem.username);
-        //   });
-        //   Promise.all(aproms).then((list) => {
-        //     list = list.map((elem, idx) => {
-        //       return { ...elem, ...list_00[idx] };
-        //     });
-        //     respok(res, null, null, { list, payload: { count } });
-        //   });
-        // } else {
-        // respok(res, null, null, { list: list_00, payload: { count } });
-        // }
-      });
-  });
-});
+    });
+  }
+);
 
 router.get("/:tablename", (req, res) => {
   let { tablename } = req.params;
@@ -808,7 +874,7 @@ router.get("/:tablename/:fieldname/:fieldval", (req, res) => {
         return;
       }
       if (resp[0] && resp[0].itemid) {
-LOGGER ( '@list query' , resp ) 
+        LOGGER("@list query", resp);
         let aproms = [];
         resp.forEach((elem) => {
           aproms[aproms.length] = findone("items", { itemid: elem.itemid });
@@ -857,7 +923,10 @@ const get_search_table_fields = (tablename, liker) => {
       break;
     default:
       return {
-        [Op.or]: [{ name: { [Op.like]: liker } }, { address: { [Op.like]: liker } }],
+        [Op.or]: [
+          { name: { [Op.like]: liker } },
+          { address: { [Op.like]: liker } },
+        ],
       };
   }
 };

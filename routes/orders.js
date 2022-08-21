@@ -224,7 +224,7 @@ router.post("/", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
-  if (type === "kingkong") {
+  if (type == "kingkong") {
     if (itemid) {
     } else if (contractaddress && tokenid) {
     } else {
@@ -250,10 +250,22 @@ router.post("/", async (req, res) => {
       `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
     );
 
+    console.log("------------------------------postdata", req.body);
+
     await updateorcreaterow(
       "orders",
       { itemid },
-      { ...req.body, uuid, status: 1, isprivate: 0 }
+      {
+        username,
+        seller,
+        price,
+        uuid,
+        paymeansname,
+        paymeansaddress,
+        nettype,
+        status: 1,
+        isprivate: 0,
+      }
     );
     respok(res, null, null, { uuid });
     updateorcreaterow(
@@ -266,7 +278,7 @@ router.post("/", async (req, res) => {
       }
     );
   }
-  if (type === "ticket") {
+  if (type == "ticket") {
     if (tokenid) {
     } else {
       resperr(res, messages.MSG_ARGINVALID, null, {

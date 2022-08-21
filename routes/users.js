@@ -16,7 +16,13 @@ const {
 const crypto = require("crypto");
 const { respok, resperr } = require("../utils/rest");
 const { generateSlug } = require("random-word-slugs");
-const { LOGGER, generaterandomstr, generaterandomstr_charset, gettimestr, ISFINITE } = require("../utils/common");
+const {
+  LOGGER,
+  generaterandomstr,
+  generaterandomstr_charset,
+  gettimestr,
+  ISFINITE,
+} = require("../utils/common");
 const { messages } = require("../configs/messages");
 const { isethaddressvalid } = require("../utils/validates");
 const { TOKENLEN } = require("../configs/configs");
@@ -74,47 +80,53 @@ router.put("/:address", filehandler.single("file"), async (req, res) => {
 router.get("/info/:username", async (req, res) => {
   let { username } = req.params;
   let { nettype } = req.query;
-	if ( nettype ) {}
-	else { resperr(res,messages.MSG_ARGMISSING) ; return } 
+  if (nettype) {
+  } else {
+    resperr(res, messages.MSG_ARGMISSING);
+    return;
+  }
   findone("users", { username, nettype }).then(async (resp) => {
     if (resp) {
     } else {
       resperr(res, messages.MSG_DATANOTFOUND);
       return;
     }
-    let respreferer = await findone("users", { myreferercode: resp.referer, nettype });
-		let aproms=[]
-		aproms[ aproms.length ] = findall ( 'ballots' , { username , nettype } ) // 0
-		aproms[ aproms.length ] = findall ( 'circulations' , { username , nettype } ) // 1
-		aproms[ aproms.length ] = findall ( 'delinquencies' , { username , nettype } ) // 2
-		aproms[ aproms.length ] = findall ( 'itembalances' , { username , nettype } ) // 3
-		aproms[ aproms.length ] = findall ( 'logactions' , { username , nettype } ) // 4
-		aproms[ aproms.length ] = findall ( 'logdelinquents' , { username , nettype} ) // 5
-		aproms[ aproms.length ] = findall ( 'logfeepayments' , { username , nettype } ) // 6
-		aproms[ aproms.length ] = findall ( 'logitembalances' , { username , nettype } ) // 7
-		aproms[ aproms.length ] = findall ( 'logpayments', { username , nettype } ) // 8
-		aproms[ aproms.length ] = findall ( 'logsales' , { username , nettype } ) // 9
-		aproms[ aproms.length ] = findall ( 'receivables', { username , nettype } ) // 10
-		aproms[ aproms.length ] = findall ( 'transactions', { username , nettype } ) // 11
-		let aresps = await Promise.all ( aproms)
-			
+    let respreferer = await findone("users", {
+      myreferercode: resp.referer,
+      nettype,
+    });
+    let aproms = [];
+    aproms[aproms.length] = findall("ballots", { username, nettype }); // 0
+    aproms[aproms.length] = findall("circulations", { username, nettype }); // 1
+    aproms[aproms.length] = findall("delinquencies", { username, nettype }); // 2
+    aproms[aproms.length] = findall("itembalances", { username, nettype }); // 3
+    aproms[aproms.length] = findall("logactions", { username, nettype }); // 4
+    aproms[aproms.length] = findall("logdelinquents", { username, nettype }); // 5
+    aproms[aproms.length] = findall("logfeepayments", { username, nettype }); // 6
+    aproms[aproms.length] = findall("logitembalances", { username, nettype }); // 7
+    aproms[aproms.length] = findall("logpayments", { username, nettype }); // 8
+    aproms[aproms.length] = findall("logsales", { username, nettype }); // 9
+    aproms[aproms.length] = findall("receivables", { username, nettype }); // 10
+    aproms[aproms.length] = findall("transactions", { username, nettype }); // 11
+    let aresps = await Promise.all(aproms);
+
     respok(res, null, null, {
       respdata: {
         ...resp,
         refereraddress: respreferer?.username,
-'ballots' : aresps[0] , // 0 
-'circulations' :  aresps[1]  , // 1 
-'delinquencies' : aresps[2]  , // 2
-'itembalances' :  aresps[3]    ,  // 3
-'logactions' :   aresps[4],  // 4
-'logdelinquents' :  aresps[5] , // 5
-'logfeepayments' :  aresps[6] , // 6
-'logitembalances' :  aresps[7], // 7
-'logpayments' :  aresps[8], // 8
-'logsales' :  aresps[ 9 ] ,  // 9
-'receivables' :  aresps[ 10 ], // 10
-'transactions' :  aresps[ 11 ], // 11
-info : resp
+        ballots: aresps[0], // 0
+        circulations: aresps[1], // 1
+        delinquencies: aresps[2], // 2
+        itembalances: aresps[3], // 3
+        logactions: aresps[4], // 4
+        logdelinquents: aresps[5], // 5
+        logfeepayments: aresps[6], // 6
+        logitembalances: aresps[7], // 7
+        logpayments: aresps[8], // 8
+        logsales: aresps[9], // 9
+        receivables: aresps[10], // 10
+        transactions: aresps[11], // 11
+        info: resp,
       },
     });
   });
@@ -258,7 +270,10 @@ router.post("/email/request", async (req, res) => {
   const { email, walletAddress } = req.body;
   const authNum = Math.floor(Math.random() * (9999 - 1) + 1);
   let respcountemail = await countrows_scalar("users", { email });
-  if (ISFINITE(+respcountemail) && +respcountemail < RESTRICT_EMAIL_REUSE_COUNT) {
+  if (
+    ISFINITE(+respcountemail) &&
+    +respcountemail < RESTRICT_EMAIL_REUSE_COUNT
+  ) {
   } else {
     resperr(res, "EMAIL-REUSE-COUNT-EXCEEDED");
     return;
@@ -268,10 +283,14 @@ router.post("/email/request", async (req, res) => {
     auth: { user: process.env.mailId, pass: process.env.mailPw },
   });
   let emailForm;
-  ejs.renderFile(__dirname + "/../template/authMail.ejs", { email, walletAddress, authNum }, (err, data) => {
-    if (err) console.log(err);
-    emailForm = data;
-  });
+  ejs.renderFile(
+    __dirname + "/../template/authMail.ejs",
+    { email, walletAddress, authNum },
+    (err, data) => {
+      if (err) console.log(err);
+      emailForm = data;
+    }
+  );
   transporter.sendMail(
     {
       from: "nip",
@@ -329,8 +348,16 @@ router.put("/user_active/:address", async (req, res) => {
   let { nettype } = req.query;
   console.log("net", nettype);
   if (active === 1 || active === 0) {
-    await updaterow("ballots", { username: address, nettype: nettype }, { active: active }).then((resp) => {
-      updaterow("users", { username: address, nettype: nettype }, { active: active }).then((resp) => {
+    await updaterow(
+      "ballots",
+      { username: address, nettype: nettype },
+      { active: active }
+    ).then((resp) => {
+      updaterow(
+        "users",
+        { username: address, nettype: nettype },
+        { active: active }
+      ).then((resp) => {
         respok(res);
       });
     });
