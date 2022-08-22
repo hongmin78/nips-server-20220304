@@ -250,8 +250,6 @@ router.post("/", async (req, res) => {
       `${username.toLowerCase()}_${itemid}_${contractaddress.toLowerCase()}_${moment().unix()}`
     );
 
-    console.log("------------------------------postdata", req.body);
-
     await updateorcreaterow(
       "orders",
       { itemid },
@@ -260,8 +258,13 @@ router.post("/", async (req, res) => {
         seller,
         price,
         uuid,
+        type,
         paymeansname,
         paymeansaddress,
+        saletype,
+        saletypestr,
+        tokenid,
+        typestr,
         nettype,
         status: 1,
         isprivate: 0,

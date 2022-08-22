@@ -135,13 +135,14 @@ router.post("/:txhash", async (req, res) => {
         username,
         itemid,
         contractaddress,
+        typestr,
       });
       break;
     case "EMPLOY_KINGKONG":
       istxtotrack = false;
       enqueue_tx_toclose_02(
         //					, uuid
-        { txhash, nettype, username, itemid, contractaddress }
+        { txhash, nettype, username, itemid, contractaddress, typestr }
       );
       break;
     case "KINGKONG_INITIAL_PAYMENT":
@@ -155,6 +156,7 @@ router.post("/:txhash", async (req, res) => {
         roundnumber,
         price,
         contractaddress,
+        typestr,
       });
       break;
     case "STAKE":

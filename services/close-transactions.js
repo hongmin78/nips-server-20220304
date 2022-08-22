@@ -102,7 +102,7 @@ const close_sale = async (jdata) => {
     { itemid, nettype },
     { username, group_ }
   );
-  await updaterow("items", { itemid, nettype }, { contractaddress });
+  await updaterow("items", { itemid, nettype }, { username, contractaddress });
 }; // END close_sale
 const enqueue_tx_toclose = async (
   txhash,
@@ -114,7 +114,9 @@ const enqueue_tx_toclose = async (
 ) => {
   switch (nettype) {
     case "ETH_TESTNET":
+      enqueue_tx_eth(txhash, uuid, nettype, group_, contractaddress, tokenid); //			enqu eue_tx_bsc (txhash , uuid , nettype )
     case "ETH-TESTNET": //			enqu eue_tx_eth (txhash , uuid , nettype ) //		break
+      enqueue_tx_eth(txhash, uuid, nettype, group_, contractaddress, tokenid); //			enqu eue_tx_bsc (txhash , uuid , nettype )
     case "BSC_MAINNET":
     case "BSC-MAINNET":
       enqueue_tx_eth(txhash, uuid, nettype, group_, contractaddress, tokenid); //			enqu eue_tx_bsc (txhash , uuid , nettype )
