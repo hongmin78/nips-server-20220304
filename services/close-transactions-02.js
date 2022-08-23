@@ -41,7 +41,7 @@ const {
   ITEM_SALE_START_PRICE,
   PAYMENT_ADDRESS_DEF,
   PAYMENT_MEANS_DEF,
-  KIP17_KINGKONG_CNTRADDRESS,
+  KIP17_CONTRACT,
   //  MAX_RO UND_TO_REACH,
 } = require("../configs/receivables");
 const {
@@ -94,19 +94,18 @@ const handle_kingkong_initial_payment_case = async (jargs) => {
   }
 };
 const handle_kingkong_staking = async (jargs) => {
-  let { txhash, uuid, nettype, username, itemid, typestr, contractaddress } =
-    jargs; //
+  let { nettype, username, itemid, typestr, contractaddress } = jargs; //
   switch (typestr) {
     case "EMPLOY_KINGKONG":
       try {
         let tokenid = await query_with_arg({
-          KIP17_KINGKONG_CNTRADDRESS,
+          contractaddress: KIP17_CONTRACT,
           abikind: "KIP17",
           methodname: "_itemhash_tokenid",
           aargs: [itemid],
           nettype,
         });
-        console.log("_______tokenid", tokenid);
+        console.log("_______TOKENID: ", tokenid);
         await updaterow("itembalances", { itemid, nettype }, { isstaked: 1 });
         await updaterow("items", { itemid, nettype }, { isstaked: 1, tokenid });
         // await createrow() // a row should be created in logstakes table
@@ -145,10 +144,19 @@ const enqueue_tx_toclose_02 = async (jargs) => {
       //        let str_txauxdata = resp;
       //        let jparams = PARSER(str_txauxdata);
       //        let { type, tables, address, amount, itemid, strauxdata, roundnumber } = jparams; // itemid
+      let {
+        txhash,
+        uuid,
+        nettype,
+        username,
+        itemid,
+        roundnumber,
+        price,
+        typestr,
+        contractaddress,
+      } = jargs;
       switch (typestr) {
         case "KINGKONG_INITIAL_PAYMENT":
-          let { txhash, uuid, nettype, username, itemid, roundnumber, price } =
-            jargs;
           handle_kingkong_initial_payment_case({
             txhash,
             uuid,
@@ -161,7 +169,6 @@ const enqueue_tx_toclose_02 = async (jargs) => {
           break;
         case "EMPLOY_KINGKONG":
           handle_kingkong_staking({
-            txhash,
             nettype,
             username,
             itemid,

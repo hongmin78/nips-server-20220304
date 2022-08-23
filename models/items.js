@@ -112,6 +112,11 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true,
         defaultValue: 0,
       },
+      tokenid: {
+        type: DataTypes.INTEGER(10),
+        allowNull: true,
+        defaultValue: 0,
+      },
       saletypestr: {
         type: DataTypes.STRING(100),
         allowNull: true,

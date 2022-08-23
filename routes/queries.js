@@ -877,7 +877,10 @@ router.get("/:tablename/:fieldname/:fieldval", (req, res) => {
         LOGGER("@list query", resp);
         let aproms = [];
         resp.forEach((elem) => {
-          aproms[aproms.length] = findone("items", { itemid: elem.itemid });
+          aproms[aproms.length] = findone("items", {
+            itemid: elem.itemid,
+            nettype,
+          });
         });
         Promise.all(aproms).then((respproms) => {
           let list = resp.map((elem, idx) => {
