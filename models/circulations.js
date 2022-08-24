@@ -53,6 +53,18 @@ module.exports = function(sequelize, DataTypes) {
     isdelinquent: {
       type: DataTypes.INTEGER(3).UNSIGNED,
       allowNull: true
+    },
+    globalroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    roundnumberglobal: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    itemroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

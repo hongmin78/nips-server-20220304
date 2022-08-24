@@ -172,7 +172,7 @@ router.post("/init/rounds", async (req, res) => {
   await deleterow("itemhistory", { nettype });
   await deleterow("circulations", { nettype });
   await deleterow("delinquencies", { nettype });
-  await deleterow("maxroundreached", { nettype });
+  await deleterow("maxroundreached", { nettype }); // from init rounds
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
   await updaterow("ballots", { nettype }, { counthelditems: 0
 		, lastroundmadepaymentfor: 0

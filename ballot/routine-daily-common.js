@@ -191,7 +191,7 @@ const func00_allocate_items_to_users = async (nettype) => {
   let itemstogive;
   let NItemstogive;
   let NMin;
-  let round_number_global;
+  let round_number_global 
   let respballotround = await findone("settings", {
     key_: "BALLOT_PERIODIC_ROUNDNUMBER",
     subkey_: nettype,
@@ -202,6 +202,7 @@ const func00_allocate_items_to_users = async (nettype) => {
   } else {
     round_number_global = 1;
   }
+	let roundnumberglobal = await getroundnumber_global ( nettype ) 
   let listreceivers0 = await func_00_01_draw_users({
     nettype,
     roundnumber: round_number_global,
@@ -268,9 +269,10 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
 
       let price;
       let roundnumber;
-      if (respcirculation) {
-        //
-        let { price: price00, roundnumber } = respcirculation;
+      if (respcirculation) {        //
+        let { price: price00, roundnumber , itemroundnumber 
+//					, roundnumberglobal 
+				} = respcirculation;
         let resppriceincrease = await findone("settings", {
           key_: "BALLOT_PRICE_INCREASE_FACTOR",
           nettype,
@@ -284,13 +286,11 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         } else {
           price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
         }
-
         roundnumber = 1 + +roundnumber;
+				itemroundnumber = 1 + +itemroundnumber
         await updaterow(
           "circulations",
-          {
-            itemid, // : ''
-            //					, username // : ''
+          {            itemid, // : ''            //					, username // : ''
             nettype,
           },
           {
@@ -298,6 +298,8 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
             price: price01, // ITEM_SALE_START_PRICE
             priceunit: PAYMENT_MEANS_DEF,
             username, // : ''
+						itemroundnumber , 
+					roundnumberglobal
           }
         );
       } else {
@@ -306,10 +308,12 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         await createrow("circulations", {
           itemid, // : ''
           username, // : ''
-          roundnumber, // : 1 // + +roundnumber // : ''
           price: ITEM_SALE_START_PRICE,
           priceunit: PAYMENT_MEANS_DEF,
           nettype,
+          roundnumber, // : 1 // + +roundnumber // : ''
+					itemroundnumber :  roundnumber , // '' ,
+					roundnumberglobal , // : '' ,
           //					, priceunitcurrency : ''
         });
         price01 = ITEM_SALE_START_PRICE;
@@ -332,7 +336,7 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
       } else {
         seller = SALES_ACCOUNT_NONE_TICKET;
       }
-      await createrow("receivables", {
+      await createrow( "receivables" , {
         itemid,
         username,
         roundnumber: round_number_global,
@@ -345,6 +349,8 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         seller,
         nettype,
         group_,
+				itemroundnumber , // : '' ,
+				roundnumberglobal // : '' 
       });
       await createrow("itemhistory", {
         itemid,
@@ -356,6 +362,8 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         uuid,
         typestr: "TENTATIVE_ASSIGN",
         nettype,
+				itemroundnumber , // : '' ,
+				roundnumberglobal // : '' 
       });
     }
     await incrementrow({
@@ -446,7 +454,7 @@ const func01_inspect_payments = async (nettype) => {
     raw: true,
     where: { active: 1, nettype },
     //		, where : { duetimeunix : { [Op.lte] : timenow } }
-  }); // findall ('receivables' , {} )
+  }); // findall ('receiv ables' , {} )
   LOGGER("timenow@inspect", timenow, nettype, listreceivables);
 
   if (listreceivables.length > 0) {
@@ -900,7 +908,7 @@ rmqopen
 			let price1 = +price0 * ( 1 + PRICE_HIKE_PERCENT/100) ;
 			price1 = price1.toFixed(0)
 			let duetime=moment().endOf('day').subtract(1,'hour')
-			await crea terow( 'receivables' , {itemid , username , roundnumber 
+			await crea terow( 'receiv ables' , {itemid , username , roundnumber 
 				, amount : price1 
 				, currency :PAYMENT_MEANS_DEF
 				, currencyaddress : PAYMENT_ADDRESS_DEF 
@@ -932,7 +940,7 @@ rmqopen
       'Invalid date',
       1
 */
-/** receivables
+/** receiva bles
   username        | varchar(80)         | YES  |     | NULL                |                               |
 | itemid          | varchar(60)         | YES  |     | NULL                |                               |
 | amount          | varchar(20)         | YES  |     | NULL                |                               |

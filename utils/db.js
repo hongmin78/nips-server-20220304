@@ -6,7 +6,6 @@ const findone = async (table, jfilter) => {
 const findall = async (table, jfilter) => {
   return await db[table].findAll({ raw: true, where: jfilter });
 };
-
 const countrows_scalar_distinct = (table, jfilter) => {
   return new Promise((resolve, reject) => {
     db[table].count({ where: { ...jfilter }, distinct: true, col: "itemid" }).then((resp) => {
@@ -121,6 +120,12 @@ const createrow = async (table, jdata) => {
   console.log(`${table}`, jdata);
   return await db[table].create(jdata);
 };
+const cprow = async (fromtable,jfilter , totable )=>{
+	let resp = await findone ( fromtable , jfilter)
+	if ( resp ) {}
+	else { return null }
+	return await createrow ( totable, resp ) 
+}
 const countrows_scalar = (table, jfilter) => {
   return new Promise((resolve, reject) => {
     db[table].count({ where: { ...jfilter } }).then((resp) => {
@@ -251,6 +256,7 @@ module.exports = {
   logical_op,
   update_min_or_max,
   countrows_scalar_distinct,
+	cprow 
 };
 
 const test = (_) => {

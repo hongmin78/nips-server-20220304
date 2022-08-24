@@ -20,6 +20,7 @@ const {
   incrementroworcreate,
   incrementrow,
   createifnoneexistent,
+	cprow
 } = require("../utils/db");
 const { query_with_arg } = require("../utils/contract-calls");
 const { ADDRESSES } = require("../configs/addresses");
@@ -45,6 +46,7 @@ const {
 } = require("../configs/receivables");
 const {
   get_MAX_ROUND_TO_REACH, // pick_kong_items_ on_item_max_round_reached
+	getroundnumber_global
 } = require("./match-helpers");
 /** let MAX_R OUND_REACH_RELATED_PARAMS = { 
 	MAX_ROU ND_TO_REACH_DEF : 17 
@@ -207,17 +209,21 @@ const handle_pay_case = async (jdata) => {
   console.log("itemidcrr", itemid);
   let respcirc = await findone("circulations", { itemid, nettype });
 
+	const ROUND_MULT_FACTOR_DUE_TO_OVERLAP = 3
   if (respcirc) {
-    let { price, roundnumber, countchangehands } = respcirc;
+    let { price, roundnumber, countchangehands 
+			, itemroundnumber 
+			, roundnumberglobal
+		} = respcirc;
     let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
-    LOGGER("MAX_ROUND_TO_REACH", roundnumber, MAX_ROUND_TO_REACH);
-    if (+roundnumber < MAX_ROUND_TO_REACH) {
+		roundnumberglobal = await  getroundnumber_global ( nettype )
+    LOGGER( "MAX_ROUND_TO_REACH" , roundnumber, MAX_ROUND_TO_REACH);
+    if ( +roundnumber < MAX_ROUND_TO_REACH * ROUND_MULT_FACTOR_DUE_TO_OVERLAP ) {
       // max not reached yet
       await updaterow(
         "items",
         { itemid, nettype },
-        {
-          salestatus: 1,
+        {          salestatus: 1,
           salesstatusstr: "ASSIGNED",
           roundoffsettoavail: ROUNDOFFSETTOAVAIL_DEF,
         }
@@ -230,37 +236,36 @@ const handle_pay_case = async (jdata) => {
             incvalue: +1,
           });
       });
-
+			await cprow ( 'circulations' , { id: respcirc.id } , 'logcirculations' )
       await updaterow(
         "circulations",
         { id: respcirc.id },
-        {
-          //				price : price 				,
-          roundnumber: 1 + +roundnumber,
+        {          //				price : price 				,
           countchangehands: 1 + +countchangehands,
+          roundnumber: 1 + +roundnumber,
+					itemroundnumber : 1 + +itemroundnumber ,
+					roundnumberglobal // : 
         }
       );
-
       await updaterow(
         "users",
         { username, nettype },
-        {
-          lastroundmadepaymentfor: roundnumber,
+        {          lastroundmadepaymentfor: roundnumber,
           lasttimemadepaymentat: moment().unix(),
         }
       );
     } //
-    else {
-      // max reached
-      await createrow("maxroundreached", {
+    else {      // max reached
+      await createrow( "maxroundreached", {
         username, // : ''
         itemid, // : ''
         nettype, // : ''
         uuid: create_uuid_via_namespace(`${username}_${itemid}_${nettype}`),
-        itemroundnumber: roundnumber,
         amountpaid: "",
         txhash, // : ''
-        globalroundnumber, // : ''
+        itemroundnumber : 1 + +itemroundnumber , // : roundnumber,
+        globalroundnumber : roundnumberglobal, // : ''
+				roundnumberglobal
       });
 			await updaterow ('ballots' , { username, nettype } , {ismaxreached: 1 				,ismaxroundreached : 1
 			}) 
@@ -272,10 +277,11 @@ const handle_pay_case = async (jdata) => {
     await updaterow(
       "circulations",
       { id: respcirc.id },
-      {
-        //				price : price 				,
+      {        //				price : price 				,
         roundnumber: 1 + +roundnumber,
         countchangehands: 1 + +countchangehands,
+				itemroundnumber : 1 + +itemroundnumber ,
+				roundnumberglobal ,
       }
     );
     await updaterow(
@@ -286,8 +292,7 @@ const handle_pay_case = async (jdata) => {
         lasttimemadepaymentat: moment().unix(),
       }
     );
-  } else {
-    // no circ defined, should not have happened, give a fallback
+  } else {    // no circ defined, should not have happened, give a fallback
     await createrow("circulations", {
       itemid, // : ''
       username, // : ''
@@ -303,12 +308,10 @@ const handle_pay_case = async (jdata) => {
     let { referfeeamount } = jauxdata;
     await updateorcreaterow(
       "logfeepayments",
-      {
-        txhash,
+      {        txhash,
         nettype,
       },
-      {
-        // username			,
+      {        // username			,
         amount: referfeeamount,
         amountfloat: referfeeamount,
         paymeansname: currency,
@@ -414,8 +417,7 @@ const enqueue_tx_eth = async (
         }
         let str_txauxdata = resp;
         let jparams = PARSER(str_txauxdata);
-        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =
-          jparams; // itemid
+        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =          jparams; // itemid
 
         if (tables) {
           KEYS(tables).forEach(async (tablename) => {
