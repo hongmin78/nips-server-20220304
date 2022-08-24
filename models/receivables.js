@@ -77,6 +77,14 @@ module.exports = function(sequelize, DataTypes) {
     group_: {
       type: DataTypes.STRING(40),
       allowNull: true
+    },
+    roundnumberglobal: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    itemroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

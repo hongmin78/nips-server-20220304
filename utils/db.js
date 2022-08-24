@@ -124,6 +124,8 @@ const cprow = async (fromtable,jfilter , totable )=>{
 	let resp = await findone ( fromtable , jfilter)
 	if ( resp ) {}
 	else { return null }
+	delete resp[ 'id' ]
+	delete resp[ 'createdat' ]
 	return await createrow ( totable, resp ) 
 }
 const countrows_scalar = (table, jfilter) => {

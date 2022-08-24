@@ -218,7 +218,8 @@ const handle_pay_case = async (jdata) => {
     let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
 		roundnumberglobal = await  getroundnumber_global ( nettype )
     LOGGER( "MAX_ROUND_TO_REACH" , roundnumber, MAX_ROUND_TO_REACH);
-    if ( +roundnumber < MAX_ROUND_TO_REACH * ROUND_MULT_FACTOR_DUE_TO_OVERLAP ) {
+//    if ( +roundnumber < MAX_ROUND_TO_REACH * ROUND_MULT_FACTOR_DUE_TO_OVERLAP ) {
+    if ( +itemroundnumber <= MAX_ROUND_TO_REACH  ) { // ROUND_MULT_FACTOR_DUE_TO_OVERLAP
       // max not reached yet
       await updaterow(
         "items",

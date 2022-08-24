@@ -269,6 +269,7 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
 
       let price;
       let roundnumber;
+			let nextitemroundnumber // = 1 + +itemroundnumber
       if (respcirculation) {        //
         let { price: price00, roundnumber , itemroundnumber 
 //					, roundnumberglobal 
@@ -287,7 +288,7 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
           price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
         }
         roundnumber = 1 + +roundnumber;
-				itemroundnumber = 1 + +itemroundnumber
+				nextitemroundnumber = 1 + +itemroundnumber
         await updaterow(
           "circulations",
           {            itemid, // : ''            //					, username // : ''
@@ -298,21 +299,22 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
             price: price01, // ITEM_SALE_START_PRICE
             priceunit: PAYMENT_MEANS_DEF,
             username, // : ''
-						itemroundnumber , 
+						itemroundnumber : nextitemroundnumber , 
 					roundnumberglobal
           }
         );
       } else {
         // freshly assigned
         roundnumber = 1;
-        await createrow("circulations", {
+				nextitemroundnumber  = 1
+        await createrow ( "circulations", {
           itemid, // : ''
           username, // : ''
           price: ITEM_SALE_START_PRICE,
           priceunit: PAYMENT_MEANS_DEF,
           nettype,
           roundnumber, // : 1 // + +roundnumber // : ''
-					itemroundnumber :  roundnumber , // '' ,
+					itemroundnumber : roundnumber , // nextitemroundnumber , // '' ,
 					roundnumberglobal , // : '' ,
           //					, priceunitcurrency : ''
         });
@@ -349,7 +351,7 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         seller,
         nettype,
         group_,
-				itemroundnumber , // : '' ,
+				itemroundnumber : nextitemroundnumber , // : '' ,
 				roundnumberglobal // : '' 
       });
       await createrow("itemhistory", {
@@ -362,7 +364,7 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         uuid,
         typestr: "TENTATIVE_ASSIGN",
         nettype,
-				itemroundnumber , // : '' ,
+				itemroundnumber : nextitemroundnumber  , // : '' ,
 				roundnumberglobal // : '' 
       });
     }
