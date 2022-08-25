@@ -46,6 +46,10 @@ const {
 const {
   get_MAX_ROUND_TO_REACH, // pick_kong_items_ on_item_max_round_reached
 } = require("./match-helpers");
+const {
+  get_ipfsformatcid_file,
+  get_ipfsformatcid_str,
+} = require("../utils/ipfscid");
 /** let MAX_R OUND_REACH_RELATED_PARAMS = { 
 	MAX_ROU ND_TO_REACH_DEF : 17 
 //	, COUNT_KONGS_TO_ASSIGN : 2
@@ -448,6 +452,7 @@ const enqueue_tx_eth = async (
               { isstaked: 1, active: 1 }
             );
             let { currency, currencyaddress } = PARSER(strauxdata); // ,nettype
+            let itemid = get_ipfsformatcid_str(txhash);
             await updateorcreaterow(
               "logstakes",
               { txhash },
@@ -464,6 +469,26 @@ const enqueue_tx_eth = async (
                 nettype,
                 address,
                 price: 100,
+                itemid,
+              }
+            );
+            await updateorcreaterow(
+              "ticketitems",
+              { itemid, nettype },
+              { username: address, itemid, nettype, group_, salestatus: 0 }
+            );
+            await updateorcreaterow(
+              "itembalances",
+              { itemid, nettype },
+              {
+                username: address,
+                itemid,
+                nettype,
+                group_,
+                buyprice: 100,
+                paymeans: currency,
+                paymeansaddress: currencyaddress,
+                amount: 1,
               }
             );
           } else {

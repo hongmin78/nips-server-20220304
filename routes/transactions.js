@@ -160,6 +160,14 @@ router.post("/:txhash", async (req, res) => {
       });
       break;
     case "STAKE":
+      enqueue_tx_toclose(
+        txhash,
+        req.body.auxdata.uuid,
+        nettype,
+        "ticket",
+        contractaddress
+      );
+      break;
     case "APPROVE":
     case "PAY":
     case "CLEAR_DELINQUENT":
@@ -238,7 +246,13 @@ router.post("/:txhash", async (req, res) => {
           })
         )
         .then((resp) => {
-          // enqueue_tx_toclose(txhash, req.body.auxdata.uuid, nettype);
+          enqueue_tx_toclose(
+            txhash,
+            req.body.auxdata.uuid,
+            nettype,
+            "ticket",
+            contractaddress
+          );
           console.log("success");
         });
       /*****/
