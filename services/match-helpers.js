@@ -342,7 +342,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
           nettype,
         },
         { roundnumber // : 1 + +roundnumber // : ''
-					, itemroundnumber : +itemroundnumber + 1 // ''
+//					, itemroundnumber : +itemroundnumber + 1 // '' // double counting
 					, roundnumberglobal , // : ''
           price: price01, // ITEM_SALE_START_PRICE
           priceunit: PAYMENT_MEANS_DEF,

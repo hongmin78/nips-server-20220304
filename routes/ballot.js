@@ -104,7 +104,7 @@ router.post("/manual/payitem/:uuid", async (req, res) => {
 						price	: amount	
 				})
 			break
-			case 'kong' :  await handle_pay_case({
+			case 'kong' : await handle_pay_case( {
 	      uuid, //
   	    username, //
     	  itemid, //

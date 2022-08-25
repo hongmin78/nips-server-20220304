@@ -148,7 +148,7 @@ const handle_pay_case = async (jdata) => {
     uuid,
     nettype
   );
-  //	await moverow( 'receivables', { itemid, nettype } , 'logsales', { txhash }) // uuid
+  //	await moverow( 'receivables', { itemid, nettype } , 'logs ales', { txhash }) // uuid
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let amount, currency, currencyaddress, feerate;
   let jauxdata;
@@ -176,12 +176,10 @@ const handle_pay_case = async (jdata) => {
   }
   await updateorcreaterow(
     "itembalances",
-    {
-      itemid,
+    {      itemid,
       nettype,
     },
-    {
-      username,
+    {      username,
       status: 1,
       buyprice: amount,
       paymeans: currency,
@@ -215,11 +213,11 @@ const handle_pay_case = async (jdata) => {
 			, itemroundnumber 
 			, roundnumberglobal
 		} = respcirc;
-    let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
+    let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH( nettype );
 		roundnumberglobal = await  getroundnumber_global ( nettype )
-    LOGGER( "MAX_ROUND_TO_REACH" , roundnumber, MAX_ROUND_TO_REACH);
+    LOGGER( "MAX_ROUND_TO_REACH" , itemroundnumber , roundnumber, MAX_ROUND_TO_REACH);
 //    if ( +roundnumber < MAX_ROUND_TO_REACH * ROUND_MULT_FACTOR_DUE_TO_OVERLAP ) {
-    if ( +itemroundnumber <= MAX_ROUND_TO_REACH  ) { // ROUND_MULT_FACTOR_DUE_TO_OVERLAP
+    if ( +itemroundnumber <= MAX_ROUND_TO_REACH  ) { // ROUND_MULT_FACTOR_DUE_TO_OVERLAP + 1
       // max not reached yet
       await updaterow(
         "items",
@@ -244,7 +242,7 @@ const handle_pay_case = async (jdata) => {
         {          //				price : price 				,
           countchangehands: 1 + +countchangehands,
           roundnumber: 1 + +roundnumber,
-					itemroundnumber : 1 + +itemroundnumber ,
+//					itemroundnumber : 1 + +itemroundnumber , // doublecounting
 					roundnumberglobal // : 
         }
       );
@@ -264,7 +262,7 @@ const handle_pay_case = async (jdata) => {
         uuid: create_uuid_via_namespace(`${username}_${itemid}_${nettype}`),
         amountpaid: "",
         txhash, // : ''
-        itemroundnumber : 1 + +itemroundnumber , // : roundnumber,
+        itemroundnumber : 1 + +itemroundnumber , // : roundnumber, // doublecounting
         globalroundnumber : roundnumberglobal, // : ''
 				roundnumberglobal
       });
@@ -281,7 +279,7 @@ const handle_pay_case = async (jdata) => {
       {        //				price : price 				,
         roundnumber: 1 + +roundnumber,
         countchangehands: 1 + +countchangehands,
-				itemroundnumber : 1 + +itemroundnumber ,
+//				itemroundnumber : 1 + +itemroundnumber , // doublecounting
 				roundnumberglobal ,
       }
     );
@@ -327,7 +325,7 @@ const handle_pay_case = async (jdata) => {
       }
     );
   }
-  await moverow("receivables", { itemid, nettype }, "logsales", { txhash }); // uuid
+  await moverow( "receivables" , { itemid, nettype }, "logsales", { txhash }); // uuid
 };
 /* logfeepayments
 	username        | varchar(80)      | YES  |     | NULL                |                               |
@@ -372,7 +370,7 @@ logactions
 */
 const handle_clear_delinquent_case = async (jdata) => {
   let { uuid, username, itemid, strauxdata, txhash, nettype } = jdata; //	await moverow ('delinquencies', { itemid } , 'logdelinquents', {} )
-  findall("delinquencies", { username }).then(async (list) => {
+  findall( "delinquencies" , { username }).then(async (list) => {
     list.forEach(async (elem) => {
       await moverow("delinquencies", { id: elem.id }, "logdelinquents", {
         txhash,
@@ -381,7 +379,7 @@ const handle_clear_delinquent_case = async (jdata) => {
       await updaterow("users", { username }, { active: 1, isdelinquen: 0 });
       //			await updaterow ( 'items' , { itemid,  nettype } , {isdelinquent : 0 } ) // not yet
       /*			await incrementrow ( {
-					table : 'logrounds'
+					table : 'logrou nds'
 				, jfilter : {  }
 				, fieldname : 'countdelinquenciesresolved'
 				, incvalue : +1
