@@ -46,7 +46,7 @@ module.exports = function(sequelize, DataTypes) {
     lastroundmadepaymentfor: {
       type: DataTypes.INTEGER(11),
       allowNull: true,
-      defaultValue: -4
+      defaultValue: 0
     },
     lasttimemadepaymentat: {
       type: DataTypes.BIGINT,
@@ -58,6 +58,32 @@ module.exports = function(sequelize, DataTypes) {
     },
     isdelinquent: {
       type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
+    },
+    buytimeunix: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    contractaddress: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    tokenid: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    sellabletimeunix: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    ismaxroundreached: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      defaultValue: 0
+    },
+    ismaxreached: {
+      type: DataTypes.INTEGER(3).UNSIGNED,
       allowNull: true,
       defaultValue: 0
     }

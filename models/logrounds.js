@@ -97,6 +97,14 @@ module.exports = function(sequelize, DataTypes) {
     nettype: {
       type: DataTypes.STRING(40),
       allowNull: true
+    },
+    drawfractionbp: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    totalusersassigned: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

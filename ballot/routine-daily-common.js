@@ -37,6 +37,9 @@ const {
   pick_kong_items_on_item_max_round_reached,
   handle_perish_item_case,
   handle_assign_item_case,
+
+	handle_assign_item_case_birth_kong , 
+
   handle_give_an_item_ownership_case,
   getroundnumber_global,
 } = require("../services/match-helpers");
@@ -53,7 +56,7 @@ const {
   PAYMENT_ADDRESS_DEF,
   PRICE_INCREASE_FACTOR_DEF,
 } = require("../configs/receivables");
-
+const IS_ASSIGN_ITEMS_RANDOMLY_OR_IN_ORDER = true 
 let { Op } = db.Sequelize;
 let scheduleddrawjob; // = nodeschedule.scheduleJob
 let jschedules = {};
@@ -78,7 +81,6 @@ const func_00_03_advance_round = async (nettype) => {
       await updaterow("ballots", { id: elem.id, nettype }, { lastroundmadepaymentfor: 1 + lastroundmadepaymentfor });
     }
   });
-
   //	})
 };
 
@@ -188,7 +190,7 @@ const func00_allocate_items_to_users = async (nettype) => {
   let itemstogive;
   let NItemstogive;
   let NMin;
-  let round_number_global;
+  let round_number_global 
   let respballotround = await findone("settings", {
     key_: "BALLOT_PERIODIC_ROUNDNUMBER",
     subkey_: nettype,
@@ -199,28 +201,34 @@ const func00_allocate_items_to_users = async (nettype) => {
   } else {
     round_number_global = 1;
   }
+	let roundnumberglobal = round_number_global // await getroundnumber_global ( nettype ) 
   let listreceivers0 = await func_00_01_draw_users({
     nettype,
     roundnumber: round_number_global,
   });
-LOGGER( `@listreceivers0 `,listreceivers0 ) 
+	LOGGER( `@listreceivers0 `,listreceivers0 ) 
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
 
   let timenow = moment();
   let timenowunix = timenow.unix();
   let timenowstr = timenow.format(STR_TIME_FORMAT);
+	let { value_ : BALLOT_DRAW_FRACTION_BP} = await findone ( 'settings' , {
+		key_: "BALLOT_DRAW_FRACTION_BP",
+		nettype,
+	} )
   await updateorcreaterow(
     "logrounds",
-    {
-      drawtime: timenowstr,
+    {      drawtime: timenowstr,
       drawtimeunix: timenowunix,
       roundnumber: round_number_global,
       nettype,
     },
-    { totalitemsassigned: 0 }
+    { totalitemsassigned: 0 
+			, drawfractionbp : BALLOT_DRAW_FRACTION_BP
+			, totalusersassigned : listreceivers0.length
+		}
   );
-
   if (listreceivers0 && listreceivers0.length) {
     NReceivers = listreceivers0.length; // draw_items()
     console.log("NReceivers", NReceivers);
@@ -228,7 +236,6 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
     itemstogive = await func_00_02_draw_items(NReceivers, nettype); //  func_00_02_draw_items_this_ver_takes_N_arg(NReceivers);
     NItemstogive = itemstogive.length;
     console.log("NItemstogive", NItemstogive);
-
     // less-than exceptions later
     NMin = Math.min(NReceivers, NItemstogive);
 
@@ -265,9 +272,11 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
 
       let price;
       let roundnumber;
-      if (respcirculation) {
-        //
-        let { price: price00, roundnumber } = respcirculation;
+			let nextitemroundnumber // = 1 + +itemroundnumber
+      if (respcirculation) {        //
+        let { price: price00, roundnumber , itemroundnumber 
+//					, roundnumberglobal 
+				} = respcirculation;
         let resppriceincrease = await findone("settings", {
           key_: "BALLOT_PRICE_INCREASE_FACTOR",
           nettype,
@@ -281,13 +290,11 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         } else {
           price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
         }
-
         roundnumber = 1 + +roundnumber;
+				nextitemroundnumber = 1 + +itemroundnumber
         await updaterow(
           "circulations",
-          {
-            itemid, // : ''
-            //					, username // : ''
+          {            itemid, // : ''            //					, username // : ''
             nettype,
           },
           {
@@ -295,18 +302,23 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
             price: price01, // ITEM_SALE_START_PRICE
             priceunit: PAYMENT_MEANS_DEF,
             username, // : ''
+						itemroundnumber : nextitemroundnumber , 
+					roundnumberglobal
           }
         );
       } else {
         // freshly assigned
         roundnumber = 1;
-        await createrow("circulations", {
+				nextitemroundnumber  = 1
+        await createrow ( "circulations", {
           itemid, // : ''
           username, // : ''
-          roundnumber, // : 1 // + +roundnumber // : ''
           price: ITEM_SALE_START_PRICE,
           priceunit: PAYMENT_MEANS_DEF,
           nettype,
+          roundnumber, // : 1 // + +roundnumber // : ''
+					itemroundnumber : roundnumber , // nextitemroundnumber , // '' ,
+					roundnumberglobal , // : '' ,
           //					, priceunitcurrency : ''
         });
         price01 = ITEM_SALE_START_PRICE;
@@ -329,7 +341,7 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
       } else {
         seller = SALES_ACCOUNT_NONE_TICKET;
       }
-      await createrow("receivables", {
+      await createrow( "receivables" , {
         itemid,
         username,
         roundnumber: round_number_global,
@@ -342,6 +354,8 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         seller,
         nettype,
         group_,
+				itemroundnumber : nextitemroundnumber , // : '' ,
+				roundnumberglobal // : '' 
       });
       await createrow("itemhistory", {
         itemid,
@@ -353,6 +367,8 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
         uuid,
         typestr: "TENTATIVE_ASSIGN",
         nettype,
+				itemroundnumber : nextitemroundnumber  , // : '' ,
+				roundnumberglobal // : '' 
       });
     }
     await incrementrow({
@@ -401,9 +417,24 @@ LOGGER( `@listreceivers0 `,listreceivers0 )
 //   MAX_ROUND_TO_REACH_DEF: 2,
 //   COUNT_KONGS_TO_ASSIGN: 2,
 // };
+
+// const find_items_pastmax=async nettype=>{
+const find_circulations_pastmax=async nettype=>{
+	let { value_ : MAX_ROUND_TO_REACH_DEF } = await findone ( 'settings' , { nettype , key_ : 'MAX_ROUND_TO_REACH_DEF' } )	
+	let list = await db['circulations'].findAll ( {raw: true 
+		, where : { nettype , 
+		itemroundnumber : { [ Op.gt ] : MAX_ROUND_TO_REACH_DEF }
+	} } )
+//	let list = await findall ( 'circulations' , { nettype , { itemroundnumber : { [ Op.gte ] : MAX_ROUND_TO_REACH_DEF } } } )
+	return list // ? list : null
+}
 const func_00_04_handle_max_round_reached = async (nettype) => {
-  let list_maxroundreached = await findall("maxroundreached", { nettype });
-  if (list_maxroundreached && list_maxroundreached.length) {
+	let list_maxroundreached = await findall( "maxroundreached" , { nettype });
+	let list_max_from_circulations = await find_circulations_pastmax ( nettype )
+
+	list_maxroundreached = [ ... list_maxroundreached , ... list_max_from_circulations  ]	
+ if (list_maxroundreached && list_maxroundreached.length) {
+		LOGGER( `@max round reached` , list_maxroundreached)
   } else {
     LOGGER("@max round reached, no items past max");
     return;
@@ -412,21 +443,23 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     let { itemid, username, nettype } = elemmatch;
     await handle_perish_item_case(itemid, nettype, username);
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
-    console.log("tpye", listkongs);
-    /*  listkongsArray.forEach(async (elemkong) => {
+    console.log("tpye",listkongs)
+    listkongs.forEach(async (elemkong) => {
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
-      await handle_assign_item_case(item, username, nettype);
-    console.log("1.5item",item)
-    }); */
-    let item = await findone("items", { itemid: listkongs.itemid, nettype });
-    await handle_assign_item_case(item, username, nettype);    console.log("1.5item", item);
-    await handle_give_an_item_ownership_case(username, nettype);
-  });
-
+//      await handle_a ssign_item_case(item, username, nettype);
+			await handle_assign_item_case_birth_kong (item, username, nettype);
+	    console.log("1.5item",item)
+    })
+ /**  let item = await findone("items", { itemid: listkongs.itemid, nettype });
+      await handle_assi gn_item_case(item, username, nettype);
+    console.log("1.5item",item) */
+    await handle_give_an_item_ownership_case(username, nettype); 
+ });
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
-    await updaterow("users", { username, nettype }, { ismaxreached: 0 });
-    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 });
+    await updaterow("users", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0 });
+    await updaterow("ballots", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
+    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
     await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
   });
 };
@@ -437,7 +470,7 @@ const func01_inspect_payments = async (nettype) => {
     raw: true,
     where: { active: 1, nettype },
     //		, where : { duetimeunix : { [Op.lte] : timenow } }
-  }); // findall ('receivables' , {} )
+  }); // findall ('receiv ables' , {} )
   LOGGER("timenow@inspect", timenow, nettype, listreceivables);
 
   if (listreceivables.length > 0) {
@@ -649,7 +682,8 @@ const draw_items = (N) => {
 };
 const J_ALLOCATE_FACTORS = {
   DEF: 1500,
-  MAX: 5000,
+//  MAX: 5000,
+  MAX: 10000,
   MIN: 0,
 };
 
@@ -678,6 +712,7 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
         ismaxroundreached: 0,
         isdelinquent: 0,
       },
+//			 order: IS_ASSIGN_ITEMS_RANDOMLY_OR_IN_ORDER ? db.Sequelize.literal("rand()") : null ,
       limit:
         N > count_users_plus_delinquent
           ? N - count_users_plus_delinquent
@@ -687,9 +722,7 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
     // shufflearray(list_01);
     // shufflearray(list_01);
     // list_01 = list_01.slice(0, N - count_users_plus_delinquent);
-
       N < count_users_plus_delinquent_n ?  list = [...list_00] : list = [...list_00, ...list_01];
-
   } else {
     let list_03 = await db["items"].findAll({
       raw: true,
@@ -709,30 +742,6 @@ const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalance
   }
   // shufflearray(list);
   // shufflearray(list);
-
-  return list;
-};
-const func_00_02_draw_items_this_ver_takes_N_arg = async (N, nettype) => {
-  // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
-  if (N > 0) {
-  } else {
-    round_number_global = 1;
-  }
-  let listreceivers0 = await func_00_01_draw_users({
-    nettype,
-    roundnumber: round_number_global,
-  });
-
-  if (list.length >= N) {
-  } else {
-    createrow("alerts", {
-      typestr: "KINGKONG_RESERVE_RAN_OUT",
-      message: "KINGKONG_RESERVE_RAN_OUT",
-      functionname: "func_00_02_draw_items_this_ver_takes_N_arg",
-    });
-  }
-  shufflearray(list);
-  shufflearray(list);
   return list;
 };
 // const func_00_02_draw_items = func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances
@@ -822,7 +831,7 @@ module.exports = {
   func_00_04_handle_max_round_reached,
 };
 // const cron = require('node-cron')
-false &&
+false  &&
   cron.schedule("* */9 * * *", () => {
     LOGGER("");
     console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips");
@@ -853,6 +862,29 @@ rmqopen
     });
   })
   .catch(console.warn);
+
+const func_00_02_draw_items_this_ver_takes_N_arg = async (N, nettype) => {
+  // what if more users than items available , then we should hand out all we could , and the rest users left unassigned
+  if (N > 0) {
+  } else {
+    round_number_global = 1;
+  }
+  let listreceivers0 = await func_00_01_draw_users({
+    nettype,
+    roundnumber: round_number_global,
+  });
+  if (list.length >= N) {
+  } else {
+    createrow("alerts", {
+      typestr: "KINGKONG_RESERVE_RAN_OUT",
+      message: "KINGKONG_RESERVE_RAN_OUT",
+      functionname: "func_00_02_draw_items_this_ver_takes_N_arg",
+    });
+  }
+  shufflearray(list);
+  shufflearray(list);
+  return list;
+};
 
 /** cron.schedule('0 0 0 * * *',async ()=>{  	LOGGER('' , moment().format('HH:mm:ss, YYYY-MM-DD') , '@nips' )
 	setTimeout(async _=>{
@@ -890,7 +922,7 @@ rmqopen
 			let price1 = +price0 * ( 1 + PRICE_HIKE_PERCENT/100) ;
 			price1 = price1.toFixed(0)
 			let duetime=moment().endOf('day').subtract(1,'hour')
-			await crea terow( 'receivables' , {itemid , username , roundnumber 
+			await crea terow( 'receiv ables' , {itemid , username , roundnumber 
 				, amount : price1 
 				, currency :PAYMENT_MEANS_DEF
 				, currencyaddress : PAYMENT_ADDRESS_DEF 
@@ -922,7 +954,7 @@ rmqopen
       'Invalid date',
       1
 */
-/** receivables
+/** receiva bles
   username        | varchar(80)         | YES  |     | NULL                |                               |
 | itemid          | varchar(60)         | YES  |     | NULL                |                               |
 | amount          | varchar(20)         | YES  |     | NULL                |                               |

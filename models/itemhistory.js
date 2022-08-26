@@ -93,6 +93,14 @@ module.exports = function(sequelize, DataTypes) {
     username: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    itemroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    roundnumberglobal: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

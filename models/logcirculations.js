@@ -53,6 +53,22 @@ module.exports = function(sequelize, DataTypes) {
     txhash: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    globalroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    isdelinquent: {
+      type: DataTypes.INTEGER(3).UNSIGNED,
+      allowNull: true
+    },
+    roundnumberglobal: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    itemroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

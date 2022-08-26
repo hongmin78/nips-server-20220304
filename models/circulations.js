@@ -49,6 +49,22 @@ module.exports = function(sequelize, DataTypes) {
     nettype: {
       type: DataTypes.STRING(40),
       allowNull: true
+    },
+    isdelinquent: {
+      type: DataTypes.INTEGER(3).UNSIGNED,
+      allowNull: true
+    },
+    globalroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    roundnumberglobal: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
+    },
+    itemroundnumber: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

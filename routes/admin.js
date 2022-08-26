@@ -81,18 +81,17 @@ const storefile_from_base64data = (datainbase64, filename, hexid) => {
 
 router.put('/banner/:uuid', async (req,res)=>{ LOGGER('' , req.body )
 	let {uuid}=req.params
-	let { isinuse , }=req.body 
+	let { isinuse }=req.body
+   
 	findone('banners', {uuid} ).then(async resp=>{
 		if ( resp){}
 		else { resperr(res, messages.MSG_DATANOTFOUND ) ; return }
-		if( Number.isFinite( + isinuse ) ){}
-		else {resperr( res,messages.MSG_ARGINVALID); return }
 		await updaterow( 'banners' , { uuid } , {... req.body } )
 		respok ( res )  
 	})
 }) 
 router.post ( '/banner' ,async(req,res)=>{
-   LOGGER('' , req.body )
+  
 	let {nettype, imagepc, writer, isinuse ,filenamepc }=req.body
 	if (imagepc && filenamepc  ){}
 	else {resperr(res,messages.MSG_ARGMISSING) ; return }
@@ -100,6 +99,7 @@ let uuid = uuidv4();
 let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
 	let resp00 =	await storefile_from_base64data ( imagepc , filenamepc,uuid);
   let imageurlpc = await storefiletoawss3(resp00, uuid);
+  console.log("LOGGER",imageurlpc);
 	if ( resp00) {}
 	else { resperr( res, 'ERR-FILE-WRITE-ERR', null, { reason:'pc-file' } ) ; return }	
  /*	if(+isinuse){
@@ -108,7 +108,7 @@ let FILE_SAVE_LOCATION_ROOT ='/var/www/html/banners'
 	await createrow ( 'banners', {
 		 writer : writer ? writer:null
 		, isinuse : isinuse ? isinuse : null	
-		, imageurlpc
+		, imageurlpc 
     ,filenamepc
 		, uuid
     , nettype  

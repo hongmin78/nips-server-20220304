@@ -42,7 +42,7 @@ let rmqopen = require("amqplib").connect("amqp://localhost");
 const STRINGER = JSON.stringify;
 const { mqpub } = require("../services/mqpub");
 const { handle_pay_case, handle_clear_delinquent_case } = require("../services/close-transactions");
-
+const { handle_kingkong_initial_payment_case } = require( '../services/close-transactions-02' ) 
 router.post("/manual/paydelinquency/:uuid", (req, res) => {
   let { nettype } = req.query;
   if (nettype) {
@@ -84,23 +84,36 @@ router.post("/manual/payitem/:uuid", async (req, res) => {
       resperr(res, messages.MSG_DATANOTFOUND);
       return;
     }
-    let { username, itemid, nettype, roundnumber } = resp; // , strauxdata , txhash ,
+    let { username, itemid, nettype, roundnumber , group_ , amount } = resp; // , strauxdata , txhash ,
     let strauxdata = STRINGER({
-      amount: resp.amount,
+      amount , // : resp.amount,
       currency: resp.currency,
       currencyaddress: resp.currencyaddress,
     });
     let txhash = generaterandomhex(64);
     txhash = "dev___" + txhash;
-    await handle_pay_case({
-      uuid, //
-      username, //
-      itemid, //
-      txhash,
-      nettype,
-      strauxdata,
-      roundnumber, // : resp
-    });
+		switch ( group_ ) 		{ 
+			case 'kingkong' :  
+				await handle_kingkong_initial_payment_case  ({
+        	txhash, //
+            uuid, //
+            nettype, //
+            username , // : address,
+            itemid, //           strauxdata,
+            roundnumber,
+						price	: amount	
+				})
+			break
+			case 'kong' : await handle_pay_case( {
+	      uuid, //
+  	    username, //
+    	  itemid, //
+      	txhash,
+	      nettype,
+  	    strauxdata,
+    	  roundnumber, // : resp
+	    });
+		}
     respok(res);
   });
 });
@@ -146,25 +159,33 @@ router.post("/init/rounds", async (req, res) => {
     resperr(res, messages.MSG_ARGMISSING);
     return;
   }
-  await updaterow("items", { nettype }, { salestatus: 0, roundoffsettoavail: 0, isdelinquent: 0, roundnumber: 0 });
+  await updaterow("items", { nettype }, { salestatus: 0
+		, roundoffsettoavail: 0
+		, isdelinquent: 0
+		, roundnumber: 0 
+		, ismaxroundreached : 0
+		, ismaxreached : 0
+	});
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", nettype }, { value_: 0 });
   //	await deleterow ( 'logrounds' , { nettype } )
   await deleterow("receivables", { nettype });
   await deleterow("itemhistory", { nettype });
   await deleterow("circulations", { nettype });
   await deleterow("delinquencies", { nettype });
+  await deleterow("maxroundreached", { nettype }); // from init rounds
   await updaterow("settings", { key_: "BALLOT_PERIODIC_ROUND_STATE", nettype }, { value_: 0 });
-  await updaterow(
-    "ballots",
-    { nettype },
-    { counthelditems: 0, lastroundmadepaymentfor: 0, isdelinquent: 0, active: 1 }
-  ); // update ballots set active=1 where nettype ='ETH_TESTNET';
+  await updaterow("ballots", { nettype }, { counthelditems: 0
+		, lastroundmadepaymentfor: 0
+		, isdelinquent: 0 
+		, ismaxroundreached : 0
+		, ismaxreached : 0
+	}); // update ballots set active=1 where nettype ='ETH_TESTNET';
   await deleterow("itembalances", { nettype });
-  await updaterow(
-    "users",
-    { nettype },
-    { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0, active: 1 }
-  );
+  await updaterow("users", { nettype }, { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0 
+		, ismaxroundreached : 0
+		, ismaxreached : 0
+	});
+//	await updaterow ( 'settings' , { key_ : '' , nettype } , { value_ : 0 } )
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
@@ -185,7 +206,7 @@ router.post("/advance/roundstate", async (req, res) => {
     roundstate = +roundstate;
 
     LOGGER("BALLOT_PERIODIC_ROUND_STATE", roundstate);
-    switch (roundstate) {
+    switch ( roundstate ) {
       case 0:
         await func_00_03_advance_round(nettype);
         await func00_allocate_items_to_users(nettype);
