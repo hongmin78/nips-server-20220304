@@ -452,7 +452,7 @@ const enqueue_tx_eth = async (
               { isstaked: 1, active: 1 }
             );
             let { currency, currencyaddress } = PARSER(strauxdata); // ,nettype
-            let itemid = get_ipfsformatcid_str(txhash);
+            // let itemid = get_ipfsformatcid_str(txhash);
             await updateorcreaterow(
               "logstakes",
               { txhash },
@@ -472,25 +472,25 @@ const enqueue_tx_eth = async (
                 itemid,
               }
             );
-            await updateorcreaterow(
-              "ticketitems",
-              { itemid, nettype },
-              { username: address, itemid, nettype, group_, salestatus: 0 }
-            );
-            await updateorcreaterow(
-              "itembalances",
-              { itemid, nettype },
-              {
-                username: address,
-                itemid,
-                nettype,
-                group_,
-                buyprice: 100,
-                paymeans: currency,
-                paymeansaddress: currencyaddress,
-                amount: 1,
-              }
-            );
+            // await updateorcreaterow(
+            //   "ticketitems",
+            //   { itemid, nettype },
+            //   { username: address, itemid, nettype, group_, salestatus: 0 }
+            // );
+            // await updateorcreaterow(
+            //   "itembalances",
+            //   { itemid, nettype },
+            //   {
+            //     username: address,
+            //     itemid,
+            //     nettype,
+            //     group_,
+            //     buyprice: 100,
+            //     paymeans: currency,
+            //     paymeansaddress: currencyaddress,
+            //     amount: 1,
+            //   }
+            // );
           } else {
           }
           //        })
