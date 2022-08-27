@@ -11,7 +11,7 @@ const {
   createorupdaterow,
   fieldexists,
   tableexists,
-  updateorcreaterow,
+  updateorcreaterow,getrandomrow_filter_multiple_rows 
 } = require("../utils/db");
 const { updaterow: updaterow_mon } = require("../utils/dbmon");
 const KEYS = Object.keys;
@@ -184,8 +184,13 @@ router.post("/init/rounds", async (req, res) => {
   await updaterow("users", { nettype }, { lastroundmadepaymentfor: 0, isdelinquent: 0, countmaxroundreached: 0 
 		, ismaxroundreached : 0
 		, ismaxreached : 0
-	});
-//	await updaterow ( 'settings' , { key_ : '' , nettype } , { value_ : 0 } )
+	}); //	await updaterow ( 'settings' , { key_ : '' , nettype } , { value_ : 0 } )
+await updaterow ( 'ballots' , { active : 1 } , { active : 0 } )
+	let respactiveballots = await getrandomrow_filter_multiple_rows ( 'ballots' ,{} , 4 ) 
+ 	respactiveballots.forEach ( async elem => {
+		await updaterow ( 'ballots' , { id : elem.id} , { active : 1 } )
+	})
+
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
