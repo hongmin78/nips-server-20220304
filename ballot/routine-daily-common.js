@@ -2,7 +2,10 @@ var express = require("express");
 var router = express.Router();
 //let { nettype } = require("../configs/net"); //  "ETH_TESTNET";
 let nettype = "ETH_TESTNET";
-const { REFERERCODELEN, B_ASSIGN_DELINQUENT_ITEMS } = require("../configs/configs");
+const {
+  REFERERCODELEN,
+  B_ASSIGN_DELINQUENT_ITEMS,
+} = require("../configs/configs");
 const {
   findone,
   createrow,
@@ -38,7 +41,7 @@ const {
   handle_perish_item_case,
   handle_assign_item_case,
 
-	handle_assign_item_case_birth_kong , 
+  handle_assign_item_case_birth_kong,
 
   handle_give_an_item_ownership_case,
   getroundnumber_global,
@@ -56,7 +59,7 @@ const {
   PAYMENT_ADDRESS_DEF,
   PRICE_INCREASE_FACTOR_DEF,
 } = require("../configs/receivables");
-const IS_ASSIGN_ITEMS_RANDOMLY_OR_IN_ORDER = true 
+const IS_ASSIGN_ITEMS_RANDOMLY_OR_IN_ORDER = true;
 let { Op } = db.Sequelize;
 let scheduleddrawjob; // = nodeschedule.scheduleJob
 let jschedules = {};
@@ -68,7 +71,11 @@ const func_00_03_advance_round = async (nettype) => {
     let { roundoffsettoavail } = elem;
     roundoffsettoavail = +roundoffsettoavail;
     if (roundoffsettoavail < 0) {
-      await updaterow("items", { id: elem.id, nettype }, { roundoffsettoavail: 1 + roundoffsettoavail });
+      await updaterow(
+        "items",
+        { id: elem.id, nettype },
+        { roundoffsettoavail: 1 + roundoffsettoavail }
+      );
     } else {
     }
   });
@@ -78,7 +85,11 @@ const func_00_03_advance_round = async (nettype) => {
     let { lastroundmadepaymentfor } = elem;
     lastroundmadepaymentfor = +lastroundmadepaymentfor;
     if (lastroundmadepaymentfor < 0) {
-      await updaterow("ballots", { id: elem.id, nettype }, { lastroundmadepaymentfor: 1 + lastroundmadepaymentfor });
+      await updaterow(
+        "ballots",
+        { id: elem.id, nettype },
+        { lastroundmadepaymentfor: 1 + lastroundmadepaymentfor }
+      );
     }
   });
   //	})
@@ -99,7 +110,10 @@ const func_00_01_draw_users = async (jdata) => {
   //	let listballots_00 = await findall( 'ballots' , {	counthelditems : 0		} ) //
   // let count_users = await countrows_scalar("ballots", { active: 1, nettype });
   let count_users = await countrows_scalar("ballots", { active: 1, nettype });
-  let count_users_plus_delinquent = await countrows_scalar("delinquencies", { nettype, active: 1 });
+  let count_users_plus_delinquent = await countrows_scalar("delinquencies", {
+    nettype,
+    active: 1,
+  });
   let count_kong_delinquent = await countrows_scalar("items", {
     group_: "kong",
     nettype,
@@ -120,7 +134,10 @@ const func_00_01_draw_users = async (jdata) => {
     let { value_: allocatefactor_settings } = respallocatefactor;
     allocatefactor_settings = +allocatefactor_settings;
 
-    if (allocatefactor_settings >= J_ALLOCATE_FACTORS.MIN && allocatefactor_settings <= J_ALLOCATE_FACTORS.MAX) {
+    if (
+      allocatefactor_settings >= J_ALLOCATE_FACTORS.MIN &&
+      allocatefactor_settings <= J_ALLOCATE_FACTORS.MAX
+    ) {
       allocatefactor_bp = allocatefactor_settings;
     }
   } else {
@@ -128,7 +145,9 @@ const func_00_01_draw_users = async (jdata) => {
 
   let count_users_receivers =
     count_users_plus_delinquent > 0
-      ? Math.ceil((count_users * allocatefactor_bp) / 10000  + count_kong_delinquent)
+      ? Math.ceil(
+          (count_users * allocatefactor_bp) / 10000 + count_kong_delinquent
+        )
       : Math.round((count_users * allocatefactor_bp) / 10000);
   let roundnumber_01 = roundnumber - 3;
   let listballots_00_from_entire = await db["ballots"].findAll({
@@ -138,12 +157,12 @@ const func_00_01_draw_users = async (jdata) => {
       isdelinquent: 0,
       nettype,
       lastroundmadepaymentfor: { [Op.gte]: 0 },
-			ismaxroundreached : 0
+      ismaxroundreached: 0,
     },
-//    ismax roundreached: 0,
+    //    ismax roundreached: 0,
   });
-	LOGGER( `` , listballots_00_from_entire ) 
-  if ( listballots_00_from_entire && listballots_00_from_entire.length ) {
+  LOGGER(``, listballots_00_from_entire);
+  if (listballots_00_from_entire && listballots_00_from_entire.length) {
   } else {
     return [];
   }
@@ -151,8 +170,14 @@ const func_00_01_draw_users = async (jdata) => {
   shufflearray(listballots_00_from_entire);
 
   console.log("count_users_rec", count_users_receivers);
-  listballots_00_from_entire = listballots_00_from_entire.slice(0, count_users_receivers);
-  console.log("listballots_00_from_entire...", listballots_00_from_entire.length);
+  listballots_00_from_entire = listballots_00_from_entire.slice(
+    0,
+    count_users_receivers
+  );
+  console.log(
+    "listballots_00_from_entire...",
+    listballots_00_from_entire.length
+  );
   let listballots_01_from_entire = listballots_00_from_entire.sort((a, b) => {
     //	let listballots_01_from_entire = listballots_00_from_entire.sort ( (a,b)=>{
     //		a.counthelditems - b.counthelditems >0 ? +1 : -1
@@ -190,7 +215,7 @@ const func00_allocate_items_to_users = async (nettype) => {
   let itemstogive;
   let NItemstogive;
   let NMin;
-  let round_number_global 
+  let round_number_global;
   let respballotround = await findone("settings", {
     key_: "BALLOT_PERIODIC_ROUNDNUMBER",
     subkey_: nettype,
@@ -201,33 +226,35 @@ const func00_allocate_items_to_users = async (nettype) => {
   } else {
     round_number_global = 1;
   }
-	let roundnumberglobal = round_number_global // await getroundnumber_global ( nettype ) 
+  let roundnumberglobal = round_number_global; // await getroundnumber_global ( nettype )
   let listreceivers0 = await func_00_01_draw_users({
     nettype,
     roundnumber: round_number_global,
   });
-	LOGGER( `@listreceivers0 `,listreceivers0 ) 
+  LOGGER(`@listreceivers0 `, listreceivers0);
   shufflearray(listreceivers0);
   shufflearray(listreceivers0); // possibly once is not enough
 
   let timenow = moment();
   let timenowunix = timenow.unix();
   let timenowstr = timenow.format(STR_TIME_FORMAT);
-	let { value_ : BALLOT_DRAW_FRACTION_BP} = await findone ( 'settings' , {
-		key_: "BALLOT_DRAW_FRACTION_BP",
-		nettype,
-	} )
+  let { value_: BALLOT_DRAW_FRACTION_BP } = await findone("settings", {
+    key_: "BALLOT_DRAW_FRACTION_BP",
+    nettype,
+  });
   await updateorcreaterow(
     "logrounds",
-    {      drawtime: timenowstr,
+    {
+      drawtime: timenowstr,
       drawtimeunix: timenowunix,
       roundnumber: round_number_global,
       nettype,
     },
-    { totalitemsassigned: 0 
-			, drawfractionbp : BALLOT_DRAW_FRACTION_BP
-			, totalusersassigned : listreceivers0.length
-		}
+    {
+      totalitemsassigned: 0,
+      drawfractionbp: BALLOT_DRAW_FRACTION_BP,
+      totalusersassigned: listreceivers0.length,
+    }
   );
   if (listreceivers0 && listreceivers0.length) {
     NReceivers = listreceivers0.length; // draw_items()
@@ -272,11 +299,15 @@ const func00_allocate_items_to_users = async (nettype) => {
 
       let price;
       let roundnumber;
-			let nextitemroundnumber // = 1 + +itemroundnumber
-      if (respcirculation) {        //
-        let { price: price00, roundnumber , itemroundnumber 
-//					, roundnumberglobal 
-				} = respcirculation;
+      let nextitemroundnumber; // = 1 + +itemroundnumber
+      if (respcirculation) {
+        //
+        let {
+          price: price00,
+          roundnumber,
+          itemroundnumber,
+          //					, roundnumberglobal
+        } = respcirculation;
         let resppriceincrease = await findone("settings", {
           key_: "BALLOT_PRICE_INCREASE_FACTOR",
           nettype,
@@ -291,10 +322,11 @@ const func00_allocate_items_to_users = async (nettype) => {
           price01 = +price00 * +PRICE_INCREASE_FACTOR_DEF;
         }
         roundnumber = 1 + +roundnumber;
-				nextitemroundnumber = 1 + +itemroundnumber
+        nextitemroundnumber = 1 + +itemroundnumber;
         await updaterow(
           "circulations",
-          {            itemid, // : ''            //					, username // : ''
+          {
+            itemid, // : ''            //					, username // : ''
             nettype,
           },
           {
@@ -302,28 +334,31 @@ const func00_allocate_items_to_users = async (nettype) => {
             price: price01, // ITEM_SALE_START_PRICE
             priceunit: PAYMENT_MEANS_DEF,
             username, // : ''
-						itemroundnumber : nextitemroundnumber , 
-					roundnumberglobal
+            itemroundnumber: nextitemroundnumber,
+            roundnumberglobal,
           }
         );
       } else {
         // freshly assigned
         roundnumber = 1;
-				nextitemroundnumber  = 1
-        await createrow ( "circulations", {
+        nextitemroundnumber = 1;
+        await createrow("circulations", {
           itemid, // : ''
           username, // : ''
           price: ITEM_SALE_START_PRICE,
           priceunit: PAYMENT_MEANS_DEF,
           nettype,
           roundnumber, // : 1 // + +roundnumber // : ''
-					itemroundnumber : roundnumber , // nextitemroundnumber , // '' ,
-					roundnumberglobal , // : '' ,
+          itemroundnumber: roundnumber, // nextitemroundnumber , // '' ,
+          roundnumberglobal, // : '' ,
           //					, priceunitcurrency : ''
         });
         price01 = ITEM_SALE_START_PRICE;
       }
-      let SALES_ACCOUNT_NONE_TICKET = await get_sales_account("SALES_ACCOUNT_NONE_TICKET", nettype);
+      let SALES_ACCOUNT_NONE_TICKET = await get_sales_account(
+        "SALES_ACCOUNT_NONE_TICKET",
+        nettype
+      );
 
       await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
       let seller; // =  ? '' : ''
@@ -341,7 +376,7 @@ const func00_allocate_items_to_users = async (nettype) => {
       } else {
         seller = SALES_ACCOUNT_NONE_TICKET;
       }
-      await createrow( "receivables" , {
+      await createrow("receivables", {
         itemid,
         username,
         roundnumber: round_number_global,
@@ -354,8 +389,8 @@ const func00_allocate_items_to_users = async (nettype) => {
         seller,
         nettype,
         group_,
-				itemroundnumber : nextitemroundnumber , // : '' ,
-				roundnumberglobal // : '' 
+        itemroundnumber: nextitemroundnumber, // : '' ,
+        roundnumberglobal, // : ''
       });
       await createrow("itemhistory", {
         itemid,
@@ -367,8 +402,8 @@ const func00_allocate_items_to_users = async (nettype) => {
         uuid,
         typestr: "TENTATIVE_ASSIGN",
         nettype,
-				itemroundnumber : nextitemroundnumber  , // : '' ,
-				roundnumberglobal // : '' 
+        itemroundnumber: nextitemroundnumber, // : '' ,
+        roundnumberglobal, // : ''
       });
     }
     await incrementrow({
@@ -419,48 +454,72 @@ const func00_allocate_items_to_users = async (nettype) => {
 // };
 
 // const find_items_pastmax=async nettype=>{
-const find_circulations_pastmax=async nettype=>{
-	let { value_ : MAX_ROUND_TO_REACH_DEF } = await findone ( 'settings' , { nettype , key_ : 'MAX_ROUND_TO_REACH_DEF' } )	
-	let list = await db['circulations'].findAll ( {raw: true 
-		, where : { nettype , 
-		itemroundnumber : { [ Op.gt ] : MAX_ROUND_TO_REACH_DEF }
-	} } )
-//	let list = await findall ( 'circulations' , { nettype , { itemroundnumber : { [ Op.gte ] : MAX_ROUND_TO_REACH_DEF } } } )
-	return list // ? list : null
-}
+const find_circulations_pastmax = async (nettype) => {
+  let { value_: MAX_ROUND_TO_REACH_DEF } = await findone("settings", {
+    nettype,
+    key_: "MAX_ROUND_TO_REACH_DEF",
+  });
+  let list = await db["circulations"].findAll({
+    raw: true,
+    where: { nettype, itemroundnumber: { [Op.gt]: MAX_ROUND_TO_REACH_DEF } },
+  });
+  //	let list = await findall ( 'circulations' , { nettype , { itemroundnumber : { [ Op.gte ] : MAX_ROUND_TO_REACH_DEF } } } )
+  return list; // ? list : null
+};
 const func_00_04_handle_max_round_reached = async (nettype) => {
-	let list_maxroundreached = await findall( "maxroundreached" , { nettype });
-	let list_max_from_circulations = await find_circulations_pastmax ( nettype )
+  let list_maxroundreached = await findall("maxroundreached", { nettype });
+  let list_max_from_circulations = await find_circulations_pastmax(nettype);
 
-	list_maxroundreached = [ ... list_maxroundreached , ... list_max_from_circulations  ]	
- if (list_maxroundreached && list_maxroundreached.length) {
-		LOGGER( `@max round reached` , list_maxroundreached)
+  list_maxroundreached = [
+    ...list_maxroundreached,
+    ...list_max_from_circulations,
+  ];
+  if (list_maxroundreached && list_maxroundreached.length) {
+    LOGGER(`@max round reached`, list_maxroundreached);
   } else {
     LOGGER("@max round reached, no items past max");
     return;
   }
   list_maxroundreached.forEach(async (elemmatch, idx) => {
+    console.log("___handle_perish_item_case", elemmatch);
     let { itemid, username, nettype } = elemmatch;
     await handle_perish_item_case(itemid, nettype, username);
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
-    console.log("tpye",listkongs)
+    console.log("tpye", listkongs);
     listkongs.forEach(async (elemkong) => {
       let item = await findone("items", { itemid: elemkong.itemid, nettype });
-//      await handle_a ssign_item_case(item, username, nettype);
-			await handle_assign_item_case_birth_kong (item, username, nettype);
-	    console.log("1.5item",item)
-    })
- /**  let item = await findone("items", { itemid: listkongs.itemid, nettype });
+      //      await handle_a ssign_item_case(item, username, nettype);
+      await handle_assign_item_case_birth_kong(item, username, nettype);
+      console.log("1.5item", item);
+    });
+    /**  let item = await findone("items", { itemid: listkongs.itemid, nettype });
       await handle_assi gn_item_case(item, username, nettype);
     console.log("1.5item",item) */
-    await handle_give_an_item_ownership_case(username, nettype); 
- });
+    await handle_give_an_item_ownership_case(username, nettype);
+  });
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     let { itemid, username, nettype } = elemmatch;
-    await updaterow("users", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0 });
-    await updaterow("ballots", { username, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
-    await updaterow("items", { itemid, nettype }, { ismaxreached: 0 , ismaxroundreached : 0  });
-    await moverow("maxroundreached", { id: elemmatch.id }, "logmaxroundreached", {});
+    await updaterow(
+      "users",
+      { username, nettype },
+      { ismaxreached: 0, ismaxroundreached: 0 }
+    );
+    await updaterow(
+      "ballots",
+      { username, nettype },
+      { ismaxreached: 0, ismaxroundreached: 0 }
+    );
+    await updaterow(
+      "items",
+      { itemid, nettype },
+      { ismaxreached: 0, ismaxroundreached: 0 }
+    );
+    await moverow(
+      "maxroundreached",
+      { id: elemmatch.id },
+      "logmaxroundreached",
+      {}
+    );
   });
 };
 
@@ -496,9 +555,21 @@ const func01_inspect_payments = async (nettype) => {
 
     let uuid = uuidv4();
     await updaterow("items", { itemid, nettype }, { isdelinquent: 1 });
-    await updaterow("ballots", { username, nettype }, { active: 0, isdelinquent: 1 });
-    await updaterow("users", { username, nettype }, { active: 0, isdelinquent: 1 });
-    await updaterow("settings", { nettype }, { BALLOT_PERIODIC_ROUND_STATE: 0 });
+    await updaterow(
+      "ballots",
+      { username, nettype },
+      { active: 0, isdelinquent: 1 }
+    );
+    await updaterow(
+      "users",
+      { username, nettype },
+      { active: 0, isdelinquent: 1 }
+    );
+    await updaterow(
+      "settings",
+      { nettype },
+      { BALLOT_PERIODIC_ROUND_STATE: 0 }
+    );
 
     await incrementrow({
       table: "logrounds",
@@ -583,12 +654,10 @@ const parse_q_msg = async (str) => {
     }
     let minute = moment.unix(timeofday).minute();
     LOGGER("timeofday@inspect,mq", hourofday, minute, nettype);
-    jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] = cron.schedule(
-      `0 ${minute} ${hourofday} * * *`,
-      (_) => {
+    jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] =
+      cron.schedule(`0 ${minute} ${hourofday} * * *`, (_) => {
         func01_inspect_payments(nettype);
-      }
-    );
+      });
   }
 };
 /**  const getroundnumber_global = async (nettype) => {
@@ -655,12 +724,10 @@ const init = async (_) => {
       }
       let minute = moment.unix(timeofday).minute();
       LOGGER("timeofday@paydue", timeofday, hourofday, minute, resp); //			let timenow = moment()	//		let timenowunix = timenow.unix()		//	let timetodrawat= timenow.startOf('day').add(+value_ , 'hours') //			if ( timenowunix > timetodrawat ){} // already past //			else {			}
-      jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] = cron.schedule(
-        `0 ${minute} ${hourofday} * * *`,
-        (_) => {
+      jschedules["BALLOT_PERIODIC_PAYMENTDUE_TIMEOFDAY_INSECONDS"] =
+        cron.schedule(`0 ${minute} ${hourofday} * * *`, (_) => {
           func01_inspect_payments(nettype);
-        }
-      );
+        });
     } else {
     }
   });
@@ -682,68 +749,80 @@ const draw_items = (N) => {
 };
 const J_ALLOCATE_FACTORS = {
   DEF: 1500,
-//  MAX: 5000,
+  //  MAX: 5000,
   MAX: 10000,
   MIN: 0,
 };
 
-const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances = async (N, nettype) => {
-  if (N > 0) {
-  } else {
-    return [];
-  }
-  let list_00 = await db["items"].findAll({
-    raw: true,
-    where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
-  });
-  let count_users_plus_delinquent_n = await countrows_scalar_distinct("delinquencies", { nettype, active: 1 });
-  let count_users_plus_delinquent = await countrows_scalar("delinquencies", { nettype, active: 1 });
-  console.log("func_00_02", count_users_plus_delinquent, N);
-  let countdelinquent = list_00.length;
-  console.log("list_00.lenght", countdelinquent);
-  let list = [];
-  if (list_00.length > 0) {
-    let list_01 = await db["items"].findAll({
+const func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances =
+  async (N, nettype) => {
+    if (N > 0) {
+    } else {
+      return [];
+    }
+    let list_00 = await db["items"].findAll({
       raw: true,
-      where: {
-        group_: "kong",
-        nettype,
-        roundoffsettoavail: { [Op.gte]: 0 },
-        ismaxroundreached: 0,
-        isdelinquent: 0,
-      },
-//			 order: IS_ASSIGN_ITEMS_RANDOMLY_OR_IN_ORDER ? db.Sequelize.literal("rand()") : null ,
-      limit:
-        N > count_users_plus_delinquent
-          ? N - count_users_plus_delinquent
-          : count_users_plus_delinquent -N
-    })
-    console.log(" count_users_plus_delinquent_nasd",  count_users_plus_delinquent_n)
-    // shufflearray(list_01);
-    // shufflearray(list_01);
-    // list_01 = list_01.slice(0, N - count_users_plus_delinquent);
-      N < count_users_plus_delinquent_n ?  list = [...list_00] : list = [...list_00, ...list_01];
-  } else {
-    let list_03 = await db["items"].findAll({
-      raw: true,
-      where: {
-        group_: "kong",
-        nettype,
-        roundoffsettoavail: { [Op.gte]: 0 },
-        ismaxroundreached: 0,
-        isdelinquent: 0,
-      },
-      limit: N,
+      where: { group_: "kong", nettype, ismaxroundreached: 0, isdelinquent: 1 },
     });
-    // shufflearray(list_03);
-    // shufflearray(list_03);
-    // list_03 = list_03.slice(0, N)
-    list = [...list_03];
-  }
-  // shufflearray(list);
-  // shufflearray(list);
-  return list;
-};
+    let count_users_plus_delinquent_n = await countrows_scalar_distinct(
+      "delinquencies",
+      { nettype, active: 1 }
+    );
+    let count_users_plus_delinquent = await countrows_scalar("delinquencies", {
+      nettype,
+      active: 1,
+    });
+    console.log("func_00_02", count_users_plus_delinquent, N);
+    let countdelinquent = list_00.length;
+    console.log("list_00.lenght", countdelinquent);
+    let list = [];
+    if (list_00.length > 0) {
+      let list_01 = await db["items"].findAll({
+        raw: true,
+        where: {
+          group_: "kong",
+          nettype,
+          roundoffsettoavail: { [Op.gte]: 0 },
+          ismaxroundreached: 0,
+          isdelinquent: 0,
+        },
+        //			 order: IS_ASSIGN_ITEMS_RANDOMLY_OR_IN_ORDER ? db.Sequelize.literal("rand()") : null ,
+        limit:
+          N > count_users_plus_delinquent
+            ? N - count_users_plus_delinquent
+            : count_users_plus_delinquent - N,
+      });
+      console.log(
+        " count_users_plus_delinquent_nasd",
+        count_users_plus_delinquent_n
+      );
+      // shufflearray(list_01);
+      // shufflearray(list_01);
+      // list_01 = list_01.slice(0, N - count_users_plus_delinquent);
+      N < count_users_plus_delinquent_n
+        ? (list = [...list_00])
+        : (list = [...list_00, ...list_01]);
+    } else {
+      let list_03 = await db["items"].findAll({
+        raw: true,
+        where: {
+          group_: "kong",
+          nettype,
+          roundoffsettoavail: { [Op.gte]: 0 },
+          ismaxroundreached: 0,
+          isdelinquent: 0,
+        },
+        limit: N,
+      });
+      // shufflearray(list_03);
+      // shufflearray(list_03);
+      // list_03 = list_03.slice(0, N)
+      list = [...list_03];
+    }
+    // shufflearray(list);
+    // shufflearray(list);
+    return list;
+  };
 // const func_00_02_draw_items = func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances
 const func_00_02_draw_items = B_ASSIGN_DELINQUENT_ITEMS
   ? func_00_02_draw_items_this_ver_gives_both_delinquents_and_from_itembalances
@@ -768,7 +847,10 @@ const MAP_BALLOT_STATUS = {
   PAUSE: false,
 };
 
-const randomly_pick_from_array_while_ensuring_each_included_atleast_once = (arr0, targetsize) => {
+const randomly_pick_from_array_while_ensuring_each_included_atleast_once = (
+  arr0,
+  targetsize
+) => {
   return [...getRandomElementsFromArray(arr0, targetsize)];
 };
 const match_with_obj = async (listreceivers0, itemstogive) => {
@@ -789,7 +871,10 @@ const match_with_obj = async (listreceivers0, itemstogive) => {
 
   listreceivers0_exp =
     listreceivers0.length !== N_items
-      ? randomly_pick_from_array_while_ensuring_each_included_atleast_once(listreceivers0, N_items)
+      ? randomly_pick_from_array_while_ensuring_each_included_atleast_once(
+          listreceivers0,
+          N_items
+        )
       : listreceivers0;
   listreceivers0 = listreceivers0_exp;
   console.log("listrecevers0--after", listreceivers0.length);
@@ -831,7 +916,7 @@ module.exports = {
   func_00_04_handle_max_round_reached,
 };
 // const cron = require('node-cron')
-false  &&
+false &&
   cron.schedule("* */9 * * *", () => {
     LOGGER("");
     console.log(moment().format("HH:mm:ss, YYYY-MM-DD"), "@nips");
