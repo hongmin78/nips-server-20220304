@@ -12,8 +12,9 @@ var http = require('http');
  * Get port from environment and store in Express.
  */
 // const PORTNUM = 34815
-// const PORTNUM = 37583 // 34915
-const PORTNUM = 34925; // 37825
+//const PORTNUM = 37583 // 34915
+const { PORTNUM } = require('../configs/configs' ) // 34915
+// const PORTNUM = 34925; // 37825
 var port = normalizePort(process.env.PORT || PORTNUM )
 app.set('port', port);
 const LOGGER=console.log
