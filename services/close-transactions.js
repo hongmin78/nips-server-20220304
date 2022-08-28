@@ -146,6 +146,25 @@ const get_pay_related_users = async (uuid, nettype) => {
   }
   return { seller, buyer, refereraddress, referercode };
 };
+/** const handle_pay_to_own_case = async (jdata)=>{
+  let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
+    jdata;
+	let respitem = await findone ( 'items' , { itemid , nettype } )
+/////////////
+ await updateorcreaterow(
+    "itembalances",
+    {      itemid,
+      nettype,
+    },
+    {      username,
+      status: 1,
+//      buyprice: amount,
+  //    paymeans: currency,
+    //  paymeansaddress: currencyaddress, //	, amount      //		, nettype
+    }
+  );
+  await moverow( "receivables" , { itemid, nettype }, "logsales", { txhash }); // uuid
+} */
 const handle_pay_case = async (jdata) => {
   let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
     jdata;

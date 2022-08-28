@@ -32,11 +32,13 @@ stdin.on( 'data', function( key ){   // ctrl-c ( end of text )
   }  // write the key to stdout all normal like
   process.stdout.write( key );
 });
-
+let MAX_ROUND_TO_REACH_DEF=2
 const main = async _=>{
 	let Nrounds = 30 
-	let resp = await axios.post ( `http://localhost:${PORTNUM}/ballot/init/rounds?nettype=${nettype}` ) 
+	let resp = await axios.post ( `http://localhost:${PORTNUM}/ballot/init/rounds?nettype=${nettype}&MAX_ROUND_TO_REACH_DEF=${MAX_ROUND_TO_REACH_DEF}` ) 
 	LOGGER( `@init: ${ STRINGER( resp.data,null,0) }` )
+		LOGGER( `>>>>>>>>>>>>>> init`  )
+		await keypress()
 	for ( let idx = 0; idx< Nrounds ; idx ++ ){
 		LOGGER( '@idx' , idx )
 		let respadvance0 = await axios.post ( `http://localhost:${PORTNUM}/ballot/advance/roundstate?nettype=${nettype}` ) ; LOGGER( '@respadvance0' ,  respadvance0.data )
@@ -52,10 +54,11 @@ const main = async _=>{
 			elem = list[ idxrcv ]
 			let { uuid } = elem
 			let resppay = await axios.post ( `http://localhost:${PORTNUM}/ballot/manual/payitem/${uuid}?nettype=${nettype}` )
+			await delay( 1 )
 			LOGGER ( '@pay' , resppay.data )
 //		} )
 		}
-		await delay(1.5)
+		await delay( 1.5 )
 		let respadvance1 = await axios.post ( `http://localhost:${PORTNUM}/ballot/advance/roundstate?nettype=${nettype}` ); LOGGER( '@respadvance1' , respadvance1.data )
 		let respdelinq =await		axios.get ( `http://localhost:${PORTNUM}/queries/rows/delinquencies/active/1/0/10/id/DESC` )
 		LOGGER( `@delinq` , respdelinq.data.list ) 

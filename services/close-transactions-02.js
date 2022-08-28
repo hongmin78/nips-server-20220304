@@ -59,21 +59,24 @@ const handle_kingkong_initial_payment_case = async (jargs) => {
     price,
     contractaddress,
   } = jargs; //
+	LOGGER( `@handle_kingkong_initial_payment_case `)
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let respitembal = await findone("itembalances", { itemid, nettype });
   if (respitembal) {
     LOGGER(`@weirdo in kingkong giving`);
   } // this should not happen
-  else {
-    await createrow("itembalances", {
-      username, //
+  else {}
+//    await createrow("itembalances", {
+    await updateorcreaterow("itembalances", {
       itemid, //
+      nettype, //
+			} , {
+      username, //
       status: 1,
       buyprice: price,
       paymeans: PAYMENT_MEANS_DEF,
       paymeansaddress: PAYMENT_ADDRESS_DEF,
       amount: 1,
-      nettype, //
       group_: "kingkong",
       contractaddress,
       isonchain: 0,
@@ -82,16 +85,15 @@ const handle_kingkong_initial_payment_case = async (jargs) => {
     });
     await updaterow(
       "items",
-      {
-        itemid,
+      {        itemid,
         nettype,
       },
-      {
-        salestatus: -1,
+      {        salestatus: -1,
         salesstatusstr: "USER_OWNED",
       }
     );
-  }
+	await moverow ( 'receivables' , { itemid,nettype } , 'logsales', { txhash }  ) 
+//  }
 };
 const handle_kingkong_staking = async (jargs) => {
   let { nettype, username, itemid, typestr, contractaddress } = jargs; //

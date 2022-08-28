@@ -153,7 +153,7 @@ circulations
 delinquencies
 */
 router.post("/init/rounds", async (req, res) => {
-  let { nettype } = req.query;
+  let { nettype , MAX_ROUND_TO_REACH_DEF } = req.query;
   if (nettype) {
   } else {
     resperr(res, messages.MSG_ARGMISSING);
@@ -190,7 +190,9 @@ await updaterow ( 'ballots' , { active : 1 } , { active : 0 } )
  	respactiveballots.forEach ( async elem => {
 		await updaterow ( 'ballots' , { id : elem.id} , { active : 1 } )
 	})
-
+	if ( MAX_ROUND_TO_REACH_DEF){
+		await updaterow ( 'settings' , { key_: 'MAX_ROUND_TO_REACH_DEF' ,}, { value_: MAX_ROUND_TO_REACH_DEF } )
+	}
   respok(res);
 });
 router.post("/advance/roundstate", async (req, res) => {
