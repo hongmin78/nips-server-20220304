@@ -32,6 +32,7 @@ const { getweirep, getethrep } = require("../utils/eth");
 const PARSER = JSON.parse;
 const TXREQSTATUS_POLL_INTERVAL = 3000;
 const TXREQSTATUS_BLOCKCOUNT = 1; // 2 // 4 // 6
+const ROUND_MULT_FACTOR_DUE_TO_OVERLAP = 3
 let TX_POLL_OPTIONS = {
   interval: TXREQSTATUS_POLL_INTERVAL,
   blocksToWait: TXREQSTATUS_BLOCKCOUNT,
@@ -46,7 +47,8 @@ const {
 } = require("../configs/receivables");
 const {
   get_MAX_ROUND_TO_REACH, // pick_kong_items_ on_item_max_round_reached
-	getroundnumber_global
+	getroundnumber_global ,
+	getcurrentroundnumberglobal
 } = require("./match-helpers");
 const {
   get_ipfsformatcid_file,
@@ -146,7 +148,7 @@ const get_pay_related_users = async (uuid, nettype) => {
   }
   return { seller, buyer, refereraddress, referercode };
 };
-/** const handle_pay_to_own_case = async (jdata)=>{
+/** const han dle_pay_to_own_case = async (jdata)=>{
   let { uuid, username, itemid, strauxdata, txhash, nettype, roundnumber } =
     jdata;
 	let respitem = await findone ( 'items' , { itemid , nettype } )
@@ -231,8 +233,7 @@ const handle_pay_case = async (jdata) => {
   );
   console.log("itemidcrr", itemid);
   let respcirc = await findone("circulations", { itemid, nettype });
-
-	const ROUND_MULT_FACTOR_DUE_TO_OVERLAP = 3
+//	const ROUND_MU LT_FACTOR_DUE_TO_OVERLAP = 3
   if (respcirc) {
     let { price, roundnumber, countchangehands 
 			, itemroundnumber 
@@ -280,16 +281,18 @@ const handle_pay_case = async (jdata) => {
       );
     } //
     else {      // max reached
+			let	roundnumberglobal4birth = ROUND_MULT_FACTOR_DUE_TO_OVERLAP + 	await getcurrentroundnumberglobal ( nettype )
       await createrow( "maxroundreached", {
         username, // : ''
         itemid, // : ''
         nettype, // : ''
-        uuid: create_uuid_via_namespace(`${username}_${itemid}_${nettype}`),
+        uuid: create_uuid_via_namespace( `${username}_${itemid}_${nettype}` ),
         amountpaid: "",
         txhash, // : ''
         itemroundnumber : 1 + +itemroundnumber , // : roundnumber, // doublecounting
         globalroundnumber : roundnumberglobal, // : ''
 				roundnumberglobal
+				, roundnumberglobal4birth 
       });
 			await updaterow ('ballots' , { username, nettype } , {ismaxreached: 1 				,ismaxroundreached : 1
 			}) 
@@ -297,17 +300,17 @@ const handle_pay_case = async (jdata) => {
 			});
       await updaterow("items", { itemid, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
 			});
+	    await updaterow(
+  	    "circulations",
+    	  { id: respcirc.id },
+	      {        //				price : price 				,
+  	    	  roundnumber: 1 + +roundnumber,
+    	    countchangehands: 1 + +countchangehands, //				itemroundnumber : 1 + +itemroundnumber , // doublecounting
+					roundnumberglobal ,
+					roundnumberglobal4birth 
+	      }
+  	  );
     }
-    await updaterow(
-      "circulations",
-      { id: respcirc.id },
-      {        //				price : price 				,
-        roundnumber: 1 + +roundnumber,
-        countchangehands: 1 + +countchangehands,
-//				itemroundnumber : 1 + +itemroundnumber , // doublecounting
-				roundnumberglobal ,
-      }
-    );
     await updaterow(
       "users",
       { username, nettype },

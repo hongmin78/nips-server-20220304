@@ -1,6 +1,5 @@
 /* jshint indent: 2 */
 
-
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('items', {
     id: {
@@ -108,7 +107,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     ismaxroundreached: {
       type: DataTypes.INTEGER(4),
-      allowNull: true
+      allowNull: true,
+      defaultValue: 0
     },
     tokenid: {
       type: DataTypes.INTEGER(10).UNSIGNED,
@@ -124,8 +124,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     price: {
       type: DataTypes.INTEGER(40),
-      allowNull: true,
-      defaultValue: 372
+      allowNull: true
     },
     isstaked: {
       type: DataTypes.INTEGER(10),

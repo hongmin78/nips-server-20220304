@@ -90,6 +90,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER(4),
       allowNull: true,
       comment: '0,null: regular rounds,1:right from birth'
+    },
+    roundnumberglobal4birth: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
+      allowNull: true
     }
   }, {
     sequelize,

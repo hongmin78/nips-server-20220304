@@ -46,7 +46,7 @@ module.exports = function(sequelize, DataTypes) {
     lastroundmadepaymentfor: {
       type: DataTypes.INTEGER(11),
       allowNull: true,
-      defaultValue: 0
+      defaultValue: -4
     },
     lasttimemadepaymentat: {
       type: DataTypes.BIGINT,

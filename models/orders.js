@@ -26,8 +26,56 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(80),
       allowNull: true
     },
+    asset_contract_bid: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    asset_id_bid: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    asset_amount_bid: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    asset_contract_ask: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    asset_id_ask: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    asset_amount_ask: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    makerortaker: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true
+    },
     uuid: {
       type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    sig_r: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    sig_s: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    sig_v: {
+      type: DataTypes.STRING(10),
+      allowNull: true
+    },
+    signature: {
+      type: DataTypes.STRING(1000),
+      allowNull: true
+    },
+    datahash: {
+      type: DataTypes.STRING(100),
       allowNull: true
     },
     itemid: {
@@ -36,7 +84,7 @@ module.exports = function(sequelize, DataTypes) {
       unique: true
     },
     type: {
-      type: DataTypes.STRING(10),
+      type: DataTypes.INTEGER(4),
       allowNull: true
     },
     typestr: {
@@ -44,17 +92,55 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       comment: '0:MINT,1:COMMON,2:AUCTION'
     },
+    rawdata_to_sign: {
+      type: DataTypes.STRING(3000),
+      allowNull: true
+    },
+    supertype: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      comment: 'sell:1, buy:2'
+    },
+    supertypestr: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      comment: '1: sell, 2:buy'
+    },
+    rawdatahash: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
+    signaturestr: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
     isprivate: {
       type: DataTypes.INTEGER(4),
       allowNull: true,
       defaultValue: 0
     },
+    privateaddress: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
     price: {
       type: DataTypes.STRING(20),
       allowNull: true
     },
+    expiry: {
+      type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    expirychar: {
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
     tokenid: {
       type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    closingtxhash: {
+      type: DataTypes.STRING(80),
       allowNull: true
     },
     buyer: {
@@ -72,6 +158,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     amount: {
       type: DataTypes.BIGINT,
+      allowNull: true
+    },
+    decimals: {
+      type: DataTypes.INTEGER(10).UNSIGNED,
       allowNull: true
     },
     saletype: {
@@ -95,12 +185,20 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(40),
       allowNull: true
     },
+    contractaddress: {
+      type: DataTypes.STRING(80),
+      allowNull: true
+    },
     nettype: {
       type: DataTypes.STRING(40),
       allowNull: true
     },
     expirystr: {
       type: DataTypes.STRING(40),
+      allowNull: true
+    },
+    msg: {
+      type: DataTypes.STRING(200),
       allowNull: true
     },
     bidcount: {

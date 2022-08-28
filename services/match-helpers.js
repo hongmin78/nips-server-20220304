@@ -32,6 +32,14 @@ const MAP_SALE_STATUS = {
   ASSIGNED: 1,
   USER_OWNED: -1,
 };
+const getcurrentroundnumberglobal = async ( nettype ) => {
+  let respballotround = await findone("settings", {
+    key_: "BALLOT_PERIODIC_ROUNDNUMBER",
+    subkey_: nettype,
+  });
+	if ( respballotround && respballotround.value_ ) { return   respballotround.value_ }
+	else { return null }
+}
 const getroundnumber_global = async (nettype) => {
   let round_number_global;
   let respballotround = await findone("settings", {
@@ -457,7 +465,7 @@ const handle_assign_item_case = async (item, username, nettype) => {
   });
 };
 
-module.exports = {
+module.exports = {getcurrentroundnumberglobal , 
   getroundnumber_global,
   pick_kong_items_on_item_max_round_reached,
   handle_perish_item_case,

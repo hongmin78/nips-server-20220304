@@ -40,14 +40,14 @@ const {
   pick_kong_items_on_item_max_round_reached,
   handle_perish_item_case,
   handle_assign_item_case,
-
   handle_assign_item_case_birth_kong,
-
   handle_give_an_item_ownership_case,
   getroundnumber_global,
+	getcurrentroundnumberglobal , 
 } = require("../services/match-helpers");
 const moment = require("moment-timezone");
 const B_CALL_OFFSET_KST_TO_UTC = false;
+const STRINGER = JSON.stringify
 moment.tz.setDefault("Etc/UTC");
 const STR_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
 let rmqq = "tasks";
@@ -467,17 +467,21 @@ const find_circulations_pastmax = async (nettype) => {
   return list; // ? list : null
 };
 const func_00_04_handle_max_round_reached = async (nettype) => {
-  let list_maxroundreached = await findall("maxroundreached", { nettype });
+  let list_maxroundreached_proper = await findall("maxroundreached", { nettype });
   let list_max_from_circulations = await find_circulations_pastmax(nettype);
 
-  list_maxroundreached = [
-    ...list_maxroundreached,
-    ...list_max_from_circulations,
+  let list_maxroundreached = [
+    ...list_maxroundreached_proper ,
+    ...list_max_from_circulations // ,
   ];
-  if (list_maxroundreached && list_maxroundreached.length) {
-    LOGGER(`@max round reached`, list_maxroundreached);
-  } else {
-    LOGGER("@max round reached, no items past max");
+  if (list_maxroundreached && list_maxroundreached.length) {    LOGGER(`@max round reached`, STRINGER(  list_maxroundreached ) )
+  } else {    LOGGER("@max round reached, no items past max");
+    return;
+  }
+	let currentroundnumberglobal = await getcurrentroundnumberglobal ( nettype )
+		list_maxroundreached = list_maxroundreached.filter( elem => currentroundnumberglobal >= + elem.roundnumberglobal4birth )  
+	if (list_maxroundreached && list_maxroundreached.length) {    LOGGER(`@past filtering,max round reached`, STRINGER(  list_maxroundreached ) )
+  } else {    LOGGER("@past filtering, max round reached, no items past max");
     return;
   }
   list_maxroundreached.forEach(async (elemmatch, idx) => {
@@ -661,7 +665,7 @@ const parse_q_msg = async (str) => {
 };
 /**  const getroundnumber_global = async (nettype) => {
   let round_number_global;
-  let respballotround = await findone("settings", { key_: "BALLOT_PERIODIC_ROUNDNUMBER", subkey_: nettype });
+  let respballotround = await findone("settings", { key_: "BALLOT_PER IODIC_ROUNDNUMBER", subkey_: nettype });
   if (respballotround) {
     let { value_ } = respballotround;
     round_number_global = 1 + +value_;
