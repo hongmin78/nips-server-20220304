@@ -317,6 +317,7 @@ const handle_assign_item_case_birth_kong = async (item, username, nettype) => {
     seller,
     nettype,
     group_,
+		birth : 1
   });
   await createrow("itemhistory", {
     itemid,

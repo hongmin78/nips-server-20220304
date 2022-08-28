@@ -487,8 +487,7 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
     console.log("tpye", listkongs);
     listkongs.forEach(async (elemkong) => {
-      let item = await findone("items", { itemid: elemkong.itemid, nettype });
-      //      await handle_a ssign_item_case(item, username, nettype);
+      let item = await findone("items", { itemid: elemkong.itemid, nettype });      //      await handle_a ssign_item_case(item, username, nettype);
       await handle_assign_item_case_birth_kong(item, username, nettype);
       console.log("1.5item", item);
     });

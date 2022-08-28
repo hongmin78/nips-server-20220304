@@ -85,6 +85,11 @@ module.exports = function(sequelize, DataTypes) {
     itemroundnumber: {
       type: DataTypes.INTEGER(10).UNSIGNED,
       allowNull: true
+    },
+    birth: {
+      type: DataTypes.INTEGER(4),
+      allowNull: true,
+      comment: '0,null: regular rounds,1:right from birth'
     }
   }, {
     sequelize,
