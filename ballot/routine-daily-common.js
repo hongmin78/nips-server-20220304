@@ -43,11 +43,11 @@ const {
   handle_assign_item_case_birth_kong,
   handle_give_an_item_ownership_case,
   getroundnumber_global,
-	getcurrentroundnumberglobal , 
+  getcurrentroundnumberglobal,
 } = require("../services/match-helpers");
 const moment = require("moment-timezone");
 const B_CALL_OFFSET_KST_TO_UTC = false;
-const STRINGER = JSON.stringify
+const STRINGER = JSON.stringify;
 moment.tz.setDefault("Etc/UTC");
 const STR_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
 let rmqq = "tasks";
@@ -467,23 +467,35 @@ const find_circulations_pastmax = async (nettype) => {
   return list; // ? list : null
 };
 const func_00_04_handle_max_round_reached = async (nettype) => {
-  let list_maxroundreached_proper = await findall("maxroundreached", { nettype });
+  let list_maxroundreached_proper = await findall("maxroundreached", {
+    nettype,
+  });
   let list_max_from_circulations = await find_circulations_pastmax(nettype);
 
   let list_maxroundreached = [
-    ...list_maxroundreached_proper ,
-    ...list_max_from_circulations // ,
+    ...list_maxroundreached_proper,
+    ...list_max_from_circulations, // ,
   ];
-  if (list_maxroundreached && list_maxroundreached.length) {    LOGGER(`@max round reached`, STRINGER(  list_maxroundreached ) )
-  } else {    LOGGER("@max round reached, no items past max");
+  if (list_maxroundreached && list_maxroundreached.length) {
+    LOGGER(`@max round reached`, STRINGER(list_maxroundreached));
+  } else {
+    LOGGER("@max round reached, no items past max");
     return;
   }
-	let currentroundnumberglobal = await getcurrentroundnumberglobal ( nettype )
-		list_maxroundreached = list_maxroundreached.filter( elem => currentroundnumberglobal >= + elem.roundnumberglobal4birth )  
-	if (list_maxroundreached && list_maxroundreached.length) {    LOGGER(`@past filtering,max round reached`, STRINGER(  list_maxroundreached ) )
-  } else {    LOGGER("@past filtering, max round reached, no items past max");
-    return;
-  }
+  // let currentroundnumberglobal = await getcurrentroundnumberglobal(nettype);
+
+  // list_maxroundreached = list_maxroundreached.filter(
+  //   (elem) => currentroundnumberglobal >= +elem.roundnumberglobal4birth
+  // );
+  // if (list_maxroundreached && list_maxroundreached.length) {
+  //   LOGGER(`@past filtering,max round reached`, STRINGER(list_maxroundreached));
+  // } else {
+  //   LOGGER(
+  //     "@past filtering, max round reached, no items past max",
+  //     STRINGER(list_maxroundreached)
+  //   );
+  //   return;
+  // }
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     console.log("___handle_perish_item_case", elemmatch);
     let { itemid, username, nettype } = elemmatch;
@@ -491,7 +503,7 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     let listkongs = await pick_kong_items_on_item_max_round_reached(nettype);
     console.log("tpye", listkongs);
     listkongs.forEach(async (elemkong) => {
-      let item = await findone("items", { itemid: elemkong.itemid, nettype });      //      await handle_a ssign_item_case(item, username, nettype);
+      let item = await findone("items", { itemid: elemkong.itemid, nettype }); //      await handle_a ssign_item_case(item, username, nettype);
       await handle_assign_item_case_birth_kong(item, username, nettype);
       console.log("1.5item", item);
     });

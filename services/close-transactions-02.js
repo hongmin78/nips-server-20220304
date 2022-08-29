@@ -60,6 +60,7 @@ const handle_kingkong_initial_payment_case = async (jargs) => {
     price,
     contractaddress,
   } = jargs; //
+  console.log("DEBUGGING_LINE");
   LOGGER(`@handle_kingkong_initial_payment_case `);
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let respitembal = await findone("itembalances", { itemid, nettype });
@@ -170,6 +171,7 @@ const enqueue_tx_toclose_02 = async (jargs) => {
             itemid, //           strauxdata,
             roundnumber,
             price,
+            contractaddress,
           });
           break;
         case "EMPLOY_KINGKONG":
