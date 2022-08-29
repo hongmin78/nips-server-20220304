@@ -46,7 +46,7 @@ const {
 } = require("../configs/receivables");
 const {
   get_MAX_ROUND_TO_REACH, // pick_kong_items_ on_item_max_round_reached
-	 getcurrentroundnumberglobal
+  getcurrentroundnumberglobal,
 } = require("./match-helpers");
 const ROUNDOFFSETTOAVAIL_DEF = -3;
 const handle_kingkong_initial_payment_case = async (jargs) => {
@@ -60,18 +60,22 @@ const handle_kingkong_initial_payment_case = async (jargs) => {
     price,
     contractaddress,
   } = jargs; //
-	LOGGER( `@handle_kingkong_initial_payment_case `)
+  LOGGER(`@handle_kingkong_initial_payment_case `);
   await updaterow("itemhistory", { uuid }, { status: 1 });
   let respitembal = await findone("itembalances", { itemid, nettype });
   if (respitembal) {
     LOGGER(`@weirdo in kingkong giving`);
   } // this should not happen
-  else {}
-//    await createrow("itembalances", {
-    await updateorcreaterow("itembalances", {
+  else {
+  }
+  //    await createrow("itembalances", {
+  await updateorcreaterow(
+    "itembalances",
+    {
       itemid, //
       nettype, //
-			} , {
+    },
+    {
       username, //
       status: 1,
       buyprice: price,
@@ -83,18 +87,15 @@ const handle_kingkong_initial_payment_case = async (jargs) => {
       isonchain: 0,
       //			, locked
       //			, avail
-    });
-    await updaterow(
-      "items",
-      {        itemid,
-        nettype,
-      },
-      {        salestatus: -1,
-        salesstatusstr: "USER_OWNED",
-      }
-    );
-	await moverow ( 'receivables' , { itemid,nettype } , 'logsales', { txhash }  ) 
-//  }
+    }
+  );
+  await updaterow(
+    "items",
+    { itemid, nettype },
+    { salestatus: -1, salesstatusstr: "USER_OWNED" }
+  );
+  await moverow("receivables", { itemid, nettype }, "logsales", { txhash });
+  //  }
 };
 const handle_kingkong_staking = async (jargs) => {
   let { nettype, username, itemid, typestr, contractaddress } = jargs; //
@@ -159,6 +160,7 @@ const enqueue_tx_toclose_02 = async (jargs) => {
         contractaddress,
       } = jargs;
       switch (typestr) {
+        case "PAY":
         case "KINGKONG_INITIAL_PAYMENT":
           handle_kingkong_initial_payment_case({
             txhash,
@@ -199,5 +201,5 @@ const enqueue_tx_toclose_02 = async (jargs) => {
 
 module.exports = {
   enqueue_tx_toclose_02,
-	handle_kingkong_initial_payment_case  ,
+  handle_kingkong_initial_payment_case,
 };

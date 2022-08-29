@@ -171,22 +171,23 @@ router.post("/:txhash", async (req, res) => {
     case "APPROVE":
     case "PAY":
     case "CLEAR_DELINQUENT":
-			let { group_} = await findone ( 'items', { itemid, nettype } )
-			if ( group_=='kingkong' && typestr =='PAY' ) {
-	      istxtotrack = false;
-  	    enqueue_tx_toclose_02({
-    	    txhash,
-      	  uuid,
-	        nettype,
-  	      username,
-    	    itemid,
-      	  roundnumber,
-        	price,
-	        contractaddress,
-  	    });
-    	  break;
-			}
-			else {}
+      let { group_ } = await findone("items", { itemid, nettype });
+      if (group_ == "kingkong" && typestr == "PAY") {
+        istxtotrack = false;
+        enqueue_tx_toclose_02({
+          txhash,
+          uuid,
+          nettype,
+          username,
+          itemid,
+          roundnumber,
+          price,
+          contractaddress,
+          typestr,
+        });
+        break;
+      } else {
+      }
       cliredisa
         .hset(
           "TX-TABLES",
