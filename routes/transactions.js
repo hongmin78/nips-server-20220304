@@ -154,7 +154,7 @@ router.post("/:txhash", async (req, res) => {
         username,
         itemid,
         roundnumber,
-        price,
+        price: auxdata?.amount,
         contractaddress,
         typestr,
       });
@@ -181,7 +181,7 @@ router.post("/:txhash", async (req, res) => {
           username,
           itemid,
           roundnumber,
-          price,
+          price: auxdata?.amount,
           contractaddress,
           typestr,
         });
