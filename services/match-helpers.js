@@ -179,6 +179,7 @@ const handle_give_an_item_ownership_case_this_ver_charges_for_payment = async (
     seller: SALES_ACCOUNT_NONE_TICKET,
     nettype,
     group_,
+		birth : 1
   });
   // pick item
   // receivables
@@ -310,7 +311,7 @@ const handle_assign_item_case_birth_kong = async (item, username, nettype) => {
   await updaterow("items", { itemid, nettype }, { isdelinquent: 0 });
   let roundnumber_global = await getroundnumber_global(nettype);
   let seller = SALES_ACCOUNT_NONE_TICKET;
-  await createrow("receivables", {
+  await createrow( "receivables" , {
     itemid,
     username,
     roundnumber: roundnumber_global,
