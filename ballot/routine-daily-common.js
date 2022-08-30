@@ -482,20 +482,20 @@ const func_00_04_handle_max_round_reached = async (nettype) => {
     LOGGER("@max round reached, no items past max");
     return;
   }
-  // let currentroundnumberglobal = await getcurrentroundnumberglobal(nettype);
+  let currentroundnumberglobal = await getcurrentroundnumberglobal(nettype);
 
-  // list_maxroundreached = list_maxroundreached.filter(
-  //   (elem) => currentroundnumberglobal >= +elem.roundnumberglobal4birth
-  // );
-  // if (list_maxroundreached && list_maxroundreached.length) {
-  //   LOGGER(`@past filtering,max round reached`, STRINGER(list_maxroundreached));
-  // } else {
-  //   LOGGER(
-  //     "@past filtering, max round reached, no items past max",
-  //     STRINGER(list_maxroundreached)
-  //   );
-  //   return;
-  // }
+  list_maxroundreached = list_maxroundreached.filter(
+    (elem) => currentroundnumberglobal >= +elem.roundnumberglobal4birth
+  );
+  if (list_maxroundreached && list_maxroundreached.length) {
+    LOGGER(`@past filtering,max round reached`, STRINGER(list_maxroundreached));
+  } else {
+    LOGGER(
+      "@past filtering, max round reached, no items past max",
+      STRINGER(list_maxroundreached)
+    );
+    return;
+  }
   list_maxroundreached.forEach(async (elemmatch, idx) => {
     console.log("___handle_perish_item_case", elemmatch);
     let { itemid, username, nettype } = elemmatch;
