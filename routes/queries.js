@@ -55,6 +55,7 @@ const MAP_TABLENAME_QUERY_ALLOWED = {
   categories: 1,
   itembalances: 1,
   circulations: 1,
+  contractaddresses: 1,
 };
 const expand_fieldval_matches = (fieldname, arrfieldvalues) => {
   let arr_field_matches = arrfieldvalues.map((elem) => {
@@ -834,15 +835,22 @@ router.get(
     });
   }
 );
-
 router.get("/:tablename", (req, res) => {
   let { tablename } = req.params;
+  let { nettype } = req.query;
   if (MAP_TABLENAME_QUERY_ALLOWED[tablename]) {
   } else {
     resperr(res, messages.MSG_NOT_ALLOWED);
     return;
   }
+  if (tablename == "contractaddresses") {
+    findall(tablename, { blockchain: nettype }).then((resp) => {
+      console.log("____________________resp", resp);
+      respok(res, null, null, { list: resp });
+    });
+  }
   findall(tablename, {}).then((resp) => {
+    console.log("____________________resp", resp);
     respok(res, null, null, { list: resp });
   });
 });
