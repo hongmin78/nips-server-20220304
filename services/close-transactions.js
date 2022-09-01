@@ -20,7 +20,7 @@ const {
   incrementroworcreate,
   incrementrow,
   createifnoneexistent,
-	cprow
+  cprow,
 } = require("../utils/db");
 const { query_with_arg } = require("../utils/contract-calls");
 const { ADDRESSES } = require("../configs/addresses");
@@ -32,7 +32,7 @@ const { getweirep, getethrep } = require("../utils/eth");
 const PARSER = JSON.parse;
 const TXREQSTATUS_POLL_INTERVAL = 3000;
 const TXREQSTATUS_BLOCKCOUNT = 1; // 2 // 4 // 6
-const ROUND_MULT_FACTOR_DUE_TO_OVERLAP = 3
+const ROUND_MULT_FACTOR_DUE_TO_OVERLAP = 3;
 let TX_POLL_OPTIONS = {
   interval: TXREQSTATUS_POLL_INTERVAL,
   blocksToWait: TXREQSTATUS_BLOCKCOUNT,
@@ -47,8 +47,8 @@ const {
 } = require("../configs/receivables");
 const {
   get_MAX_ROUND_TO_REACH, // pick_kong_items_ on_item_max_round_reached
-	getroundnumber_global ,
-	getcurrentroundnumberglobal
+  getroundnumber_global,
+  getcurrentroundnumberglobal,
 } = require("./match-helpers");
 const {
   get_ipfsformatcid_file,
@@ -198,15 +198,14 @@ const handle_pay_case = async (jdata) => {
       fieldname: "counthelditems",
       incvalue: -1,
     });
-   /*  await movei row("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
+    /*  await movei row("itembalances", { id: respitembalance.id }, "logitembalances", {}); */
   } else {
   }
   await updateorcreaterow(
     "itembalances",
-    {      itemid,
-      nettype,
-    },
-    {      username,
+    { itemid, nettype },
+    {
+      username,
       status: 1,
       buyprice: amount,
       paymeans: currency,
@@ -233,22 +232,32 @@ const handle_pay_case = async (jdata) => {
   );
   console.log("itemidcrr", itemid);
   let respcirc = await findone("circulations", { itemid, nettype });
-//	const ROUND_MU LT_FACTOR_DUE_TO_OVERLAP = 3
+  //	const ROUND_MU LT_FACTOR_DUE_TO_OVERLAP = 3
   if (respcirc) {
-    let { price, roundnumber, countchangehands 
-			, itemroundnumber 
-			, roundnumberglobal
-		} = respcirc;
-    let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH( nettype );
-		roundnumberglobal = await  getroundnumber_global ( nettype )
-    LOGGER( "MAX_ROUND_TO_REACH" , itemroundnumber , roundnumber, MAX_ROUND_TO_REACH);
-//    if ( +roundnumber < MAX_ROUND_TO_REACH * ROUND_MULT_FACTOR_DUE_TO_OVERLAP ) {
-    if ( +itemroundnumber <= MAX_ROUND_TO_REACH  ) { // ROUND_MULT_FACTOR_DUE_TO_OVERLAP + 1
+    let {
+      price,
+      roundnumber,
+      countchangehands,
+      itemroundnumber,
+      roundnumberglobal,
+    } = respcirc;
+    let MAX_ROUND_TO_REACH = await get_MAX_ROUND_TO_REACH(nettype);
+    roundnumberglobal = await getroundnumber_global(nettype);
+    LOGGER(
+      "MAX_ROUND_TO_REACH",
+      itemroundnumber,
+      roundnumber,
+      MAX_ROUND_TO_REACH
+    );
+    //    if ( +roundnumber < MAX_ROUND_TO_REACH * ROUND_MULT_FACTOR_DUE_TO_OVERLAP ) {
+    if (+itemroundnumber <= MAX_ROUND_TO_REACH) {
+      // ROUND_MULT_FACTOR_DUE_TO_OVERLAP + 1
       // max not reached yet
       await updaterow(
         "items",
         { itemid, nettype },
-        {          salestatus: 1,
+        {
+          salestatus: 1,
           salesstatusstr: "ASSIGNED",
           roundoffsettoavail: ROUNDOFFSETTOAVAIL_DEF,
         }
@@ -261,55 +270,70 @@ const handle_pay_case = async (jdata) => {
             incvalue: +1,
           });
       });
-			await cprow ( 'circulations' , { id: respcirc.id } , 'logcirculations' )
+      await cprow("circulations", { id: respcirc.id }, "logcirculations");
       await updaterow(
         "circulations",
         { id: respcirc.id },
-        {          //				price : price 				,
+        {
+          //				price : price 				,
           countchangehands: 1 + +countchangehands,
           roundnumber: 1 + +roundnumber,
-//					itemroundnumber : 1 + +itemroundnumber , // doublecounting
-					roundnumberglobal // : 
+          //					itemroundnumber : 1 + +itemroundnumber , // doublecounting
+          roundnumberglobal, // :
         }
       );
       await updaterow(
         "users",
         { username, nettype },
-        {          lastroundmadepaymentfor: roundnumber,
+        {
+          lastroundmadepaymentfor: roundnumber,
           lasttimemadepaymentat: moment().unix(),
         }
       );
     } //
-    else {      // max reached
-			let	roundnumberglobal4birth = ROUND_MULT_FACTOR_DUE_TO_OVERLAP + 	await getcurrentroundnumberglobal ( nettype )
-      await createrow( "maxroundreached", {
+    else {
+      // max reached
+      let roundnumberglobal4birth =
+        ROUND_MULT_FACTOR_DUE_TO_OVERLAP +
+        (await getcurrentroundnumberglobal(nettype));
+      await createrow("maxroundreached", {
         username, // : ''
         itemid, // : ''
         nettype, // : ''
-        uuid: create_uuid_via_namespace( `${username}_${itemid}_${nettype}` ),
+        uuid: create_uuid_via_namespace(`${username}_${itemid}_${nettype}`),
         amountpaid: "",
         txhash, // : ''
-        itemroundnumber : 1 + +itemroundnumber , // : roundnumber, // doublecounting
-        globalroundnumber : roundnumberglobal, // : ''
-				roundnumberglobal
-				, roundnumberglobal4birth 
+        itemroundnumber: 1 + +itemroundnumber, // : roundnumber, // doublecounting
+        globalroundnumber: roundnumberglobal, // : ''
+        roundnumberglobal,
+        roundnumberglobal4birth,
       });
-			await updaterow ('ballots' , { username, nettype } , {ismaxreached: 1 				,ismaxroundreached : 1
-			}) 
-      await updaterow("users", { username, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
-			});
-      await updaterow("items", { itemid, nettype }, { ismaxreached: 1 				,ismaxroundreached : 1
-			});
-	    await updaterow(
-  	    "circulations",
-    	  { id: respcirc.id },
-	      {        //				price : price 				,
-  	    	  roundnumber: 1 + +roundnumber,
-    	    countchangehands: 1 + +countchangehands, //				itemroundnumber : 1 + +itemroundnumber , // doublecounting
-					roundnumberglobal ,
-					roundnumberglobal4birth 
-	      }
-  	  );
+      await updaterow(
+        "ballots",
+        { username, nettype },
+        { ismaxreached: 1, ismaxroundreached: 1 }
+      );
+      await updaterow(
+        "users",
+        { username, nettype },
+        { ismaxreached: 1, ismaxroundreached: 1 }
+      );
+      await updaterow(
+        "items",
+        { itemid, nettype },
+        { ismaxreached: 1, ismaxroundreached: 1 }
+      );
+      await updaterow(
+        "circulations",
+        { id: respcirc.id },
+        {
+          //				price : price 				,
+          roundnumber: 1 + +roundnumber,
+          countchangehands: 1 + +countchangehands, //				itemroundnumber : 1 + +itemroundnumber , // doublecounting
+          roundnumberglobal,
+          roundnumberglobal4birth,
+        }
+      );
     }
     await updaterow(
       "users",
@@ -319,7 +343,8 @@ const handle_pay_case = async (jdata) => {
         lasttimemadepaymentat: moment().unix(),
       }
     );
-  } else {    // no circ defined, should not have happened, give a fallback
+  } else {
+    // no circ defined, should not have happened, give a fallback
     await createrow("circulations", {
       itemid, // : ''
       username, // : ''
@@ -335,10 +360,9 @@ const handle_pay_case = async (jdata) => {
     let { referfeeamount } = jauxdata;
     await updateorcreaterow(
       "logfeepayments",
-      {        txhash,
-        nettype,
-      },
-      {        // username			,
+      { txhash, nettype },
+      {
+        // username			,
         amount: referfeeamount,
         amountfloat: referfeeamount,
         paymeansname: currency,
@@ -353,7 +377,7 @@ const handle_pay_case = async (jdata) => {
       }
     );
   }
-  await moverow( "receivables" , { itemid, nettype }, "logsales", { txhash }); // uuid
+  await moverow("receivables", { itemid, nettype }, "logsales", { txhash }); // uuid
 };
 /* logfeepayments
 	username        | varchar(80)      | YES  |     | NULL                |                               |
@@ -398,8 +422,9 @@ logactions
 */
 const handle_clear_delinquent_case = async (jdata) => {
   let { uuid, username, itemid, strauxdata, txhash, nettype } = jdata; //	await moverow ('delinquencies', { itemid } , 'logdelinquents', {} )
-  findall( "delinquencies" , { username }).then(async (list) => {
+  findall("delinquencies", { username }).then(async (list) => {
     list.forEach(async (elem) => {
+      console.log("FOUND DELINQUENCIES!");
       await moverow("delinquencies", { id: elem.id }, "logdelinquents", {
         txhash,
       });
@@ -444,7 +469,8 @@ const enqueue_tx_eth = async (
         }
         let str_txauxdata = resp;
         let jparams = PARSER(str_txauxdata);
-        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =          jparams; // itemid
+        let { type, tables, address, amount, itemid, strauxdata, roundnumber } =
+          jparams; // itemid
 
         if (tables) {
           KEYS(tables).forEach(async (tablename) => {
